@@ -1,7 +1,7 @@
 import { Bell } from "lucide-react";
 import Image from "next/image";
 
-export default function Header() {
+export default function MobileHeader() {
   return (
     <header className="flex items-center justify-between px-4 pt-6">
       <div className="flex items-center gap-3">
@@ -18,11 +18,11 @@ export default function Header() {
 
         <div>
           {/* Increased weight for better recognition */}
-          <h1 className="text-[17px] font-bold tracking-tight text-slate-900">
+          <h1 className="text-[17px] font-semibold tracking-wide text-slate-900">
             Alexander
           </h1>
           {/* Bumped to text-sm (14px) for readability; slate-500 is the standard for secondary info */}
-          <p className="text-sm font-medium text-slate-500">
+          <p className="text-sm font-normal text-slate-500">
             123 Main Street, New York
           </p>
         </div>
