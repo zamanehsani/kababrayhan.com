@@ -67,6 +67,8 @@ export interface Item {
   image?: string;
   description?: string;
   max_discount : string;
+  custom_calories?: number;
+  custom_prep_time?: number;
 }
 
 export interface OrderCartItem {
@@ -276,4 +278,8 @@ export interface CreatePaymentIntentRequest {
 export interface PaymentIntentResponse {
   client_secret: string;
   id: string;
+}
+
+export interface FullItemResponse {
+  data: Record<string, any>;
 }

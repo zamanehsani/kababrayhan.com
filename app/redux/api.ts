@@ -28,6 +28,7 @@ import type {
   UpdateCustomerRequest,
   UploadCustomerAvatarRequest,
   UploadedFile,
+  FullItemResponse,
 } from "./apiType";
 
 // Add SendOtp types
@@ -50,7 +51,7 @@ export const erpApi = createApi({
     baseUrl: `${ERP_API_BASE_URL}/api/resource/`,
     prepareHeaders: (headers) => {
       headers.set("Authorization", ERP_API_AUTHORIZATION);
-       headers.set("X-Frappe-Site-Name", "kababrayhan.com");
+      headers.set("X-Frappe-Site-Name", "kababrayhan.com");
       return headers;
     },
   }),
@@ -98,10 +99,21 @@ export const erpApi = createApi({
             "image",
             "description",
             "max_discount",
+            "custom_calories",
+            "custom_prep_time",
           ]),
         },
       }),
       transformResponse: (response: { data: Item[] }) => response.data,
+    }),
+
+    getItemByCode: builder.query<Record<string, any>, string>({
+      query: (itemCode) => ({
+        // Targeting /api/resource/Item/ITEM_CODE returns the entire structural payload
+        url: `Item/${encodeURIComponent(itemCode)}`,
+      }),
+      // Returns response.data which exposes the entire schema block directly
+      transformResponse: (response: FullItemResponse) => response.data,
     }),
 
     // create the customer
@@ -405,4 +417,5 @@ export const {
   useSendOtpMutation,
   useVerifyOtpMutation,
   useCreateCustomerNewMutation,
+  useGetItemByCodeQuery,
 } = erpApi;

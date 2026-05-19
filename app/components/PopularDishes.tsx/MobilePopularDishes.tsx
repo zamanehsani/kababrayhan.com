@@ -4,14 +4,16 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { ItemDetailModal } from "../home/modal/ItemDetailModal";
 import { Dish } from "@/app/types/type";
-import { useGetItemsQuery } from "../../redux/api";
+import { useGetItemByCodeQuery, useGetItemsQuery } from "../../redux/api";
 
 
 
 export default function PopularDishes() {
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const { data: items } = useGetItemsQuery();
-
+   const {data: itembycode} = useGetItemByCodeQuery("item-test-001")
+console.log("Fetched items:", items);
+console.log("full item:", itembycode);
   const slugify = (value: string) =>
     value
       .toLowerCase()
@@ -24,8 +26,8 @@ export default function PopularDishes() {
         id: item.item_code || item.name,
         name: item.item_name ?? item.name ?? "Menu Item",
         price: item.standard_rate ? item.standard_rate.toFixed(2) : "0.00",
-        cal: "170",
-        time: "15-20 min",
+        cal: item.custom_calories ? item.custom_calories.toString() : "170",
+        time: item.custom_prep_time ? `${item.custom_prep_time} min` : "15-20 min",
         rating: "4.7",
         restaurant: item.item_group ?? "Popular",
         tags: item.item_group

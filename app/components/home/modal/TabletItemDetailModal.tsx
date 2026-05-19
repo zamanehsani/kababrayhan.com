@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Dish } from "@/app/types/type";
 import { addDishToCart } from "@/app/lib/cart";
+import { TabletCustomizationSheet } from "./tablet/TabletCustomizationSheet";
+import { useItemCustomizationState } from "./shared/useItemCustomizationState";
 
 
 export function TabletItemDetailModal({
@@ -13,6 +15,16 @@ export function TabletItemDetailModal({
   onClose: () => void;
 }>) {
   const [quantity, setQuantity] = useState(1);
+  const [isCustomizationOpen, setIsCustomizationOpen] = useState(false);
+
+  const {
+    variationGroups,
+    addOnGroups,
+    resolvedSelections,
+    selectedCount,
+    handleSingleSelect,
+    handleMultiToggle,
+  } = useItemCustomizationState(dish.id);
 
   const handleAddToCart = () => {
     addDishToCart(dish, quantity);
@@ -26,28 +38,34 @@ export function TabletItemDetailModal({
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
-    window.addEventListener("keydown", onKeyDown);
+    globalThis.addEventListener("keydown", onKeyDown);
 
     return () => {
-      window.removeEventListener("keydown", onKeyDown);
+      globalThis.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previousOverflow;
     };
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-[250] flex items-center justify-center p-8">
+    <div className="fixed inset-0 z-250 flex items-center justify-center p-8">
       {/* Backdrop overlay */}
-      <div 
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" 
-        onClick={onClose} 
+      <button
+        type="button"
+        aria-label="Close modal"
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+        onClick={onClose}
       />
 
       {/* Main Modal Container */}
-      <div 
-        className="relative z-10 flex flex-col w-full max-w-xl h-auto max-h-[85vh] rounded-[2.5rem] bg-white shadow-2xl overflow-y-auto no-scrollbar border border-slate-100"
-        role="dialog"
-        aria-modal="true"
+      <dialog
+        className="relative z-10 flex h-[86vh] w-full max-w-2xl flex-col overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white p-0 shadow-2xl"
+        open
+        aria-labelledby="tablet-item-detail-title"
       >
+        <h2 id="tablet-item-detail-title" className="sr-only">
+          {dish.name} details
+        </h2>
+
         {/* Header Actions Container */}
         <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none">
           <button
@@ -61,68 +79,114 @@ export function TabletItemDetailModal({
           </button>
         </div>
 
-        {/* Hero image canvas */}
-        <div className="relative w-full aspect-[16/10] bg-slate-50/50 flex items-center justify-center p-6 border-b border-slate-50">
-          <div className="absolute inset-0 scale-120 blur-3xl opacity-20 pointer-events-none">
-            <Image src={dish.img} alt="" fill className="object-cover" />
-          </div>
-          <div className="relative w-full h-full">
-            <Image
-              src={dish.img}
-              alt={dish.name}
-              fill
-              className="object-contain"
-              priority
-            />
-          </div>
+        <div className="flex-1 overflow-y-auto no-scrollbar">
+          {isCustomizationOpen ? (
+            <div className="h-full pt-14">
+              <TabletCustomizationSheet
+                variationGroups={variationGroups}
+                addOnGroups={addOnGroups}
+                selections={resolvedSelections}
+                onSingleSelect={handleSingleSelect}
+                onMultiToggle={handleMultiToggle}
+                onBack={() => setIsCustomizationOpen(false)}
+              />
+            </div>
+          ) : (
+            <>
+              {/* Hero image canvas */}
+              <div className="relative flex aspect-16/10 w-full items-center justify-center border-b border-slate-50 bg-slate-50/50 p-6 pt-14">
+                <div className="pointer-events-none absolute inset-0 scale-120 opacity-20 blur-3xl">
+                  <Image src={dish.img} alt="" fill className="object-cover" />
+                </div>
+                <div className="relative h-full w-full">
+                  <Image
+                    src={dish.img}
+                    alt={dish.name}
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+              </div>
+
+              {/* Detail Context Layer */}
+              <div className="flex flex-col gap-4 p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <span className="text-xs font-medium uppercase tracking-wide text-orange-500">
+                      {dish.restaurant}
+                    </span>
+                    <h1 className="mt-0.5 text-2xl font-medium tracking-wide text-slate-800">
+                      {dish.name}
+                    </h1>
+                  </div>
+                  <span className="shrink-0 text-2xl font-medium tracking-wide text-emerald-600">
+                    ${dish.price}
+                  </span>
+                </div>
+
+                {/* Quick Metrics Badge Row */}
+                <div className="flex items-center gap-4 rounded-2xl border border-slate-100/80 bg-slate-50 px-4 py-2.5 text-xs font-medium tracking-wide text-slate-500">
+                  <div className="flex items-center gap-1.5">
+                    <Flame size={14} className="text-orange-500" />
+                    <span>{dish.cal} kcal</span>
+                  </div>
+                  <div className="h-3 w-px bg-slate-200"></div>
+                  <div className="flex items-center gap-1.5">
+                    <Clock size={14} className="text-slate-400" />
+                    <span>{dish.time}</span>
+                  </div>
+                  <div className="h-3 w-px bg-slate-200"></div>
+                  <div className="flex items-center gap-1.5">
+                    <Star size={14} className="fill-yellow-400 text-yellow-400" />
+                    <span>{dish.rating} Rating</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="mb-1 text-sm font-medium tracking-wide text-slate-800">
+                    Description
+                  </h3>
+                  <div
+                    className="prose prose-sm max-w-none font-sans leading-relaxed tracking-wide text-slate-400 prose-p:my-1 prose-p:text-slate-400 prose-strong:font-normal prose-strong:text-slate-700 prose-ul:list-disc prose-ul:pl-4 prose-li:my-0.5"
+                    dangerouslySetInnerHTML={{ __html: dish.description }}
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Detail Context Layer */}
-        <div className="p-6 flex flex-col gap-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <span className="text-xs font-semibold tracking-wide text-orange-500 uppercase">
-                {dish.restaurant}
-              </span>
-              <h1 className="text-2xl font-semibold text-slate-800 tracking-wide mt-0.5">
-                {dish.name}
-              </h1>
-            </div>
-            <span className="text-2xl font-semibold text-emerald-600 tracking-wide shrink-0">
-              ${dish.price}
+        <div className="flex items-center justify-between border-t border-slate-100/80 bg-white px-6 py-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium tracking-wide text-slate-800">
+              Customize
             </span>
+            {selectedCount > 0 && (
+              <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-medium tracking-wide text-yellow-700">
+                {selectedCount} selected
+              </span>
+            )}
           </div>
-
-          {/* Quick Metrics Badge Row */}
-          <div className="flex items-center gap-4 text-xs font-semibold text-slate-500 bg-slate-50 px-4 py-2.5 rounded-2xl border border-slate-100/80">
-            <div className="flex items-center gap-1.5">
-              <Flame size={14} className="text-orange-500" />
-              <span>{dish.cal} kcal</span>
-            </div>
-            <div className="h-3 w-[1px] bg-slate-200"></div>
-            <div className="flex items-center gap-1.5">
-              <Clock size={14} className="text-slate-400" />
-              <span>{dish.time}</span>
-            </div>
-            <div className="h-3 w-[1px] bg-slate-200"></div>
-            <div className="flex items-center gap-1.5">
-              <Star size={14} className="text-yellow-400 fill-yellow-400" />
-              <span>{dish.rating} Rating</span>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-semibold tracking-wide text-slate-800 mb-1">
-              Description
-            </h3>
-            <p className="text-sm leading-relaxed tracking-wide text-slate-400 font-sans">
-              {dish.description}
-            </p>
-          </div>
+          <button
+            type="button"
+            onClick={() => setIsCustomizationOpen((current) => !current)}
+            className="flex items-center gap-0.5 text-xs font-medium tracking-wide text-yellow-600"
+            aria-expanded={isCustomizationOpen}
+          >
+            {isCustomizationOpen ? "Back to Details" : "More Details"}
+            <span
+              className={`text-[10px] transition-transform ${
+                isCustomizationOpen ? "rotate-180" : ""
+              }`}
+            >
+              ▼
+            </span>
+          </button>
         </div>
 
         {/* Footer control bracket */}
-        <div className="mt-auto p-6 border-t border-slate-50 flex items-center gap-4 bg-white sticky bottom-0">
+        <div className="mt-auto flex items-center gap-4 border-t border-slate-50 bg-white p-6">
           <div className="flex items-center bg-slate-50 rounded-full p-1 border border-slate-100">
             <button
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -130,7 +194,7 @@ export function TabletItemDetailModal({
             >
               <Minus size={14} />
             </button>
-            <span className="w-10 text-center font-semibold tracking-wide text-sm text-slate-800">
+            <span className="w-10 text-center text-sm font-medium tracking-wide text-slate-800">
               {quantity.toString().padStart(2, "0")}
             </span>
             <button
@@ -144,12 +208,12 @@ export function TabletItemDetailModal({
           <button
             type="button"
             onClick={handleAddToCart}
-            className="flex-1 h-12 bg-yellow-400 text-slate-800 rounded-full font-semibold text-sm tracking-wide shadow-md shadow-yellow-200/40 active:scale-[0.98] transition-all"
+            className="h-12 flex-1 rounded-full bg-yellow-400 text-sm font-medium tracking-wide text-slate-800 shadow-md shadow-yellow-200/40 transition-all active:scale-[0.98]"
           >
             Add to Cart
           </button>
         </div>
-      </div>
+      </dialog>
     </div>
   );
 }
