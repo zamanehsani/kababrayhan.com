@@ -112,9 +112,10 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
       <AddressSelectModal 
         open={isMapOpen}
         onClose={() => setIsMapOpen(false)}
-        onSelect={(addressData) => {
-          setForm(prev => ({ ...prev, address: addressData.name }));
-          localStorage.setItem("uae_address", addressData.name);
+        onSelect={(addressData: { name?: string; street?: string }) => {
+          const resolvedAddress = addressData.name || addressData.street || "";
+          setForm(prev => ({ ...prev, address: resolvedAddress }));
+          localStorage.setItem("uae_address", resolvedAddress);
         }}
       />
     </section>

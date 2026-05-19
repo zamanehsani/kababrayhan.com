@@ -1,11 +1,4 @@
 // --- Customer and Address Creation Types ---
-export interface CreateCustomerRequest {
-  customer_name: string;
-  customer_type: string;
-  mobile_no: string;
-  territory: string;
-}
-
 export interface CreateCustomerResponse {
   data: {
     name: string;

@@ -1,13 +1,15 @@
+"use client";
+
 import { useState } from "react";
 import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 
 const PaymentForm = ({ total, salesOrder }: { total: number; salesOrder: any }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +34,7 @@ const PaymentForm = ({ total, salesOrder }: { total: number; salesOrder: any }) 
         // Replace with your actual utility functions
         // saveOrderToHistory(salesOrder); 
         // clearPendingCheckout(); ...
-        navigate("/thank-you");
+        router.push("/thank-you");
       }
     } catch {
       setPaymentError("Something went wrong. Please try again.");
@@ -76,3 +78,5 @@ const PaymentForm = ({ total, salesOrder }: { total: number; salesOrder: any }) 
     </form>
   );
 };
+
+export default PaymentForm;

@@ -10,11 +10,17 @@ import {
   useCreateCustomerNewMutation,
   useCreateAddressMutation,
 } from "../../../redux/api";
-import { Address } from "@/app/types/type";
+
+export type SelectedAddress = {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+};
 
 export type AddressSelectModalProps = {
   open: boolean;
-  onSelect: (address: Address) => void;
+  onSelect: (address: SelectedAddress) => void;
   onClose: () => void;
 };
 
