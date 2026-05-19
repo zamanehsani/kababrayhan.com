@@ -10,6 +10,12 @@ export default function DesktopPopularDishes() {
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const { data: items } = useGetItemsQuery();
 
+  const slugify = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+
   const dishes: Dish[] = useMemo(
     () =>
       items?.map((item) => ({
@@ -32,6 +38,22 @@ export default function DesktopPopularDishes() {
     [items]
   );
 
+  const groupedDishes = useMemo(() => {
+    const groups = new Map<string, Dish[]>();
+
+    dishes.forEach((dish) => {
+      const groupName = dish.restaurant || "Popular";
+      if (!groups.has(groupName)) {
+        groups.set(groupName, []);
+      }
+      groups.get(groupName)?.push(dish);
+    });
+
+    return Array.from(groups.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([name, items]) => ({ name, items }));
+  }, [dishes]);
+
   return (
     /* 
       Unified layout constraints for Laptop, Desktop, and Ultra-wide tiers:
@@ -50,74 +72,97 @@ export default function DesktopPopularDishes() {
         </button>
       </div>
 
-      {/* 
-        High-Density Grid Layout:
-        - Perfectly suited for desktop views, keeping cards beautifully proportioned
-      */}
-      <div className="grid grid-cols-4 gap-6">
-        {dishes.map((dish) => (
-          <div
-            key={dish.id}
-            role="button"
-            tabIndex={0}
-            onClick={() => setSelectedDish(dish)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                setSelectedDish(dish);
-              }
-            }}
-            className="group relative flex flex-col rounded-[2rem] bg-slate-50/70 p-5 border border-slate-100/50 transition-all duration-300 ease-out hover:bg-white hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/50 active:scale-[0.98]"
-          >
-            {/* TOP SECTION: Title and Wishlist */}
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <h4 className="text-[16px] font-semibold leading-snug tracking-wide text-slate-800 line-clamp-2 group-hover:text-slate-900 transition-colors">
-                {dish.name}
-              </h4>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-red-500 shadow-sm transition-all duration-200 hover:scale-110 active:scale-90"
-                aria-label={
-                  dish.liked ? "Remove from favorites" : "Add to favorites"
-                }
-              >
-                <Heart
-                  size={15}
-                  fill={dish.liked ? "currentColor" : "none"}
-                  strokeWidth={2.5}
-                />
-              </button>
-            </div>
+      <div
+        id="category-all"
+        data-category-section
+        data-category-name="All"
+        className="sr-only"
+      />
 
-            {/* MIDDLE SECTION: Image centered with a soft hover scale effect */}
-            <div className="relative aspect-square w-full my-1 overflow-hidden">
-              <Image
-                src={dish.img}
-                alt={dish.name}
-                fill
-                className="object-contain p-2 transition-transform duration-500 ease-out group-hover:scale-105"
-              />
-            </div>
-
-            {/* BOTTOM SECTION: Calories and Price */}
-            <div className="mt-auto pt-3 flex items-center justify-between">
-              {/* Calories (Left) */}
-              <div className="flex items-center gap-1 text-xs font-semibold tracking-wide text-slate-400 bg-slate-100/80 group-hover:bg-slate-50 px-2 py-0.5 rounded-full transition-colors">
-                <Flame size={12} className="text-orange-500" />
-                <span>{dish.cal} kcal</span>
-              </div>
-
-              {/* Price (Right) */}
-              <span className="text-[18px] font-semibold tracking-wide text-amber-500 group-hover:text-amber-600 transition-colors">
-                <span className="text-xs font-bold mr-0.5">$</span>
-                {dish.price}
-              </span>
-            </div>
+      {groupedDishes.map((group, index) => (
+        <div
+          key={group.name}
+          id={`category-${slugify(group.name)}`}
+          data-category-section
+          data-category-name={group.name}
+          className={index === 0 ? "" : "mt-10"}
+        >
+          <div className="mb-4">
+            <h4 className="text-base font-semibold tracking-wide text-slate-800">
+              {group.name}
+            </h4>
           </div>
-        ))}
-      </div>
+
+          {/* 
+            High-Density Grid Layout:
+            - Perfectly suited for desktop views, keeping cards beautifully proportioned
+          */}
+          <div className="grid grid-cols-4 gap-6">
+            {group.items.map((dish) => (
+              <div
+                key={dish.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelectedDish(dish)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelectedDish(dish);
+                  }
+                }}
+                className="group relative flex flex-col rounded-[2rem] bg-slate-50/70 p-5 border border-slate-100/50 transition-all duration-300 ease-out hover:bg-white hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/50 active:scale-[0.98]"
+              >
+                {/* TOP SECTION: Title and Wishlist */}
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <h4 className="text-[16px] font-semibold leading-snug tracking-wide text-slate-800 line-clamp-2 group-hover:text-slate-900 transition-colors">
+                    {dish.name}
+                  </h4>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-red-500 shadow-sm transition-all duration-200 hover:scale-110 active:scale-90"
+                    aria-label={
+                      dish.liked ? "Remove from favorites" : "Add to favorites"
+                    }
+                  >
+                    <Heart
+                      size={15}
+                      fill={dish.liked ? "currentColor" : "none"}
+                      strokeWidth={2.5}
+                    />
+                  </button>
+                </div>
+
+                {/* MIDDLE SECTION: Image centered with a soft hover scale effect */}
+                <div className="relative aspect-square w-full my-1 overflow-hidden">
+                  <Image
+                    src={dish.img}
+                    alt={dish.name}
+                    fill
+                    className="object-contain p-2 transition-transform duration-500 ease-out group-hover:scale-105"
+                  />
+                </div>
+
+                {/* BOTTOM SECTION: Calories and Price */}
+                <div className="mt-auto pt-3 flex items-center justify-between">
+                  {/* Calories (Left) */}
+                  <div className="flex items-center gap-1 text-xs font-semibold tracking-wide text-slate-400 bg-slate-100/80 group-hover:bg-slate-50 px-2 py-0.5 rounded-full transition-colors">
+                    <Flame size={12} className="text-orange-500" />
+                    <span>{dish.cal} kcal</span>
+                  </div>
+
+                  {/* Price (Right) */}
+                  <span className="text-[18px] font-semibold tracking-wide text-amber-500 group-hover:text-amber-600 transition-colors">
+                    <span className="text-xs font-bold mr-0.5">$</span>
+                    {dish.price}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
 
       {/* ITEM DETAIL MODAL */}
       {selectedDish && (
