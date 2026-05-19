@@ -1,14 +1,22 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { X, Minus, Plus, ShoppingBag, ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { X, ShoppingBag, ArrowRight } from "lucide-react";
 import PhoneModal from "../home/modal/PhoneModal";
 import PhoneVerifyModal from "../home/modal/PhoneVerifyModal";
 import DeliveryTakeawayModal from "../home/modal/DeliveryTakeawayModal";
 import AddressSelectModal from "../home/modal/AddressSelectModal";
+import UpdateDecisionModal from "../home/modal/UpdateDecisionModal";
 import { getCart, saveCart, type CartEntry } from "@/app/lib/cart";
+import {
+  PHONE_KEY,
+  PHONE_STATUS_KEY,
+  readCustomerPortalSnapshot,
+} from "@/app/lib/customerPortal";
 
 export default function CartDrawer() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [cart, setCart] = useState<CartEntry[]>([]);
   
@@ -18,15 +26,17 @@ export default function CartDrawer() {
   const [phone, setPhone] = useState("");
   const [showDeliveryTakeaway, setShowDeliveryTakeaway] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
+  const [showPhoneUpdatePrompt, setShowPhoneUpdatePrompt] = useState(false);
+  const [showAddressUpdatePrompt, setShowAddressUpdatePrompt] = useState(false);
+  const [allowExistingPhoneInput, setAllowExistingPhoneInput] = useState(false);
 
   useEffect(() => {
     const handleOpen = () => {
       setCart(getCart());
       setOpen(true);
     };
-    
-    window.addEventListener("openCartDrawer", handleOpen);
-    return () => window.removeEventListener("openCartDrawer", handleOpen);
+    globalThis.addEventListener("openCartDrawer", handleOpen);
+    return () => globalThis.removeEventListener("openCartDrawer", handleOpen);
   }, []);
 
   // Sync body scroll locked state when drawer opens
@@ -69,10 +79,101 @@ export default function CartDrawer() {
     }
   };
 
+  const handleBeginCheckout = () => {
+    const snapshot = readCustomerPortalSnapshot();
+
+    if (snapshot.isVerified && snapshot.phone) {
+      setPhone(snapshot.phone);
+      setShowPhoneUpdatePrompt(true);
+      return;
+    }
+
+    if (snapshot.phoneStatus === "entered" && snapshot.phone) {
+      setPhone(snapshot.phone);
+      setShowVerifyModal(true);
+      return;
+    }
+
+    setAllowExistingPhoneInput(false);
+    setShowPhoneModal(true);
+  };
+
+  const proceedAfterPhoneDecision = () => {
+    setShowDeliveryTakeaway(true);
+  };
+
+  const handlePhoneUpdateConfirm = () => {
+    setShowPhoneUpdatePrompt(false);
+    setAllowExistingPhoneInput(true);
+    setShowPhoneModal(true);
+  };
+
+  const handlePhoneUpdateSkip = () => {
+    setShowPhoneUpdatePrompt(false);
+    proceedAfterPhoneDecision();
+  };
+
+  const handleAddressUpdateConfirm = () => {
+    setShowAddressUpdatePrompt(false);
+    setShowAddressModal(true);
+  };
+
+  const handleAddressUpdateSkip = () => {
+    setShowAddressUpdatePrompt(false);
+    setOpen(false);
+    router.push("/checkout");
+  };
+
+  const handlePhoneModalClose = (phoneJustSaved?: string) => {
+    setShowPhoneModal(false);
+
+    const savedPhone = phoneJustSaved || localStorage.getItem(PHONE_KEY) || "";
+    const status = localStorage.getItem(PHONE_STATUS_KEY);
+
+    if (!savedPhone) {
+      setAllowExistingPhoneInput(false);
+      return;
+    }
+
+    setPhone(savedPhone);
+
+    // If user was in explicit update flow and closed without changing,
+    // continue checkout with existing verified session.
+    if (allowExistingPhoneInput && !phoneJustSaved && status === "verified") {
+      setAllowExistingPhoneInput(false);
+      proceedAfterPhoneDecision();
+      return;
+    }
+
+    setAllowExistingPhoneInput(false);
+    setShowVerifyModal(true);
+  };
+
+  const handleDeliverySelection = (option: "delivery" | "takeaway") => {
+    setShowDeliveryTakeaway(false);
+
+    if (option !== "delivery") {
+      setOpen(false);
+      router.push("/checkout");
+      return;
+    }
+
+    const snapshot = readCustomerPortalSnapshot();
+
+    if (snapshot.address) {
+      setShowAddressUpdatePrompt(true);
+      return;
+    }
+
+    setShowAddressModal(true);
+  };
+
   return (
-    <div className="fixed inset-0 z-[300] flex justify-end">
+    <div className="fixed inset-0 z-300 flex justify-end">
       {/* Backdrop Blur Layer */}
-      <div 
+      <button
+        type="button"
+        aria-label="Close cart drawer"
         className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity animate-fade-in"
         onClick={() => setOpen(false)}
       />
@@ -85,7 +186,7 @@ export default function CartDrawer() {
           <div className="flex items-center gap-2.5">
             <ShoppingBag size={20} className="text-yellow-500" />
             <h2 className="text-lg font-semibold tracking-wide text-slate-900">
-              {cart.length} item{cart.length !== 1 ? "s" : ""} selected
+              {cart.length} item{cart.length === 1 ? "" : "s"} selected
             </h2>
           </div>
           <button
@@ -201,7 +302,7 @@ export default function CartDrawer() {
           </div>
           
           <button
-            onClick={() => setShowPhoneModal(true)}
+            onClick={handleBeginCheckout}
             disabled={cart.length === 0}
             className="w-full h-12 rounded-full bg-slate-900 text-white font-semibold text-sm tracking-wide shadow-lg shadow-slate-900/10 hover:bg-slate-800 active:scale-[0.99] transition-all disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center relative group"
           >
@@ -214,12 +315,8 @@ export default function CartDrawer() {
         {showPhoneModal && (
           <PhoneModal
             open={showPhoneModal}
-            onClose={(phoneJustSaved?: string) => {
-              setShowPhoneModal(false);
-              const saved = phoneJustSaved || localStorage.getItem("uae_phone");
-              setPhone(saved || "");
-              if (saved) setShowVerifyModal(true);
-            }}
+            allowExistingPhone={allowExistingPhoneInput}
+            onClose={handlePhoneModalClose}
           />
         )}
         {showVerifyModal && (
@@ -228,7 +325,7 @@ export default function CartDrawer() {
             phone={phone}
             onClose={() => {
               setShowVerifyModal(false);
-              setShowDeliveryTakeaway(true);
+              proceedAfterPhoneDecision();
             }}
           />
         )}
@@ -236,10 +333,7 @@ export default function CartDrawer() {
           <DeliveryTakeawayModal
             open={showDeliveryTakeaway}
             onClose={() => setShowDeliveryTakeaway(false)}
-            onSelect={(option) => {
-              setShowDeliveryTakeaway(false);
-              if (option === "delivery") setShowAddressModal(true);
-            }}
+            onSelect={handleDeliverySelection}
           />
         )}
         {showAddressModal && (
@@ -249,6 +343,24 @@ export default function CartDrawer() {
             onSelect={() => setShowAddressModal(false)}
           />
         )}
+        <UpdateDecisionModal
+          open={showPhoneUpdatePrompt}
+          title="Phone already verified"
+          description="Do you want to update or change the phone number before checkout?"
+          confirmLabel="Yes, Update"
+          skipLabel="No, Continue"
+          onConfirm={handlePhoneUpdateConfirm}
+          onSkip={handlePhoneUpdateSkip}
+        />
+        <UpdateDecisionModal
+          open={showAddressUpdatePrompt}
+          title="Address already saved"
+          description="Do you want to update or change the delivery address?"
+          confirmLabel="Yes, Update"
+          skipLabel="No, Continue"
+          onConfirm={handleAddressUpdateConfirm}
+          onSkip={handleAddressUpdateSkip}
+        />
       </div>
     </div>
   );

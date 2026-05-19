@@ -1,8 +1,10 @@
 "use client";
 
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import React, { useState, useRef, useEffect } from "react";
 import { useVerifyOtpMutation, useSendOtpMutation } from "../../../redux/api";
+import {
+  saveVerifiedPhone,
+} from "@/app/lib/customerPortal";
 
 type PhoneVerifyModalProps = {
   open: boolean;
@@ -17,7 +19,13 @@ const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, phon
   const [sendOtp, { isLoading: isResending }] = useSendOtpMutation();
   const [resendTimer, setResendTimer] = useState(0);
   const [resent, setResent] = useState(false);
-  const inputsRef = [useRef(null), useRef(null), useRef(null), useRef(null)];
+  const inputsRef = [
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+  ];
+  const otpSlotKeys = ["otp-1", "otp-2", "otp-3", "otp-4"] as const;
 
   // Timer for resend
   useEffect(() => {
@@ -30,8 +38,7 @@ const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, phon
 
   if (!open) return null;
 
-  const PHONE_STATUS_KEY = "uae_phone_status";
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     const code = digits.join("");
     if (/^\d{4}$/.test(code)) {
@@ -39,13 +46,14 @@ const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, phon
         const mobile = phone.replace("+", "").replace(/^0+/, "");
         const result = await verifyOtp({ mobile, otp: code }).unwrap();
         if (result.status === "success") {
-          localStorage.setItem(PHONE_STATUS_KEY, "verified");
+          saveVerifiedPhone(phone);
           setError("");
           onClose();
         } else {
           setError("Invalid code. Please try again.");
         }
-      } catch (err) {
+      } catch (error) {
+        console.error("OTP verification failed", error);
         setError("Invalid code. Please try again.");
       }
     } else {
@@ -72,19 +80,26 @@ const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, phon
   };
 
   const handleDigitChange = (idx: number, val: string) => {
-    if (!/^[0-9]?$/.test(val)) return;
+    if (!/^\d?$/.test(val)) return;
     const newDigits = [...digits];
     newDigits[idx] = val;
     setDigits(newDigits);
     if (val && idx < 3) {
-    //   @ts-expect-error
       inputsRef[idx + 1].current?.focus();
     }
     if (!val && idx > 0) {
-      // @ts-ignore
       inputsRef[idx - 1].current?.focus();
     }
   };
+
+  let resendLabel = "Resend code";
+  if (resendTimer > 0) {
+    resendLabel = `Resend code in ${resendTimer}s`;
+  } else if (isResending) {
+    resendLabel = "Resending...";
+  } else if (resent) {
+    resendLabel = "Resent! Send again?";
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
@@ -102,15 +117,15 @@ const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, phon
           <div className="flex gap-3 justify-center">
             {digits.map((digit, idx) => (
               <input
-                key={idx}
+                key={otpSlotKeys[idx]}
                 ref={inputsRef[idx]}
                 type="text"
                 inputMode="numeric"
-                pattern="[0-9]"
+                pattern="\d"
                 maxLength={1}
                 className="w-14 h-16 text-center border border-gray-200 rounded-lg px-2 py-3 text-2xl font-bold tracking-widest focus:outline-none focus:border-red-500"
                 value={digit}
-                onChange={e => handleDigitChange(idx, e.target.value.replace(/[^0-9]/g, ""))}
+                onChange={(e) => handleDigitChange(idx, e.target.value.replaceAll(/\D/g, ""))}
                 autoFocus={idx === 0}
                 required
               />
@@ -131,13 +146,7 @@ const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, phon
               onClick={handleResend}
               disabled={resendTimer > 0 || isResending}
             >
-              {resendTimer > 0
-                ? `Resend code in ${resendTimer}s`
-                : isResending
-                ? "Resending..."
-                : resent
-                ? "Resent! Send again?"
-                : "Resend code"}
+              {resendLabel}
             </button>
           </div>
         </form>

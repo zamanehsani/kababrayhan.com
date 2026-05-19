@@ -1,7 +1,6 @@
 "use client";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -10,6 +9,9 @@ import {
   useCreateCustomerNewMutation,
   useCreateAddressMutation,
 } from "../../../redux/api";
+import {
+  saveDeliveryAddress,
+} from "@/app/lib/customerPortal";
 
 export type SelectedAddress = {
   id: string;
@@ -22,12 +24,14 @@ export type AddressSelectModalProps = {
   open: boolean;
   onSelect: (address: SelectedAddress) => void;
   onClose: () => void;
+  redirectTo?: string | null;
 };
 
 const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
   open,
   onSelect,
   onClose,
+  redirectTo = "/checkout",
 }) => {
   const router = useRouter();
   const [addressText, setAddressText] = useState("");
@@ -56,6 +60,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
         data.display_name || `Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
       setAddressText(name);
     } catch (error) {
+      console.error("Address reverse-geocode failed", error);
       setAddressText(`Dropped Pin at ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
     } finally {
       setIsLoading(false);
@@ -77,8 +82,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
     }
 
     const initMap = () => {
-      // @ts-ignore
-      const L = window.L;
+      const L = (globalThis as typeof globalThis & { L?: any }).L;
       if (L && mapRef.current && !mapInstanceRef.current) {
         // Fix Leaflet's default icon path issues
         delete L.Icon.Default.prototype._getIconUrl;
@@ -132,15 +136,17 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
       }
     };
 
-    if (!document.getElementById(leafletJsId)) {
+    const existingLeafletScript = document.getElementById(leafletJsId);
+
+    if (existingLeafletScript) {
+      initMap();
+    } else {
       const script = document.createElement("script");
       script.id = leafletJsId;
       script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
       script.async = true;
       script.onload = initMap;
       document.body.appendChild(script);
-    } else {
-      initMap();
     }
 
     return () => {
@@ -155,10 +161,10 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-md p-0 sm:p-4">
+    <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/70 backdrop-blur-md p-0 sm:p-4">
       <div className="bg-white w-full max-w-6xl h-full sm:h-[90vh] sm:rounded-3xl shadow-2xl relative flex flex-col overflow-hidden">
         {/* Header Overlay */}
-        <div className="absolute top-6 inset-x-6 z-[1001] pointer-events-none flex justify-between items-start">
+        <div className="absolute top-6 inset-x-6 z-1001 pointer-events-none flex justify-between items-start">
           <div className="pointer-events-auto flex flex-col gap-2">
             <button
               onClick={() =>
@@ -182,12 +188,12 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
         <div className="flex-1 relative group">
           <div
             ref={mapRef}
-            className="absolute inset-0 w-full h-full cursor-crosshair z-[1000]"
+            className="absolute inset-0 w-full h-full cursor-crosshair z-1000"
           />
 
           {/* Centered Target (Visible before first click) */}
           {!selectedLatLng && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[1001]">
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-1001">
               <div className="relative flex items-center justify-center">
                 <div className="w-10 h-10 border-2 border-red-500/50 rounded-full animate-ping absolute" />
                 <div className="w-4 h-4 bg-red-600 rounded-full border-2 border-white shadow-lg" />
@@ -200,13 +206,13 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
         </div>
 
         {/* Bottom Selection Panel (Floating Card Style) */}
-        <div className="absolute bottom-8 inset-x-0 z-[1002] flex justify-center px-4 pointer-events-none">
+        <div className="absolute bottom-8 inset-x-0 z-1002 flex justify-center px-4 pointer-events-none">
           <div className="pointer-events-auto w-full max-w-xl bg-white/95 backdrop-blur-lg border border-white/20 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] p-6 sm:p-8 flex flex-col gap-4">
             <div className="space-y-1">
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-red-500">
                 Confirm Delivery Point
               </h3>
-              <div className="min-h-[3rem] flex items-center">
+              <div className="min-h-12 flex items-center">
                 {isLoading ? (
                   <div className="flex items-center gap-3 text-gray-400 italic">
                     <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
@@ -245,6 +251,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                   } catch (e) {
                     // If error is "Already Exists", we continue.
                     // If error is "Validation", we might need to check our ERPNext settings.
+                    console.info("Customer create skipped", e);
                     console.log("Customer might already exist, proceeding...");
                   }
 
@@ -264,13 +271,9 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                       },
                     ],
                   }).unwrap();
-                  localStorage.setItem(
-                    "uae_address_id",
+                  saveDeliveryAddress(
+                    addressResponse.data.address_line1,
                     addressResponse.data.name
-                  );
-                  localStorage.setItem(
-                    "uae_address",
-                    addressResponse.data.address_line1
                   );
 
                   onSelect({
@@ -281,9 +284,11 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                   });
 
                   onClose();
-                  setTimeout(() => {
-                    router.push("/checkout");
-                  }, 200);
+                  if (redirectTo) {
+                    setTimeout(() => {
+                      router.push(redirectTo);
+                    }, 200);
+                  }
                 } catch (e: any) {
                   // This will now capture the specific ERPNext error message
                   setError(

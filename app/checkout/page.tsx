@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
@@ -15,7 +15,6 @@ import type { CreateSalesOrderRequest } from "../redux/apiType";
 import { readStoredCustomer } from "@/app/components/customerStorage";
 import {
   clearPendingCheckout,
-  clearCheckoutInfo,
   clearPendingSalesOrder,
 } from "@/app/components/orderStorage";
 
@@ -68,7 +67,6 @@ const PaymentForm = ({
         setIsProcessing(false);
       } else if (paymentIntent?.status === "succeeded") {
         clearPendingCheckout();
-        clearCheckoutInfo();
         clearPendingSalesOrder();
         router.push("/thank-you");
       }
