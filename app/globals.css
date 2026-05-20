@@ -10,3 +10,14 @@
 	display: none;
 }
 
+
+
+
+/* Forces nested rich-text elements to stay inline so line-clamp works perfectly */
+.prose-xs-strip * {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  font-size: inherit;
+  font-weight: inherit;
+}

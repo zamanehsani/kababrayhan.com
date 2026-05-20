@@ -160,7 +160,7 @@ export function TabletItemDetailModal({
         <div className="flex items-center justify-between border-t border-slate-100/80 bg-white px-6 py-3">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium tracking-wide text-slate-800">
-              Customize
+              Modification
             </span>
             {selectedCount > 0 && (
               <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-medium tracking-wide text-yellow-700">

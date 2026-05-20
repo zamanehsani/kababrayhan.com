@@ -4,16 +4,14 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { ItemDetailModal } from "../home/modal/ItemDetailModal";
 import { Dish } from "@/app/types/type";
-import { useGetItemByCodeQuery, useGetItemsQuery } from "../../redux/api";
+import { useGetItemsQuery } from "../../redux/api";
 
 
 
 export default function PopularDishes() {
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const { data: items } = useGetItemsQuery();
-   const {data: itembycode} = useGetItemByCodeQuery("item-test-001")
-console.log("Fetched items:", items);
-console.log("full item:", itembycode);
+
   const slugify = (value: string) =>
     value
       .toLowerCase()

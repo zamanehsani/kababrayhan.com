@@ -38,7 +38,7 @@ if (stripeKey) {
 
 const PaymentForm = ({
   total,
-  salesOrder: _salesOrder,
+  salesOrder,
 }: {
   total: number;
   salesOrder: SalesOrder | null;
@@ -52,6 +52,14 @@ const PaymentForm = ({
   const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     if (!stripe || !elements) return;
+
+    const salesOrderName = salesOrder?.name?.trim();
+    if (!salesOrderName) {
+      setPaymentError(
+        "Sales order is missing. Payment cannot continue without order tracking metadata."
+      );
+      return;
+    }
 
     setIsProcessing(true);
     setPaymentError(null);
@@ -201,7 +209,9 @@ const CheckoutPage = () => {
 
       const order = await createSalesOrder(orderPayload).unwrap();
 
-      if (!order?.name) {
+      const salesOrderName = order?.name?.trim();
+
+      if (!salesOrderName) {
         setOrderError("Order creation failed. No order name returned.");
         setIsInitializing(false);
         return;
@@ -212,7 +222,7 @@ const CheckoutPage = () => {
       const intentResult = await createPaymentIntent({
         amount: total,
         currency: "aed",
-        sales_order: order.name,
+        sales_order: salesOrderName,
       }).unwrap();
 
       setClientSecret(intentResult.client_secret);

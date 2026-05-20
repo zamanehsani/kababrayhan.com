@@ -114,7 +114,7 @@ export default function TabletHeader() {
               type="text"
               autoFocus
               placeholder="Search dishes, orders, tags..."
-              className="h-12 w-full rounded-full border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all focus:border-orange-200 focus:bg-white focus:ring-4 focus:ring-orange-50 shadow-inner"
+              className="h-12 w-full rounded-full border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all focus:border-slate-200 focus:bg-white focus:ring-4 focus:ring-slate-50 shadow-inner"
             />
           </div>
         )}
@@ -126,7 +126,7 @@ export default function TabletHeader() {
           onClick={() => setIsSearchOpen(!isSearchOpen)}
           className={`flex h-12 w-12 items-center justify-center rounded-full border transition-all active:scale-95 ${
             isSearchOpen
-              ? "border-orange-200 bg-orange-50 text-orange-600 rotate-90"
+              ? "border-slate-200 bg-slate-50 text-slate-600 rotate-90"
               : "border-slate-100 bg-slate-50 text-slate-600"
           } duration-300`}
         >

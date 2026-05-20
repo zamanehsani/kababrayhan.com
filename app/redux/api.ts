@@ -17,6 +17,7 @@ import type {
   Customer,
   CustomerDetails,
   Item,
+  KitchenOrderTicket,
   PaymentIntentResponse,
   SalesOrder,
   SalesOrderDetails,
@@ -320,6 +321,8 @@ export const erpApi = createApi({
             "transaction_date",
             "grand_total",
             "status",
+            "custom_kitchen_order_ticket",
+            "custom_kitchen_order_ticket.status as kitchen_order_ticket_status",
           ]),
         },
       }),
@@ -333,6 +336,14 @@ export const erpApi = createApi({
         url: `Sales Order/${encodeURIComponent(orderName)}`,
       }),
       transformResponse: (response: { data: SalesOrderDetails }) =>
+        response.data,
+    }),
+    // get kitchen order ticket details
+    getKitchenOrderTicket: builder.query<KitchenOrderTicket, string>({
+      query: (kotName) => ({
+        url: `Kitchen Order Ticket/${encodeURIComponent(kotName)}`,
+      }),
+      transformResponse: (response: { data: KitchenOrderTicket }) =>
         response.data,
     }),
     createSalesOrder: builder.mutation<SalesOrder, CreateSalesOrderRequest>({
@@ -353,9 +364,7 @@ export const erpApi = createApi({
         const formData = new URLSearchParams();
         formData.append("amount", String(Math.round(body.amount * 100)));
         formData.append("currency", body.currency ?? "aed");
-        if (body.sales_order) {
-          formData.append("sales_order", body.sales_order);
-        }
+        formData.append("sales_order", body.sales_order);
 
         const result = await fetchWithBQ({
           url: `${ERP_API_BASE_URL}/api/method/get_stripe_intent`,
@@ -411,6 +420,7 @@ export const {
   useUploadCustomerAvatarMutation,
   useGetCustomerSalesOrdersQuery,
   useGetSalesOrderQuery,
+  useGetKitchenOrderTicketQuery,
   useCreateSalesOrderMutation,
   useCreatePaymentIntentMutation,
   useGetItemsQuery,

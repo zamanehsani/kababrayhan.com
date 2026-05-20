@@ -11,7 +11,7 @@ export default function SearchBar() {
         <input
           type="text"
           placeholder="Search for restaurants or dishes..."
-          className="w-full rounded-full border border-slate-100 bg-slate-50 py-3.5 pl-10 pr-4 text-base text-slate-900 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-orange-200"
+          className="w-full rounded-full border border-slate-100 bg-slate-50 py-3 pl-10 pr-4 text-base text-slate-900 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-slate-200"
         />
       </div>
       {/* Ensure button has h-12 and w-12 for a clear 48px tap target */}

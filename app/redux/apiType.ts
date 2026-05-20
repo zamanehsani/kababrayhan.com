@@ -229,6 +229,8 @@ export interface SalesOrderSummary {
   transaction_date: string;
   grand_total: number;
   status: string;
+  custom_kitchen_order_ticket?: string;
+  kitchen_order_ticket_status?: string;
 }
 
 export interface SalesOrderDetails {
@@ -248,6 +250,7 @@ export interface SalesOrderDetails {
   status: string;
   delivery_status: string;
   billing_status: string;
+  custom_kitchen_order_ticket?: string;
   items: SalesOrderItem[];
 }
 
@@ -265,7 +268,7 @@ export interface SalesOrder {
 export interface CreatePaymentIntentRequest {
   amount: number;
   currency?: string;
-  sales_order?: string;
+  sales_order: string;
 }
 
 export interface PaymentIntentResponse {
@@ -275,4 +278,13 @@ export interface PaymentIntentResponse {
 
 export interface FullItemResponse {
   data: Record<string, any>;
+}
+
+export interface KitchenOrderTicket {
+  name: string;
+  status: string;
+  order_type?: string;
+  sales_order?: string;
+  creation?: string;
+  modified?: string;
 }

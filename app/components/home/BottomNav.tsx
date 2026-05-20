@@ -17,7 +17,7 @@ export default function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-100 md:hidden">
+    <nav className="fixed bottom-2 left-1/2 -translate-x-1/2 z-100 md:hidden">
       <div className="flex items-center gap-1.5 rounded-full bg-slate-400/20 p-1.5 backdrop-blur-xl border border-white/20 shadow-xl">
         {navItems.map((item) => (
           <button

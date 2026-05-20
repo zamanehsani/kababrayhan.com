@@ -3,17 +3,32 @@
 import { useState } from "react";
 import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { useRouter } from "next/navigation";
+import type { SalesOrder } from "@/app/redux/apiType";
 
-const PaymentForm = ({ total, salesOrder }: { total: number; salesOrder: any }) => {
+const PaymentForm = ({
+  total,
+  salesOrder,
+}: {
+  total: number;
+  salesOrder: SalesOrder | null;
+}) => {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const router = useRouter();
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
+
+    const salesOrderName = salesOrder?.name?.trim();
+    if (!salesOrderName) {
+      setPaymentError(
+        "Sales order is missing. Payment cannot continue without order tracking metadata."
+      );
+      return;
+    }
 
     setIsProcessing(true);
     setPaymentError(null);
@@ -31,9 +46,6 @@ const PaymentForm = ({ total, salesOrder }: { total: number; salesOrder: any }) 
       }
 
       if (paymentIntent?.status === "succeeded") {
-        // Replace with your actual utility functions
-        // saveOrderToHistory(salesOrder); 
-        // clearPendingCheckout(); ...
         router.push("/thank-you");
       }
     } catch {

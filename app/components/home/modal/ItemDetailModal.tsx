@@ -125,7 +125,7 @@ export function ItemDetailModal({
 
   return (
     <dialog
-      className="fixed inset-0 z-250 flex h-full w-full max-h-none max-w-none flex-col overflow-y-auto border-0 bg-white p-0 no-scrollbar"
+      className="fixed inset-0 z-250 flex h-full w-full max-h-none max-w-none flex-col overflow-y-auto overflow-x-hidden border-0 bg-white p-0 no-scrollbar"
       open
       aria-labelledby="dish-details-title"
     >
@@ -160,7 +160,7 @@ export function ItemDetailModal({
         />
       ) : (
         <>
-          <div className="relative w-full aspect-4/3 flex items-center justify-center px-6">
+          <div className="relative w-full aspect-4/3 flex items-center justify-center px-6 overflow-hidden">
             {/* The Background Blur Layer */}
             <div className="absolute inset-0 scale-150 blur-3xl opacity-30 pointer-events-none transform">
               <Image src={dish.img} alt="" fill className="object-cover" />
@@ -228,11 +228,11 @@ export function ItemDetailModal({
         </>
       )}
 
-      {/* 7. CUSTOMIZE LINK */}
+      {/* 7. Modification LINK */}
       <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100/80 mb-auto">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold tracking-wide text-slate-800">
-            Customize
+            Modification
           </span>
           {selectedCount > 0 && (
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">

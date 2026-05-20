@@ -19,7 +19,7 @@ export default function CartDrawer() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [cart, setCart] = useState<CartEntry[]>([]);
-  
+
   // Modal Orchestration State
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
@@ -72,7 +72,7 @@ export default function CartDrawer() {
     const updated = [...cart];
     const target = updated[idx];
     const newQty = (target.qty || 1) + amount;
-    
+
     if (newQty > 0) {
       target.qty = newQty;
       updateCartStorage(updated);
@@ -180,7 +180,6 @@ export default function CartDrawer() {
 
       {/* Drawer Canvas */}
       <div className="relative z-10 w-full max-w-md h-full bg-white shadow-2xl flex flex-col border-l border-slate-100 animate-slide-in">
-        
         {/* Header Segment */}
         <div className="flex items-center justify-between p-5 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
@@ -201,7 +200,10 @@ export default function CartDrawer() {
         <div className="flex-1 overflow-y-auto bg-slate-50/50 no-scrollbar p-4 flex flex-col gap-3">
           {cart.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-center p-6">
-              <ShoppingBag size={40} className="text-slate-300 stroke-[1.5] mb-2" />
+              <ShoppingBag
+                size={40}
+                className="text-slate-300 stroke-[1.5] mb-2"
+              />
               <p className="text-sm font-medium text-slate-400 tracking-wide">
                 Your basket is entirely empty.
               </p>
@@ -236,11 +238,14 @@ export default function CartDrawer() {
                       {entry.item.title}
                     </h3>
                     {entry.item.description && (
-                      <p className="text-xs text-slate-400 font-sans line-clamp-1 mb-2">
-                        {entry.item.description}
-                      </p>
+                      <div
+                        className="text-xs text-slate-400 font-sans line-clamp-1 mb-2 prose-xs-strip"
+                        dangerouslySetInnerHTML={{
+                          __html: entry.item.description,
+                        }}
+                      />
                     )}
-                    
+
                     {/* Addon Bracket */}
                     <div className="inline-flex flex-col bg-slate-50 rounded-xl px-2.5 py-1.5 border border-slate-100">
                       <p className="text-xs font-semibold text-slate-700 tracking-wide">
@@ -257,7 +262,10 @@ export default function CartDrawer() {
                 <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-lg font-semibold text-slate-900 tracking-wide">
-                      AED {Math.round(entry.item.discountedPrice * (entry.qty || 1))}
+                      AED{" "}
+                      {Math.round(
+                        entry.item.discountedPrice * (entry.qty || 1)
+                      )}
                     </span>
                     <span className="text-xs text-slate-400 line-through font-medium">
                       AED {Math.round(entry.item.realPrice * (entry.qty || 1))}
@@ -265,10 +273,6 @@ export default function CartDrawer() {
                   </div>
 
                   <div className="flex items-center gap-4">
-                    <button className="text-orange-500 font-semibold text-xs tracking-wide hover:underline active:opacity-80">
-                      Change
-                    </button>
-
                     {/* Compact Quantity Regulator */}
                     <div className="flex items-center bg-slate-50 rounded-full p-1 border border-slate-100 gap-2">
                       <button
@@ -298,16 +302,21 @@ export default function CartDrawer() {
         <div className="p-5 border-t border-slate-100 bg-white shadow-[0_-8px_24px_rgba(0,0,0,0.02)]">
           <div className="flex items-center justify-between mb-4 text-sm font-semibold text-slate-800 tracking-wide">
             <span>Subtotal Value</span>
-            <span className="text-base text-slate-900 font-bold">AED {totalPrice}</span>
+            <span className="text-base text-slate-900 font-bold">
+              AED {totalPrice}
+            </span>
           </div>
-          
+
           <button
             onClick={handleBeginCheckout}
             disabled={cart.length === 0}
             className="w-full h-12 rounded-full bg-slate-900 text-white font-semibold text-sm tracking-wide shadow-lg shadow-slate-900/10 hover:bg-slate-800 active:scale-[0.99] transition-all disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center relative group"
           >
             <span>Proceed to Checkout</span>
-            <ArrowRight size={16} className="absolute right-6 transition-transform group-hover:translate-x-1" />
+            <ArrowRight
+              size={16}
+              className="absolute right-6 transition-transform group-hover:translate-x-1"
+            />
           </button>
         </div>
 
