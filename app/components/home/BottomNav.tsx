@@ -1,39 +1,158 @@
 "use client";
+import { useCallback, useEffect, useState } from "react";
 import { Home, ShoppingCart, ClipboardList, User } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { CART_UPDATED } from "@/app/lib/cart";
+import {
+  CUSTOMER_PORTAL_UPDATED,
+  PHONE_KEY,
+  readCustomerPortalSnapshot,
+} from "@/app/lib/customerPortal";
+import PhoneModal from "./modal/PhoneModal";
+import PhoneVerifyModal from "./modal/PhoneVerifyModal";
 
 export default function BottomNav() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [phoneForVerify, setPhoneForVerify] = useState("");
+  const [pendingRoute, setPendingRoute] = useState<string | null>(null);
+  const [portalState, setPortalState] = useState(() =>
+    readCustomerPortalSnapshot()
+  );
+
+  const refreshPortalState = useCallback(() => {
+    setPortalState(readCustomerPortalSnapshot());
+  }, []);
+
+  useEffect(() => {
+    globalThis.addEventListener(CUSTOMER_PORTAL_UPDATED, refreshPortalState);
+    globalThis.addEventListener(CART_UPDATED, refreshPortalState);
+    globalThis.addEventListener("storage", refreshPortalState);
+
+    return () => {
+      globalThis.removeEventListener(
+        CUSTOMER_PORTAL_UPDATED,
+        refreshPortalState
+      );
+      globalThis.removeEventListener(CART_UPDATED, refreshPortalState);
+      globalThis.removeEventListener("storage", refreshPortalState);
+    };
+  }, [refreshPortalState]);
+
+  const isHomeRoute = pathname === "/" || pathname.startsWith("/home");
+
   const navItems = [
-    { id: 'home', icon: <Home size={18} />, active: true },
-    { id: 'cart', icon: <ShoppingCart size={18} />, active: false },
-    { id: 'orders', icon: <ClipboardList size={18} />, active: false },
-    { id: 'profile', icon: <User size={18} />, active: false },
+    { id: "home", icon: <Home size={18} />, active: isHomeRoute },
+    { id: "cart", icon: <ShoppingCart size={18} />, active: false },
+    {
+      id: "orders",
+      icon: <ClipboardList size={18} />,
+      active: pathname.startsWith("/my-orders"),
+    },
+    {
+      id: "profile",
+      icon: <User size={18} />,
+      active: pathname.startsWith("/account-profile"),
+    },
   ];
 
+  const openVerificationFlowFor = (route: string) => {
+    if (portalState.isVerified) {
+      router.push(route);
+      return;
+    }
+
+    setPendingRoute(route);
+    setShowPhoneModal(true);
+  };
+
+  const handlePhoneModalClose = (phoneJustSaved?: string) => {
+    setShowPhoneModal(false);
+    const savedPhone =
+      phoneJustSaved || globalThis.localStorage.getItem(PHONE_KEY) || "";
+
+    if (!savedPhone) {
+      setPendingRoute(null);
+      refreshPortalState();
+      return;
+    }
+
+    setPhoneForVerify(savedPhone);
+    setShowVerifyModal(true);
+  };
+
+  const handleVerifyModalClose = () => {
+    setShowVerifyModal(false);
+    setPhoneForVerify("");
+    refreshPortalState();
+
+    if (!pendingRoute) {
+      return;
+    }
+
+    if (readCustomerPortalSnapshot().isVerified) {
+      router.push(pendingRoute);
+    }
+
+    setPendingRoute(null);
+  };
+
   const handleAction = (id: string) => {
+    if (id === "home") {
+      router.push("/home");
+      return;
+    }
+
     if (id === "cart") {
-      // Dispatches global event to open your newly built Next.js CartDrawer
-      window.dispatchEvent(new Event("openCartDrawer"));
+      // Dispatches global event to open your newly built Next.js CartDrawer.
+      globalThis.dispatchEvent(new Event("openCartDrawer"));
+      return;
+    }
+
+    if (id === "orders") {
+      openVerificationFlowFor("/my-orders");
+      return;
+    }
+
+    if (id === "profile") {
+      openVerificationFlowFor("/account-profile");
     }
   };
 
   return (
-    <nav className="fixed bottom-2 left-1/2 -translate-x-1/2 z-100 md:hidden">
-      <div className="flex items-center gap-1.5 rounded-full bg-slate-400/20 p-1.5 backdrop-blur-xl border border-white/20 shadow-xl">
-        {navItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => handleAction(item.id)}
-            className={`flex h-11 w-11 items-center justify-center rounded-full transition-all duration-300 ${
-              item.active
-                ? "bg-yellow-400 text-slate-900 shadow-sm scale-105"
-                : "bg-white text-slate-500 hover:bg-slate-50 active:scale-95 shadow-sm"
-            }`}
-          >
-            {item.icon}
-          </button>
-        ))}
-      </div>
-    </nav>
+    <>
+      <nav className="fixed bottom-2 left-1/2 z-100 -translate-x-1/2 md:hidden">
+        <div className="flex items-center gap-1.5 rounded-full border border-white/20 bg-slate-400/20 p-1.5 shadow-xl backdrop-blur-xl">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => handleAction(item.id)}
+              aria-label={item.id}
+              className={`flex h-11 w-11 items-center justify-center rounded-full transition-all duration-300 ${
+                item.active
+                  ? "scale-105 bg-yellow-400 text-slate-900 shadow-sm"
+                  : "bg-white text-slate-500 shadow-sm hover:bg-slate-50 active:scale-95"
+              }`}
+            >
+              {item.icon}
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      {showPhoneModal && (
+        <PhoneModal open={showPhoneModal} onClose={handlePhoneModalClose} />
+      )}
+      {showVerifyModal && (
+        <PhoneVerifyModal
+          open={showVerifyModal}
+          phone={phoneForVerify}
+          onClose={handleVerifyModalClose}
+        />
+      )}
+    </>
   );
 }
-

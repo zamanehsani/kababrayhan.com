@@ -114,7 +114,7 @@ export default function MyOrdersPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-red-600">
               Orders
             </p>
-            <h1 className="mt-1 text-2xl font-semibold text-slate-900">
+            <h1 className="mt-1 text-xl font-normal text-slate-900">
               My Orders
             </h1>
           </div>
@@ -142,7 +142,7 @@ export default function MyOrdersPage() {
               onClick={() => router.push("/")}
               className="mt-4 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition-colors hover:bg-slate-800"
             >
-              Go To Dashboard
+              Go To Home
               <ArrowRight size={14} />
             </button>
           </div>

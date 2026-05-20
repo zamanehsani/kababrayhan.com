@@ -37,7 +37,7 @@ export default function DesktopHeader() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const desktopNavItems = [
-    { id: "dashboard", href: "/dashboard", label: "Dashboard", icon: <Home size={16} /> },
+    { id: "home", href: "/home", label: "Home", icon: <Home size={16} /> },
     { id: "orders", href: "/my-orders", label: "My Orders", icon: <ClipboardList size={16} /> },
   ];
 
@@ -54,7 +54,7 @@ export default function DesktopHeader() {
 
   const hasOrders = portalState.hasOrder || (salesOrders?.length ?? 0) > 0;
   const shouldShowNav = portalState.isVerified && hasOrders;
-  const isDashboardRoute = pathname === "/" || pathname.startsWith("/dashboard");
+  const isHomeRoute = pathname === "/" || pathname.startsWith("/home");
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -138,8 +138,8 @@ export default function DesktopHeader() {
               router.push(item.href);
             }}
             className={`flex items-center gap-1.5 px-3.5 h-9 rounded-lg text-[13px] font-semibold tracking-wide transition-all duration-200 ${
-              (item.href === "/dashboard" && isDashboardRoute) ||
-              (item.href !== "/dashboard" && pathname.startsWith(item.href))
+              (item.href === "/home" && isHomeRoute) ||
+              (item.href !== "/home" && pathname.startsWith(item.href))
                 ? "bg-slate-900 text-white shadow-sm scale-100"
                 : "text-slate-500 hover:bg-white hover:text-slate-800 hover:shadow-sm"
             }`}
