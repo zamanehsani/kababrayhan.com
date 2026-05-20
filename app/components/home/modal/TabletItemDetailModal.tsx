@@ -121,7 +121,7 @@ export function TabletItemDetailModal({
                     </h1>
                   </div>
                   <span className="shrink-0 text-2xl font-medium tracking-wide text-emerald-600">
-                    ${dish.price}
+                    AED {dish.price}
                   </span>
                 </div>
 

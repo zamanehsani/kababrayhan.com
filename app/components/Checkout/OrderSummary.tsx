@@ -24,7 +24,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total }) => {
       {/* Header with Red Accent */}
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="h-6 w-1 rounded-full bg-red-600" />
+          <span className="h-6 w-1 rounded-full bg-brand-400" />
           <h2 className="text-xl font-black tracking-tight text-stone-900">
             Your Order
           </h2>
@@ -51,7 +51,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total }) => {
               </div>
               <div>
                 <div className="text-sm font-bold text-stone-900 leading-tight">
-                  <span className="text-red-600">{entry.qty || 1}x</span> {entry.item?.title}
+                  <span className="text-brand-400">{entry.qty || 1}x</span> {entry.item?.title}
                 </div>
                 {entry.addon?.title && (
                   <div className="mt-1 text-[11px] font-medium text-stone-400">

@@ -24,8 +24,8 @@ const CheckoutHeader: React.FC<CheckoutHeaderProps> = ({
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2">
           {/* Brand Pill */}
-          <div className="h-1.5 w-4 rounded-full bg-red-600" />
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-red-600">
+          <div className="h-1.5 w-4 rounded-full bg-brand-400" />
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-400">
             {tag}
           </p>
         </div>
@@ -34,7 +34,7 @@ const CheckoutHeader: React.FC<CheckoutHeaderProps> = ({
           <button
             type="button"
             onClick={onClick}
-            className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-stone-400 transition-all hover:text-red-600"
+            className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-stone-400 transition-all hover:text-brand-400"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -55,7 +55,7 @@ const CheckoutHeader: React.FC<CheckoutHeaderProps> = ({
         ) : (
           <Link
             href={backLink}
-            className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-stone-400 transition-all hover:text-red-600"
+            className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-stone-400 transition-all hover:text-brand-400"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

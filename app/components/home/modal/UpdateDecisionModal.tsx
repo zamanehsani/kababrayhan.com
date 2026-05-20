@@ -40,7 +40,7 @@ export default function UpdateDecisionModal({
           <button
             type="button"
             onClick={onConfirm}
-            className="rounded-xl bg-red-600 px-4 py-2 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-red-700"
+            className="rounded-xl bg-brand-400 px-4 py-2 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-brand-700"
           >
             {confirmLabel}
           </button>

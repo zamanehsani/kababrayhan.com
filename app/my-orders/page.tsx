@@ -111,7 +111,7 @@ export default function MyOrdersPage() {
       <section className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-red-600">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-400">
               Orders
             </p>
             <h1 className="mt-1 text-xl font-normal text-slate-900">
@@ -156,7 +156,7 @@ export default function MyOrdersPage() {
 
         {portalState.isVerified && isError && (
           <div className="rounded-2xl border border-red-100 bg-red-50 p-6 shadow-sm">
-            <p className="text-sm text-red-700">
+            <p className="text-sm text-brand-700">
               Could not fetch your orders right now. Try again.
             </p>
           </div>

@@ -189,7 +189,7 @@ export function ItemDetailModal({
               {dish.name}
             </h1>
             <span className="text-xl font-semibold text-emerald-600">
-              <span className="text-xl font-semibold mr-0.5">$</span>
+              <span className="text-xl font-semibold mr-0.5">AED</span>
               {dish.price}
             </span>
           </div>

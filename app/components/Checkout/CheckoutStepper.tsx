@@ -15,7 +15,7 @@ const CheckoutStepper: React.FC<CheckoutStepperProps> = ({ currentStep }) => {
         
         {/* Active Progress Line */}
         <div 
-          className="absolute top-1/2 left-0 h-[2px] bg-red-600 transition-all duration-700 ease-in-out" 
+          className="absolute top-1/2 left-0 h-[2px] bg-brand-400 transition-all duration-700 ease-in-out" 
           style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
         />
 
@@ -30,9 +30,9 @@ const CheckoutStepper: React.FC<CheckoutStepperProps> = ({ currentStep }) => {
               <div
                 className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all duration-500 ${
                   isActive 
-                    ? "border-red-600 bg-white shadow-[0_0_15px_rgba(220,38,38,0.2)]" 
+                    ? "border-brand-400 bg-white shadow-[0_0_15px_rgba(220,38,38,0.2)]" 
                     : isCompleted 
-                      ? "border-red-600 bg-red-600" 
+                      ? "border-brand-400 bg-brand-400" 
                       : "border-stone-200 bg-white"
                 }`}
               >
@@ -43,7 +43,7 @@ const CheckoutStepper: React.FC<CheckoutStepperProps> = ({ currentStep }) => {
                   </svg>
                 ) : (
                   // Number for active/pending steps
-                  <span className={`text-xs font-black ${isActive ? "text-red-600" : "text-stone-400"}`}>
+                  <span className={`text-xs font-black ${isActive ? "text-brand-400" : "text-stone-400"}`}>
                     {stepNum}
                   </span>
                 )}

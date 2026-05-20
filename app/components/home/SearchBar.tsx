@@ -1,6 +1,29 @@
+"use client";
+
 import { Search, Settings2 } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export default function SearchBar() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const searchValue = searchParams.get("search") ?? "";
+
+  const updateSearchQuery = (nextValue: string) => {
+    const nextParams = new URLSearchParams(searchParams.toString());
+
+    if (nextValue.trim()) {
+      nextParams.set("search", nextValue);
+    } else {
+      nextParams.delete("search");
+    }
+
+    const queryString = nextParams.toString();
+    router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+      scroll: false,
+    });
+  };
+
   return (
     <section className="mt-6 flex gap-3 px-4 md:hidden">
       <div className="relative flex-1">
@@ -11,6 +34,8 @@ export default function SearchBar() {
         <input
           type="text"
           placeholder="Search for restaurants or dishes..."
+          value={searchValue}
+          onChange={(event) => updateSearchQuery(event.target.value)}
           className="w-full rounded-full border border-slate-100 bg-slate-50 py-3 pl-10 pr-4 text-base text-slate-900 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-slate-200"
         />
       </div>

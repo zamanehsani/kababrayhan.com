@@ -22,6 +22,9 @@ import CheckoutStepper from "../components/Checkout/CheckoutStepper";
 import CheckoutHeader from "../components/Checkout/CheckoutHeader";
 import OrderSummary from "../components/Checkout/OrderSummary";
 import CheckoutForm from "../components/Checkout/CheckoutForm";
+import MobileHeader from "../components/Header/MobileHeader";
+import TabletHeader from "../components/Header/TabletHeader";
+import DesktopHeader from "../components/Header/DesktopHeader";
 
 const stripeKey =
   
@@ -91,7 +94,7 @@ const PaymentForm = ({
       </div>
 
       {paymentError && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-brand-700">
           {paymentError}
         </div>
       )}
@@ -102,7 +105,7 @@ const PaymentForm = ({
         className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4 text-xs font-black uppercase tracking-[0.2em] transition-all shadow-xl ${
           isProcessing
             ? "bg-stone-400 text-white cursor-not-allowed"
-            : "bg-red-600 text-white shadow-red-200 hover:bg-red-700 active:scale-95"
+            : "bg-brand-400 text-white shadow-red-200 hover:bg-brand-700 active:scale-95"
         }`}
       >
         {isProcessing ? "Processing..." : `Pay AED ${total.toFixed(2)}`}
@@ -246,7 +249,7 @@ const CheckoutPage = () => {
   if (orderError) {
     paymentSection = (
       <div className="text-center py-6">
-        <p className="text-red-600 font-bold mb-4">{orderError}</p>
+        <p className="text-brand-400 font-bold mb-4">{orderError}</p>
         <button
           onClick={handleAutoProceed}
           className="px-6 py-2 bg-stone-900 text-white rounded-xl text-xs font-bold uppercase"
@@ -258,7 +261,7 @@ const CheckoutPage = () => {
   } else if (isInitializing || !clientSecret) {
     paymentSection = (
       <div className="flex flex-col items-center py-10">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-stone-100 border-t-red-600 mb-4" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-stone-100 border-t-brand-400 mb-4" />
         <p className="text-stone-400 font-bold uppercase text-[10px] tracking-widest">
           Securing Payment Line...
         </p>
@@ -286,44 +289,58 @@ const CheckoutPage = () => {
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-6 py-24 min-h-screen">
-      <CheckoutStepper currentStep={step} />
-
-      <CheckoutHeader
-        title={step === 2 ? "Delivery Details" : "Secure Payment"}
-        subtitle="Confirm your delivery details and complete the payment securely."
-        backLabel={step === 3 ? "Change Address" : "Back to Plate"}
-        backLink="/"
-        onClick={
-          step === 3
-            ? () => {
-                setClientSecret(null);
-                setStep(2);
-              }
-            : undefined
-        }
-      />
-
-      <div className="grid gap-12 lg:grid-cols-2 lg:items-start">
-        <div className="space-y-8">
-          <CheckoutForm form={form} setForm={setForm} error={null} />
-
-          {(isInitializing || clientSecret || orderError) && (
-            <section className="overflow-hidden rounded-[2.5rem] bg-white shadow-[0_30px_60px_rgba(0,0,0,0.12)] ring-1 ring-stone-100 animate-in fade-in zoom-in-95 duration-700">
-              <div className="border-b border-stone-50 px-8 py-6 bg-stone-50/50">
-                <h2 className="text-xl font-black text-stone-900">Payment</h2>
-              </div>
-
-              <div className="px-8 py-10">{paymentSection}</div>
-            </section>
-          )}
-        </div>
-
-        <div className="sticky top-24">
-          <OrderSummary cart={cart} total={total} />
-        </div>
+    <div className="min-h-screen bg-white">
+      <div className="block md:hidden">
+        <MobileHeader />
       </div>
-    </main>
+
+      <div className="hidden md:block lg:hidden">
+        <TabletHeader />
+      </div>
+
+      <div className="hidden lg:block">
+        <DesktopHeader />
+      </div>
+
+      <main className="mx-auto max-w-7xl px-6 py-10 md:py-14 lg:py-16">
+        <CheckoutStepper currentStep={step} />
+
+        <CheckoutHeader
+          title={step === 2 ? "Delivery Details" : "Secure Payment"}
+          subtitle="Confirm your delivery details and complete the payment securely."
+          backLabel={step === 3 ? "Change Address" : "Back to Plate"}
+          backLink="/"
+          onClick={
+            step === 3
+              ? () => {
+                  setClientSecret(null);
+                  setStep(2);
+                }
+              : undefined
+          }
+        />
+
+        <div className="grid gap-12 lg:grid-cols-2 lg:items-start">
+          <div className="space-y-8">
+            <CheckoutForm form={form} setForm={setForm} error={null} />
+
+            {(isInitializing || clientSecret || orderError) && (
+              <section className="overflow-hidden rounded-[2.5rem] bg-white shadow-[0_30px_60px_rgba(0,0,0,0.12)] ring-1 ring-stone-100 animate-in fade-in zoom-in-95 duration-700">
+                <div className="border-b border-stone-50 px-8 py-6 bg-stone-50/50">
+                  <h2 className="text-xl font-black text-stone-900">Payment</h2>
+                </div>
+
+                <div className="px-8 py-10">{paymentSection}</div>
+              </section>
+            )}
+          </div>
+
+          <div className="sticky top-24">
+            <OrderSummary cart={cart} total={total} />
+          </div>
+        </div>
+      </main>
+    </div>
   );
 };
 

@@ -67,12 +67,12 @@ const PhoneModal: React.FC<PhoneModalProps> = ({
       <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-sm relative">
         <button
           onClick={() => onClose()}
-          className="absolute top-3 right-3 text-gray-400 hover:text-red-600 text-2xl font-black"
+          className="absolute top-3 right-3 text-gray-400 hover:text-brand-400 text-xl font-black"
           aria-label="Close phone modal"
         >
           ×
         </button>
-        <h2 className="text-xl font-bold mb-4 text-center">Enter your UAE Phone Number</h2>
+        <h2 className="text-xl font-meduim mb-4 text-center  tracking-wide">Enter your UAE Phone Number</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <span className="px-3 py-3 rounded-lg bg-gray-100 border border-gray-200 text-lg select-none">+971</span>
@@ -88,10 +88,10 @@ const PhoneModal: React.FC<PhoneModalProps> = ({
               disabled={isLoading}
             />
           </div>
-          {error && <div className="text-red-600 text-sm text-center">{error}</div>}
+          {error && <div className="text-brand-400 text-sm text-center">{error}</div>}
           <button
             type="submit"
-            className="w-full rounded-xl bg-red-600 py-3 text-base font-black uppercase tracking-widest text-white transition-all hover:bg-red-700 active:scale-[0.98]"
+            className="w-full rounded-xl bg-brand-400 py-3 text-base font-medium uppercase tracking-widest text-white transition-all hover:bg-brand-700 active:scale-[0.98]"
             disabled={isLoading}
           >
             {isLoading ? "Sending..." : "Send OTP"}

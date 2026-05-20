@@ -121,7 +121,7 @@ export function DesktopItemDetailModal({
                   Total Price
                 </span>
                 <span className="text-3xl font-medium tracking-wide text-emerald-600">
-                  ${totalPrice}
+                  AED {totalPrice}
                 </span>
               </div>
 
@@ -260,7 +260,7 @@ export function DesktopItemDetailModal({
                     Total Price
                   </span>
                   <span className="text-3xl font-medium tracking-wide text-emerald-600">
-                    ${totalPrice}
+                    AED {totalPrice}
                   </span>
                 </div>
 

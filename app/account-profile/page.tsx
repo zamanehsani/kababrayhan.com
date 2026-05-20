@@ -144,7 +144,7 @@ export default function AccountProfilePage() {
         <div className="overflow-hidden rounded-3xl border border-slate-200 bg-linear-to-br from-white via-slate-50 to-orange-50/50 p-5 shadow-sm shadow-slate-200/40 sm:p-7 lg:p-9">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-red-600">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-brand-400">
                 Account
               </p>
               <h1 className="mt-2 text-xl font-normal leading-wide text-slate-900 sm:text-xl lg:text-2xl">
@@ -199,7 +199,7 @@ export default function AccountProfilePage() {
           <article className="h-full rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40 sm:p-6">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-50 text-brand-400">
                   <Phone size={18} />
                 </div>
                 <div className="min-w-0">

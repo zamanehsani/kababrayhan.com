@@ -77,7 +77,7 @@ export function ModeCustomizationPanel({
                   </div>
                   {option.price > 0 && (
                     <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
-                      +${option.price.toFixed(2)}
+                      +AED {option.price.toFixed(2)}
                     </span>
                   )}
                 </button>

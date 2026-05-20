@@ -170,15 +170,15 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
               onClick={() =>
                 mapInstanceRef.current?.setView([25.2048, 55.2708], 13)
               }
-              className="bg-white/90 backdrop-blur shadow-xl border border-gray-100 px-5 py-2.5 rounded-2xl font-bold text-gray-800 flex items-center gap-2 hover:bg-white transition-all active:scale-95"
+              className="bg-white/90 backdrop-blur shadow-xl border border-gray-100 px-4 py-2 rounded-2xl font-normal text-gray-800 flex items-center gap-2 hover:bg-white transition-all active:scale-95"
             >
-              <span className="text-red-500 text-lg">📍</span> Recenter Dubai
+              <span className="text-red-500 text-base">📍</span> Recenter Dubai
             </button>
           </div>
 
           <button
             onClick={onClose}
-            className="pointer-events-auto bg-white/90 backdrop-blur text-gray-400 hover:text-red-600 rounded-2xl w-12 h-12 flex items-center justify-center shadow-xl border border-gray-100 transition-all active:scale-90 text-3xl font-light"
+            className="pointer-events-auto bg-white/90 backdrop-blur text-gray-400 hover:text-brand-400 rounded-2xl w-10 h-10 flex items-center justify-center shadow-xl border border-gray-100 transition-all active:scale-90 text-3xl font-light"
           >
             ×
           </button>
@@ -196,8 +196,8 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-1001">
               <div className="relative flex items-center justify-center">
                 <div className="w-10 h-10 border-2 border-red-500/50 rounded-full animate-ping absolute" />
-                <div className="w-4 h-4 bg-red-600 rounded-full border-2 border-white shadow-lg" />
-                <div className="absolute top-10 whitespace-nowrap bg-gray-900/80 text-white px-3 py-1 rounded-lg text-xs font-medium">
+                <div className="w-4 h-4 bg-brand-400 rounded-full border-2 border-white shadow-lg" />
+                <div className="absolute top-10 whitespace-nowrap bg-gray-900/80 text-white px-3 py-1 rounded-lg text-xs font-normal tracking-wide">
                   Click to drop pin
                 </div>
               </div>
@@ -209,17 +209,17 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
         <div className="absolute bottom-8 inset-x-0 z-1002 flex justify-center px-4 pointer-events-none">
           <div className="pointer-events-auto w-full max-w-xl bg-white/95 backdrop-blur-lg border border-white/20 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] p-6 sm:p-8 flex flex-col gap-4">
             <div className="space-y-1">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-red-500">
+              <h3 className="text-sm font-medium uppercase tracking-widest text-red-500">
                 Confirm Delivery Point
               </h3>
               <div className="min-h-12 flex items-center">
                 {isLoading ? (
                   <div className="flex items-center gap-3 text-gray-400 italic">
-                    <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-brand-400 border-t-transparent rounded-full animate-spin" />
                     Fetching address details...
                   </div>
                 ) : (
-                  <p className="text-gray-800 font-semibold text-lg line-clamp-2 leading-tight">
+                  <p className="text-gray-800 font-medium text-lg line-clamp-2 leading-tight tracking-wide">
                     {addressText || "Tap the map to select your location"}
                   </p>
                 )}
@@ -227,7 +227,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
             </div>
 
             <button
-              className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-200 disabled:text-gray-400 text-white py-5 rounded-[1.5rem] font-black uppercase tracking-widest transition-all shadow-lg shadow-red-200 active:scale-[0.98]"
+              className="w-full bg-brand-400 hover:bg-brand-700 disabled:bg-gray-200 disabled:text-gray-400 text-white py-5 rounded-[1.5rem] font-medium uppercase tracking-widest transition-all shadow-lg shadow-red-200 active:scale-[0.98]"
               disabled={!selectedLatLng || isLoading || submitting}
               onClick={async () => {
                 setSubmitting(true);
@@ -302,7 +302,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
               {submitting ? "Saving..." : "Confirm & Deliver Here"}
             </button>
             {error && (
-              <div className="text-red-600 text-sm text-center mt-2">
+              <div className="text-brand-400 text-sm text-center mt-2">
                 {error}
               </div>
             )}

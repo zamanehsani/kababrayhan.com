@@ -106,13 +106,13 @@ const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, phon
       <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-sm relative">
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-400 hover:text-red-600 text-2xl font-black"
+          className="absolute top-3 right-3 text-gray-400 hover:text-brand-400 text-2xl font-black"
           aria-label="Close verification modal"
         >
           ×
         </button>
-        <h2 className="text-xl font-bold mb-2 text-center">Verify Your Phone</h2>
-        <div className="text-center text-gray-500 mb-4 text-sm">We sent a 4-digit code to <span className="font-bold">{phone}</span></div>
+        <h2 className="text-xl font-medium mb-2 text-center tracking-wide">Verify Your Phone</h2>
+        <div className="text-center text-gray-500 mb-4 text-sm tracking-wide">We sent a 4-digit code to <span className="font-medium tracking-wide">{phone}</span></div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex gap-3 justify-center">
             {digits.map((digit, idx) => (
@@ -131,10 +131,10 @@ const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, phon
               />
             ))}
           </div>
-          {error && <div className="text-red-600 text-sm text-center">{error}</div>}
+          {error && <div className="text-brand-400 text-sm text-center">{error}</div>}
           <button
             type="submit"
-            className="w-full rounded-xl bg-red-600 py-3 text-base font-black uppercase tracking-widest text-white transition-all hover:bg-red-700 active:scale-[0.98]"
+            className="w-full rounded-xl bg-brand-400 py-3 text-base font-medium uppercase tracking-widest text-white transition-all hover:bg-brand-700 active:scale-[0.98]"
             disabled={isLoading}
           >
             {isLoading ? "Verifying..." : "Verify"}
@@ -142,7 +142,7 @@ const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, phon
           <div className="text-center mt-2">
             <button
               type="button"
-              className="text-xs text-red-600 font-bold underline disabled:text-gray-400 disabled:cursor-not-allowed"
+              className="text-xs text-brand-400 font-bold underline disabled:text-gray-400 disabled:cursor-not-allowed"
               onClick={handleResend}
               disabled={resendTimer > 0 || isResending}
             >

@@ -90,7 +90,7 @@ export function CustomizationPanel({
                   </div>
                   {option.price > 0 && (
                     <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
-                      +${option.price.toFixed(2)}
+                      +AED {option.price.toFixed(2)}
                     </span>
                   )}
                 </button>

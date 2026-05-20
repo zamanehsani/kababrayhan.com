@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useGetCustomerSalesOrdersQuery } from "@/app/redux/api";
 import { CART_UPDATED } from "@/app/lib/cart";
 import {
@@ -26,6 +26,7 @@ import PhoneVerifyModal from "../home/modal/PhoneVerifyModal";
 export default function DesktopHeader() {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
@@ -55,6 +56,33 @@ export default function DesktopHeader() {
   const hasOrders = portalState.hasOrder || (salesOrders?.length ?? 0) > 0;
   const shouldShowNav = portalState.isVerified && hasOrders;
   const isHomeRoute = pathname === "/" || pathname.startsWith("/home");
+  const searchValue = searchParams.get("search") ?? "";
+  const shouldShowSearchInput = isSearchOpen || Boolean(searchValue);
+
+  const updateSearchQuery = (nextValue: string) => {
+    const nextParams = new URLSearchParams(searchParams.toString());
+
+    if (nextValue.trim()) {
+      nextParams.set("search", nextValue);
+    } else {
+      nextParams.delete("search");
+    }
+
+    const queryString = nextParams.toString();
+    router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+      scroll: false,
+    });
+  };
+
+  const handleSearchToggle = () => {
+    if (shouldShowSearchInput) {
+      updateSearchQuery("");
+      setIsSearchOpen(false);
+      return;
+    }
+
+    setIsSearchOpen(true);
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -113,7 +141,7 @@ export default function DesktopHeader() {
 
   let middleSectionContent: React.ReactNode = <div className="h-9 w-full" />;
 
-  if (isSearchOpen) {
+  if (shouldShowSearchInput) {
     middleSectionContent = (
       <div className="relative w-full flex items-center animate-in fade-in slide-in-from-top-1 duration-300">
         <span className="absolute inset-y-0 left-4 flex items-center text-slate-400 pointer-events-none">
@@ -123,6 +151,8 @@ export default function DesktopHeader() {
           type="text"
           autoFocus
           placeholder="Search items, active orders, tickets..."
+          value={searchValue}
+          onChange={(event) => updateSearchQuery(event.target.value)}
           className="w-full h-9 pl-10 pr-3.5 rounded-lg border border-slate-200 bg-slate-50/50 text-[13px] font-medium text-slate-700 placeholder-slate-400 outline-none transition-all duration-200 focus:border-slate-200 focus:bg-white focus:ring-4 focus:ring-slate-50 shadow-inner"
         />
       </div>
@@ -157,11 +187,11 @@ export default function DesktopHeader() {
       {/* Left Section: Image Branding */}
       <div className="flex items-center shrink-0">
         <Image
-          src="/banner/banner.PNG"
+          src="/logo.png"
           alt="Kabab Rayhan"
           width={150}
           height={44}
-          className="h-11 w-auto object-contain"
+          className="h-18 w-auto object-contain"
           priority
         />
       </div>
@@ -176,14 +206,14 @@ export default function DesktopHeader() {
         
         {/* Dynamic Search Toggle Trigger */}
         <button 
-          onClick={() => setIsSearchOpen(!isSearchOpen)}
+          onClick={handleSearchToggle}
           className={`flex h-11 w-11 items-center justify-center rounded-xl border transition-all active:scale-95 duration-200 ${
-            isSearchOpen
+            shouldShowSearchInput
               ? "border-slate-200 bg-slate-50 text-slate-600 rotate-90"
               : "border-slate-200 bg-white text-slate-500 hover:text-slate-700 hover:bg-slate-50"
           }`}
         >
-          {isSearchOpen ? <X size={18} /> : <Search size={18} />}
+          {shouldShowSearchInput ? <X size={18} /> : <Search size={18} />}
         </button>
 
         {portalState.isVerified && hasOrders && (
@@ -251,7 +281,7 @@ export default function DesktopHeader() {
 
                 <button
                   type="button"
-                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors"
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-brand-400 hover:bg-red-50 transition-colors"
                   onClick={handleSignOut}
                 >
                   <LogOut size={16} />
