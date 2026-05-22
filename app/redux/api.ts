@@ -17,6 +17,7 @@ import type {
   Customer,
   CustomerDetails,
   Item,
+  ItemDetails,
   KitchenOrderTicket,
   PaymentIntentResponse,
   SalesOrder,
@@ -91,6 +92,7 @@ export const erpApi = createApi({
         url: "Item",
         params: {
           // This tells ERPNext exactly which columns to send back
+          limit_page_length: 1000,
           fields: JSON.stringify([
             "name",
             "item_name",
@@ -108,13 +110,55 @@ export const erpApi = createApi({
       transformResponse: (response: { data: Item[] }) => response.data,
     }),
 
-    getItemByCode: builder.query<Record<string, any>, string>({
+    getItemByCode: builder.query<ItemDetails, string>({
       query: (itemCode) => ({
         // Targeting /api/resource/Item/ITEM_CODE returns the entire structural payload
         url: `Item/${encodeURIComponent(itemCode)}`,
       }),
-      // Returns response.data which exposes the entire schema block directly
-      transformResponse: (response: FullItemResponse) => response.data,
+      transformResponse: (response: FullItemResponse) => {
+        const itemData = response.data ?? {};
+        let rawAddOns: Array<{ add_on?: unknown; price?: unknown }> = [];
+
+        if (Array.isArray(itemData.custom_allowed_addons)) {
+          rawAddOns = itemData.custom_allowed_addons as Array<{
+            add_on?: unknown;
+            price?: unknown;
+          }>;
+        } else if (Array.isArray(itemData.allowed_add_ons)) {
+          rawAddOns = itemData.allowed_add_ons as Array<{
+            add_on?: unknown;
+            price?: unknown;
+          }>;
+        }
+
+        const custom_allowed_addons = rawAddOns
+          .map((row) => {
+            const addOnName =
+              typeof row.add_on === "string"
+                ? row.add_on.trim()
+                : "";
+
+            const parsedPrice =
+              typeof row.price === "number" ? row.price : Number(row.price ?? 0);
+
+            if (!addOnName) return null;
+
+            return {
+              add_on: addOnName,
+              price: Number.isFinite(parsedPrice) ? parsedPrice : 0,
+            };
+          })
+          .filter(
+            (row): row is { add_on: string; price: number } => Boolean(row)
+          );
+
+        return {
+          ...itemData,
+          custom_allowed_addons,
+          // Keep this alias for existing UI code paths that still read allowed_add_ons.
+          allowed_add_ons: custom_allowed_addons,
+        };
+      },
     }),
 
     // create the customer
@@ -404,6 +448,18 @@ export const erpApi = createApi({
         },
       }),
     }),
+
+    // the ziina payment:
+    initializeZiinaPayment: builder.mutation<
+      { message: { redirect_url: string } },
+      { order_id: string; amount: number }
+    >({
+      query: (paymentDetails) => ({
+        url: `${ERP_API_METHOD_URL}pizza_app.api.create_ziina_payment`,
+        method: "POST",
+        body: paymentDetails,
+      }),
+    }),
   }),
 });
 
@@ -428,4 +484,9 @@ export const {
   useVerifyOtpMutation,
   useCreateCustomerNewMutation,
   useGetItemByCodeQuery,
+
+  // ziina
+  useInitializeZiinaPaymentMutation,
+
+  
 } = erpApi;

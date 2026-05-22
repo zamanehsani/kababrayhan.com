@@ -11,15 +11,8 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Dish } from "@/app/types/type";
 import { addDishToCart } from "@/app/lib/cart";
-import { useGetItemByCodeQuery } from "@/app/redux/api";
 import { ItemCustomizationSheet } from "./ItemCustomizationSheet";
-import type { CustomGroup } from "./CustomizationPanel";
-import { buildCustomizationSections } from "./customizationOptions";
-
-type CustomizationSections = {
-  variationGroups: CustomGroup[];
-  addOnGroups: CustomGroup[];
-};
+import { useItemCustomizationState } from "./shared/useItemCustomizationState";
 
 export function ItemDetailModal({
   dish,
@@ -30,81 +23,40 @@ export function ItemDetailModal({
 }>) {
   const [quantity, setQuantity] = useState(1);
   const [isCustomizationOpen, setIsCustomizationOpen] = useState(false);
-  const [selections, setSelections] = useState<Record<string, string[]>>({});
-
   const itemCode = useMemo(() => String(dish.id ?? ""), [dish.id]);
-  const { data: fullItemData } = useGetItemByCodeQuery(itemCode, {
-    skip: !itemCode,
-  });
+  const {
+    variationGroups,
+    addOnGroups,
+    resolvedSelections,
+    selectedCount,
+    selectedAddOns,
+    selectedAddOnPrice,
+    handleSingleSelect,
+    handleMultiToggle,
+  } = useItemCustomizationState(itemCode);
 
-  const { variationGroups, addOnGroups } = useMemo<CustomizationSections>(
-    () => buildCustomizationSections(fullItemData),
-    [fullItemData]
+  const basePrice = useMemo(() => {
+    const parsed = Number(dish.price);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }, [dish.price]);
+
+  const unitPrice = useMemo(
+    () => basePrice + selectedAddOnPrice,
+    [basePrice, selectedAddOnPrice]
   );
 
-  const allCustomizationGroups = useMemo(
-    () => [...variationGroups, ...addOnGroups],
-    [variationGroups, addOnGroups]
-  );
-
-  const resolvedSelections = useMemo(() => {
-    const next: Record<string, string[]> = {};
-
-    allCustomizationGroups.forEach((group) => {
-      const optionIds = new Set(group.options.map((option) => option.id));
-      const currentSelection = (selections[group.id] || []).filter((id) =>
-        optionIds.has(id)
-      );
-
-      if (group.type === "single") {
-        const normalized = currentSelection.slice(0, 1);
-        if (group.required && normalized.length === 0 && group.options[0]) {
-          next[group.id] = [group.options[0].id];
-        } else {
-          next[group.id] = normalized;
-        }
-        return;
-      }
-
-      next[group.id] = currentSelection;
-    });
-
-    return next;
-  }, [allCustomizationGroups, selections]);
-
-  const selectedCount = useMemo(
-    () =>
-      Object.values(resolvedSelections).reduce(
-        (total, group) => total + group.length,
-        0
-      ),
-    [resolvedSelections]
-  );
-
-  const handleSingleSelect = (groupId: string, optionId: string) => {
-    setSelections((current) => ({
-      ...current,
-      [groupId]: [optionId],
-    }));
-  };
-
-  const handleMultiToggle = (groupId: string, optionId: string) => {
-    setSelections((current) => {
-      const currentGroupSelection =
-        current[groupId] ?? resolvedSelections[groupId] ?? [];
-      const isSelected = currentGroupSelection.includes(optionId);
-
-      return {
-        ...current,
-        [groupId]: isSelected
-          ? currentGroupSelection.filter((id) => id !== optionId)
-          : [...currentGroupSelection, optionId],
-      };
-    });
-  };
+  const totalPrice = useMemo(() => unitPrice * quantity, [unitPrice, quantity]);
 
   const handleAddToCart = () => {
-    addDishToCart(dish, quantity);
+    addDishToCart(
+      dish,
+      quantity,
+      selectedAddOns.map((addOn) => ({
+        id: addOn.id,
+        name: addOn.name,
+        price: addOn.price,
+      }))
+    );
     onClose();
   };
 
@@ -190,7 +142,7 @@ export function ItemDetailModal({
             </h1>
             <span className="text-xl font-semibold text-emerald-600">
               <span className="text-xl font-semibold mr-0.5">AED</span>
-              {dish.price}
+              {unitPrice.toFixed(2)}
             </span>
           </div>
 
@@ -284,7 +236,7 @@ export function ItemDetailModal({
           onClick={handleAddToCart}
           className="flex-1 h-12 bg-yellow-400 text-slate-800 rounded-full font-semibold text-sm tracking-wide shadow-md shadow-yellow-200/50 active:scale-[0.98] transition-transform"
         >
-          Add to Cart
+          Add to Cart • AED {totalPrice.toFixed(2)}
         </button>
       </div>
     </dialog>

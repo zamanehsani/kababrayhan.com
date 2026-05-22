@@ -22,6 +22,7 @@ import CheckoutStepper from "../components/Checkout/CheckoutStepper";
 import CheckoutHeader from "../components/Checkout/CheckoutHeader";
 import OrderSummary from "../components/Checkout/OrderSummary";
 import CheckoutForm from "../components/Checkout/CheckoutForm";
+import ZiinaPaymentSection from "../components/Checkout/ZiinaPaymentSection";
 import MobileHeader from "../components/Header/MobileHeader";
 import TabletHeader from "../components/Header/TabletHeader";
 import DesktopHeader from "../components/Header/DesktopHeader";
@@ -153,7 +154,7 @@ const CheckoutPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.address, form.phone, cart]);
 
-  const handleAutoProceed = async () => {
+  async function handleAutoProceed() {
     setIsInitializing(true);
     setOrderError(null);
 
@@ -170,12 +171,40 @@ const CheckoutPage = () => {
 
       const items = cart
         .map((cartEntry: any) => {
-          const item_code = cartEntry.item?.id;
+          const item_code = cartEntry.item?.baseItemCode || cartEntry.item?.id;
           const item_name =
             cartEntry.item?.title || cartEntry.item?.item_name || cartEntry.name;
           const qty = Number(cartEntry.qty || 1);
           const rate = Number(cartEntry.item?.discountedPrice || cartEntry.price || 0);
+
+          const selectedAddOns = Array.isArray(cartEntry.addon?.selectedAddOns)
+            ? cartEntry.addon.selectedAddOns
+            : [];
+          const selectedAddOnNames = selectedAddOns
+            .map((addOn: { name?: unknown }) =>
+              typeof addOn.name === "string" ? addOn.name.trim() : ""
+            )
+            .filter((name: string) => Boolean(name));
+
+          let custom_selected_addons = "";
+
+          if (selectedAddOnNames.length > 0) {
+            // ERPNext field type is Small Text, so send a single comma-separated string.
+            custom_selected_addons = selectedAddOnNames.join(", ");
+          } else if (typeof cartEntry.addon?.title === "string") {
+            const normalizedTitle = cartEntry.addon.title.trim();
+
+            if (normalizedTitle && normalizedTitle.toLowerCase() !== "standard portion") {
+              custom_selected_addons = normalizedTitle
+                .split(",")
+                .map((name: string) => name.trim())
+                .filter((name: string) => Boolean(name))
+                .join(", ");
+            }
+          }
+
           if (!item_code) return null;
+
           return {
             item_code,
             item_name,
@@ -185,6 +214,7 @@ const CheckoutPage = () => {
             warehouse: "Finished Goods - P",
             delivery_date: deliveryDate,
             uom: "Nos",
+            custom_selected_addons,
           };
         })
         .filter(Boolean);
@@ -236,7 +266,7 @@ const CheckoutPage = () => {
     } finally {
       setIsInitializing(false);
     }
-  };
+  }
 
   const total = cart.reduce(
     (sum: number, entry: any) =>
@@ -331,6 +361,22 @@ const CheckoutPage = () => {
                 </div>
 
                 <div className="px-8 py-10">{paymentSection}</div>
+              </section>
+            )}
+
+            {(isInitializing || clientSecret || orderError || salesOrder) && (
+              <section className="overflow-hidden rounded-[2.5rem] bg-white shadow-[0_30px_60px_rgba(0,0,0,0.12)] ring-1 ring-stone-100 animate-in fade-in zoom-in-95 duration-700">
+                <div className="border-b border-stone-50 px-8 py-6 bg-stone-50/50">
+                  <h2 className="text-xl font-black text-stone-900">Ziina (Test)</h2>
+                </div>
+
+                <div className="px-8 py-10">
+                  <ZiinaPaymentSection
+                    total={total}
+                    salesOrderName={salesOrder?.name}
+                    isDisabled={isInitializing}
+                  />
+                </div>
               </section>
             )}
           </div>

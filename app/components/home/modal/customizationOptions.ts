@@ -1,4 +1,5 @@
 import type { CustomGroup, CustomOption } from "./CustomizationPanel";
+import type { ItemDetails } from "@/app/redux/apiType";
 
 const FALLBACK_VARIATION_GROUPS: CustomGroup[] = [
   {
@@ -32,21 +33,6 @@ const FALLBACK_VARIATION_GROUPS: CustomGroup[] = [
       { id: "st-regular", name: "Regular", price: 0 },
       { id: "st-light", name: "Light", price: 0 },
       { id: "st-premium", name: "Chef Premium", price: 2 },
-    ],
-  },
-];
-
-const FALLBACK_ADDON_GROUPS: CustomGroup[] = [
-  {
-    id: "addons",
-    title: "Add-ons",
-    type: "multiple",
-    required: false,
-    options: [
-      { id: "ad-dip", name: "Garlic Dip", price: 1.5 },
-      { id: "ad-fries", name: "Fries", price: 2.5 },
-      { id: "ad-drink", name: "Soft Drink", price: 2 },
-      { id: "ad-cheese", name: "Extra Cheese", price: 1.8 },
     ],
   },
 ];
@@ -172,10 +158,10 @@ const createVariationGroup = (
 };
 
 const extractVariationGroups = (
-  itemDetails?: Record<string, unknown>
+  itemDetails?: ItemDetails
 ): CustomGroup[] => {
   const attributes = Array.isArray(itemDetails?.attributes)
-    ? (itemDetails.attributes as Record<string, unknown>[])
+    ? itemDetails.attributes
     : [];
 
   const derivedGroups = attributes
@@ -186,8 +172,42 @@ const extractVariationGroups = (
   return FALLBACK_VARIATION_GROUPS;
 };
 
-const extractAddOnGroups = (itemDetails?: Record<string, unknown>): CustomGroup[] => {
+const extractAddOnGroups = (itemDetails?: ItemDetails): CustomGroup[] => {
+  let allowedAddOns = [] as NonNullable<ItemDetails["allowed_add_ons"]>;
+
+  if (Array.isArray(itemDetails?.custom_allowed_addons)) {
+    allowedAddOns = itemDetails.custom_allowed_addons;
+  } else if (Array.isArray(itemDetails?.allowed_add_ons)) {
+    allowedAddOns = itemDetails.allowed_add_ons;
+  }
+
+  const allowedAddOnOptions = allowedAddOns
+    .map((row, index) => {
+      const name = toStringValue(row.add_on);
+      if (!name) return null;
+
+      return {
+        id: `allowed-addon-${slugify(name)}-${index}`,
+        name,
+        price: toNumber(row.price),
+      } satisfies CustomOption;
+    })
+    .filter((option): option is CustomOption => Boolean(option));
+
+  if (allowedAddOnOptions.length > 0) {
+    return [
+      {
+        id: "allowed-add-ons",
+        title: "Add-ons",
+        type: "multiple",
+        required: false,
+        options: allowedAddOnOptions,
+      } satisfies CustomGroup,
+    ];
+  }
+
   const possibleKeys = [
+    "custom_allowed_addons",
     "addons",
     "add_ons",
     "add_on_items",
@@ -215,11 +235,11 @@ const extractAddOnGroups = (itemDetails?: Record<string, unknown>): CustomGroup[
     ];
   }
 
-  return FALLBACK_ADDON_GROUPS;
+  return [];
 };
 
 export const buildCustomizationSections = (
-  itemDetails?: Record<string, unknown>
+  itemDetails?: ItemDetails
 ): { variationGroups: CustomGroup[]; addOnGroups: CustomGroup[] } => ({
   variationGroups: extractVariationGroups(itemDetails),
   addOnGroups: extractAddOnGroups(itemDetails),

@@ -160,8 +160,8 @@ export default function DesktopCategoryTabs() {
         >
           {/* Centering Wrapper: Controls the maximum layout width */}
           <div
-            className={`mx-auto max-w-7xl w-full ${
-              isPinned ? "px-4 md:px-12" : ""
+            className={`mx-auto max-w-full w-full ${
+              isPinned ? "px-2 md:px-12" : ""
             }`}
           >
             {/* Scroll Container: Centers buttons when few, allows overflow when many */}

@@ -1,5 +1,5 @@
 import { X, Clock, Flame, Heart, Minus, Plus, Star } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Dish } from "@/app/types/type";
 import { addDishToCart } from "@/app/lib/cart";
@@ -16,18 +16,37 @@ export function TabletItemDetailModal({
 }>) {
   const [quantity, setQuantity] = useState(1);
   const [isCustomizationOpen, setIsCustomizationOpen] = useState(false);
+  const itemCode = useMemo(() => String(dish.id ?? ""), [dish.id]);
 
   const {
     variationGroups,
     addOnGroups,
     resolvedSelections,
     selectedCount,
+    selectedAddOns,
+    selectedAddOnPrice,
     handleSingleSelect,
     handleMultiToggle,
-  } = useItemCustomizationState(dish.id);
+  } = useItemCustomizationState(itemCode);
+
+  const basePrice = useMemo(() => {
+    const parsed = Number(dish.price);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }, [dish.price]);
+
+  const unitPrice = basePrice + selectedAddOnPrice;
+  const totalPrice = unitPrice * quantity;
 
   const handleAddToCart = () => {
-    addDishToCart(dish, quantity);
+    addDishToCart(
+      dish,
+      quantity,
+      selectedAddOns.map((addOn) => ({
+        id: addOn.id,
+        name: addOn.name,
+        price: addOn.price,
+      }))
+    );
     onClose();
   };
 
@@ -121,7 +140,7 @@ export function TabletItemDetailModal({
                     </h1>
                   </div>
                   <span className="shrink-0 text-2xl font-medium tracking-wide text-emerald-600">
-                    AED {dish.price}
+                    AED {unitPrice.toFixed(2)}
                   </span>
                 </div>
 
@@ -210,7 +229,7 @@ export function TabletItemDetailModal({
             onClick={handleAddToCart}
             className="h-12 flex-1 rounded-full bg-yellow-400 text-sm font-medium tracking-wide text-slate-800 shadow-md shadow-yellow-200/40 transition-all active:scale-[0.98]"
           >
-            Add to Cart
+            Add to Cart • AED {totalPrice.toFixed(2)}
           </button>
         </div>
       </dialog>

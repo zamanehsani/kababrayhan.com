@@ -1,5 +1,5 @@
 import { X, Clock, Flame, Heart, Minus, Plus, Star } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Dish } from "@/app/types/type";
 import { addDishToCart } from "@/app/lib/cart";
@@ -16,20 +16,36 @@ export function DesktopItemDetailModal({
 }>) {
   const [quantity, setQuantity] = useState(1);
   const [isCustomizationOpen, setIsCustomizationOpen] = useState(false);
+  const itemCode = useMemo(() => String(dish.id ?? ""), [dish.id]);
 
   const {
     variationGroups,
     addOnGroups,
     resolvedSelections,
     selectedCount,
+    selectedAddOns,
+    selectedAddOnPrice,
     handleSingleSelect,
     handleMultiToggle,
-  } = useItemCustomizationState(dish.id);
+  } = useItemCustomizationState(itemCode);
 
-  const totalPrice = (Number(dish.price || 0) * quantity).toFixed(2);
+  const basePrice = useMemo(() => {
+    const parsed = Number(dish.price);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }, [dish.price]);
+
+  const totalPrice = ((basePrice + selectedAddOnPrice) * quantity).toFixed(2);
 
   const handleAddToCart = () => {
-    addDishToCart(dish, quantity);
+    addDishToCart(
+      dish,
+      quantity,
+      selectedAddOns.map((addOn) => ({
+        id: addOn.id,
+        name: addOn.name,
+        price: addOn.price,
+      }))
+    );
     onClose();
   };
 
@@ -225,7 +241,7 @@ export function DesktopItemDetailModal({
                     Description
                   </h3>
                   <div
-                    className="prose prose-sm max-w-none font-sans leading-relaxed tracking-wide text-slate-400 prose-p:my-1 prose-p:text-slate-400 prose-strong:font-normal prose-strong:text-slate-700 prose-ul:list-disc prose-ul:pl-4 prose-li:my-0.5"
+                    className="prose prose-sm max-w-none font-sans leading-relaxed tracking-wide text-slate-400 prose-p:my-1 prose-p:text-xs prose-p:text-slate-400 prose-strong:text-xs prose-strong:font-normal prose-strong:text-slate-700 prose-ul:list-disc prose-ul:pl-4 prose-li:my-0.5 prose-li:text-xs"
                     dangerouslySetInnerHTML={{ __html: dish.description }}
                   />
                 </div>

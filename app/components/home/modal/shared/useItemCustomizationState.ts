@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useGetItemByCodeQuery } from "@/app/redux/api";
-import type { CustomGroup } from "../CustomizationPanel";
+import type { CustomGroup, CustomOption } from "../CustomizationPanel";
 import { buildCustomizationSections } from "../customizationOptions";
 
 type CustomizationSections = {
@@ -13,6 +13,8 @@ interface UseItemCustomizationStateResult {
   addOnGroups: CustomGroup[];
   resolvedSelections: Record<string, string[]>;
   selectedCount: number;
+  selectedAddOns: CustomOption[];
+  selectedAddOnPrice: number;
   handleSingleSelect: (groupId: string, optionId: string) => void;
   handleMultiToggle: (groupId: string, optionId: string) => void;
 }
@@ -21,6 +23,7 @@ export function useItemCustomizationState(
   itemId: string | number | undefined
 ): UseItemCustomizationStateResult {
   const [selections, setSelections] = useState<Record<string, string[]>>({});
+  const [selectedAddOns, setSelectedAddOns] = useState<CustomOption[]>([]);
 
   const itemCode = useMemo(() => String(itemId ?? ""), [itemId]);
   const { data: fullItemData } = useGetItemByCodeQuery(itemCode, {
@@ -71,6 +74,23 @@ export function useItemCustomizationState(
     [resolvedSelections]
   );
 
+  useEffect(() => {
+    const selectedOptionIds = new Set(
+      addOnGroups.flatMap((group) => resolvedSelections[group.id] ?? [])
+    );
+
+    const nextSelectedAddOns = addOnGroups.flatMap((group) =>
+      group.options.filter((option) => selectedOptionIds.has(option.id))
+    );
+
+    setSelectedAddOns(nextSelectedAddOns);
+  }, [addOnGroups, resolvedSelections]);
+
+  const selectedAddOnPrice = useMemo(
+    () => selectedAddOns.reduce((total, addOn) => total + addOn.price, 0),
+    [selectedAddOns]
+  );
+
   const handleSingleSelect = (groupId: string, optionId: string) => {
     setSelections((current) => ({
       ...current,
@@ -98,6 +118,8 @@ export function useItemCustomizationState(
     addOnGroups,
     resolvedSelections,
     selectedCount,
+    selectedAddOns,
+    selectedAddOnPrice,
     handleSingleSelect,
     handleMultiToggle,
   };

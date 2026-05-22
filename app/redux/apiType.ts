@@ -64,6 +64,24 @@ export interface Item {
   custom_prep_time?: number;
 }
 
+export interface ItemAddOnLink {
+  add_on: string;
+  price: number;
+}
+
+export interface ItemDetails {
+  name?: string;
+  item_name?: string;
+  item_code?: string;
+  description?: string;
+  image?: string;
+  standard_rate?: number;
+  attributes?: Array<Record<string, unknown>>;
+  custom_allowed_addons?: ItemAddOnLink[];
+  allowed_add_ons?: ItemAddOnLink[];
+  [key: string]: unknown;
+}
+
 export interface OrderCartItem {
   itemCode: string;
   name: string;
@@ -75,6 +93,7 @@ export interface CreateSalesOrderItem {
   item_code: string;
   qty: number;
   rate: number;
+  custom_selected_addons?: string;
 }
 
 export interface CreateSalesOrderRequest {
@@ -277,7 +296,7 @@ export interface PaymentIntentResponse {
 }
 
 export interface FullItemResponse {
-  data: Record<string, any>;
+  data: ItemDetails;
 }
 
 export interface KitchenOrderTicket {

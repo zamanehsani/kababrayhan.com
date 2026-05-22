@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ItemDetailModal } from "../home/modal/ItemDetailModal";
 import { Dish } from "@/app/types/type";
-import { useGetItemsQuery } from "../../redux/api";
+import { ERP_API_BASE_URL, useGetItemsQuery } from "../../redux/api";
 
 
 
@@ -21,6 +21,22 @@ export default function PopularDishes() {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
+
+  const resolveDishImage = (value?: string) => {
+    const normalizedValue = value?.trim();
+
+    if (!normalizedValue) {
+      return "/popular-dishes/burger.png";
+    }
+
+    if (/^https?:\/\//i.test(normalizedValue)) {
+      return normalizedValue;
+    }
+
+    return `${ERP_API_BASE_URL}${
+      normalizedValue.startsWith("/") ? normalizedValue : `/${normalizedValue}`
+    }`;
+  };
 
   const dishes: Dish[] = useMemo(
     () =>
@@ -38,7 +54,7 @@ export default function PopularDishes() {
         description:
           item.description ??
           "A delicious selection from our menu, prepared fresh for you.",
-        img: item.image || "/popular-dishes/burger.png",
+        img: resolveDishImage(item.image),
         liked: false,
       })) ?? [],
     [items]
@@ -121,7 +137,7 @@ export default function PopularDishes() {
                       setSelectedDish(dish);
                     }
                   }}
-                  className="relative flex flex-col rounded-[2rem] bg-slate-50 p-4 transition-all active:scale-[0.98]"
+                  className="relative flex flex-col rounded-[2rem] bg-slate-100 p-4 transition-all active:scale-[0.98]"
                 >
                   {/* TOP SECTION: Title and Wishlist */}
                   <div className="flex items-start justify-between gap-2 mb-2">
@@ -151,6 +167,11 @@ export default function PopularDishes() {
                       src={dish.img}
                       alt={dish.name}
                       fill
+                      onError={(event) => {
+                        if (!event.currentTarget.src.includes("/popular-dishes/burger.png")) {
+                          event.currentTarget.src = "/popular-dishes/burger.png";
+                        }
+                      }}
                       className="object-contain p-2"
                     />
                   </div>

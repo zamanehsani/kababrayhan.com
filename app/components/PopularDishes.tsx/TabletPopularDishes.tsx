@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Dish } from "@/app/types/type";
 import { TabletItemDetailModal } from "../home/modal/TabletItemDetailModal";
-import { useGetItemsQuery } from "../../redux/api";
+import { ERP_API_BASE_URL, useGetItemsQuery } from "../../redux/api";
 
 
 export default function TabletPopularDishes() {
@@ -21,14 +21,30 @@ export default function TabletPopularDishes() {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
 
+  const resolveDishImage = (value?: string) => {
+    const normalizedValue = value?.trim();
+
+    if (!normalizedValue) {
+      return "/popular-dishes/burger.png";
+    }
+
+    if (/^https?:\/\//i.test(normalizedValue)) {
+      return normalizedValue;
+    }
+
+    return `${ERP_API_BASE_URL}${
+      normalizedValue.startsWith("/") ? normalizedValue : `/${normalizedValue}`
+    }`;
+  };
+
   const dishes: Dish[] = useMemo(
     () =>
       items?.map((item) => ({
         id: item.item_code || item.name,
         name: item.item_name ?? item.name ?? "Menu Item",
         price: item.standard_rate ? item.standard_rate.toFixed(2) : "0.00",
-        cal: "170",
-        time: "15-20 min",
+        cal: item.custom_calories ? item.custom_calories.toString() : "170",
+        time: item.custom_prep_time ? `${item.custom_prep_time} min` : "15-20 min",
         rating: "4.7",
         restaurant: item.item_group ?? "Popular",
         tags: item.item_group
@@ -37,7 +53,7 @@ export default function TabletPopularDishes() {
         description:
           item.description ??
           "A delicious selection from our menu, prepared fresh for you.",
-        img: item.image || "/popular-dishes/burger.png",
+        img: resolveDishImage(item.image),
         liked: false,
       })) ?? [],
     [items]
@@ -127,7 +143,7 @@ export default function TabletPopularDishes() {
                       setSelectedDish(dish);
                     }
                   }}
-                  className="group relative flex flex-col rounded-[2rem] bg-slate-50/80 p-4 border border-slate-100/40 transition-all duration-200 hover:bg-white hover:shadow-lg hover:shadow-slate-200/40 active:scale-[0.98]"
+                  className="group relative flex flex-col rounded-[2rem] bg-slate-100 p-4 border border-slate-100/40 transition-all duration-200 hover:bg-white hover:shadow-lg hover:shadow-slate-200/40 active:scale-[0.98]"
                 >
                   {/* TOP SECTION: Title and Wishlist */}
                   <div className="flex items-start justify-between gap-2 mb-2">
@@ -157,6 +173,11 @@ export default function TabletPopularDishes() {
                       src={dish.img}
                       alt={dish.name}
                       fill
+                      onError={(event) => {
+                        if (!event.currentTarget.src.includes("/popular-dishes/burger.png")) {
+                          event.currentTarget.src = "/popular-dishes/burger.png";
+                        }
+                      }}
                       className="object-contain p-2 transition-transform duration-300 group-hover:scale-105"
                     />
                   </div>
