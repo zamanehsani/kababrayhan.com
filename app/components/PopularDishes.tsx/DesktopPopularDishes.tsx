@@ -153,10 +153,10 @@ export default function DesktopPopularDishes() {
                       setSelectedDish(dish);
                     }
                   }}
-                  className="group relative flex flex-col rounded-[2rem] bg-slate-100 p-5 border border-slate-100/50 transition-all duration-300 ease-out hover:bg-white hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/50 active:scale-[0.98]"
+                  className="group relative flex flex-col rounded-[2rem] bg-slate-100 p-4 border border-slate-100/50 transition-all duration-300 ease-out hover:bg-white hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/50 active:scale-[0.98]"
                 >
                   {/* TOP SECTION: Title and Wishlist */}
-                  <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex items-start justify-between gap-2 mb-1">
                     <h4 className="text-[16px] font-semibold leading-snug tracking-wide text-slate-800 line-clamp-2 group-hover:text-slate-900 transition-colors">
                       {dish.name}
                     </h4>
@@ -188,12 +188,12 @@ export default function DesktopPopularDishes() {
                           event.currentTarget.src = "/popular-dishes/burger.png";
                         }
                       }}
-                      className="object-contain p-2 transition-transform duration-500 ease-out group-hover:scale-105"
+                      className="object-contain p-0 transition-transform duration-500 ease-out group-hover:scale-105"
                     />
                   </div>
 
                   {/* BOTTOM SECTION: Calories and Price */}
-                  <div className="mt-auto pt-3 flex items-center justify-between">
+                  <div className="mt-auto pt-2 flex items-center justify-between">
                     {/* Calories (Left) */}
                     <div className="flex items-center gap-1 text-xs font-semibold tracking-wide text-slate-400 bg-slate-100/80 group-hover:bg-slate-50 px-2 py-0.5 rounded-full transition-colors">
                       <Flame size={12} className="text-orange-500" />

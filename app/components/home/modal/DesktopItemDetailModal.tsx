@@ -153,7 +153,7 @@ export function DesktopItemDetailModal({
               {dish.name} details
             </h2>
 
-            <div className="border-b border-slate-100 pl-8 pr-24 pb-5 pt-7">
+            <div className=" pl-8 pr-24 pb-5 pt-7">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <span className="text-xs font-medium uppercase tracking-wide text-orange-500">
@@ -184,7 +184,7 @@ export function DesktopItemDetailModal({
             />
 
             {/* Price View Layout */}
-            <div className="flex items-center justify-between gap-4 border-t border-slate-100 bg-white px-8 py-5">
+            <div className="flex items-center justify-between gap-4 bg-white px-8 py-5">
               <div className="flex flex-col">
                 <span className="text-xs font-normal tracking-wide text-slate-400">
                   Total Price
@@ -256,7 +256,7 @@ export function DesktopItemDetailModal({
               </h2>
 
               {/* Header Data Group */}
-              <div className="border-b border-slate-100 pl-8 pr-24 pb-5 pt-7">
+              <div className="pl-8 pr-24 pb-5 pt-7">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <span className="text-xs font-medium uppercase tracking-wide text-orange-500">
@@ -291,9 +291,6 @@ export function DesktopItemDetailModal({
 
                 {/* Description Block */}
                 <div>
-                  <h3 className="mb-1.5 text-sm font-medium tracking-wide text-slate-800">
-                    About this item
-                  </h3>
                   <div
                     className="prose prose-sm max-w-none font-sans leading-relaxed tracking-wide text-slate-400 prose-p:my-1 prose-p:text-xs prose-p:text-slate-400 prose-strong:text-xs prose-strong:font-normal prose-strong:text-slate-700 prose-ul:list-disc prose-ul:pl-4 prose-li:my-0.5 prose-li:text-xs"
                     dangerouslySetInnerHTML={{ __html: dish.description }}
@@ -302,7 +299,7 @@ export function DesktopItemDetailModal({
               </div>
 
               {hasCustomizationOptions && (
-                <div className="flex items-center justify-between border-t border-slate-100/80 bg-white px-8 py-3">
+                <div className="flex items-center justify-between bg-white px-8 py-3">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium tracking-wide text-slate-800">
                       Modification
@@ -340,7 +337,7 @@ export function DesktopItemDetailModal({
               )}
 
               {/* Price View Layout */}
-              <div className="flex items-center justify-between gap-4 border-t border-slate-100 bg-white px-8 py-5">
+              <div className="flex items-center justify-between gap-4 bg-white px-8 py-5">
                 <div className="flex flex-col">
                   <span className="text-xs font-normal tracking-wide text-slate-400">
                     Total Price

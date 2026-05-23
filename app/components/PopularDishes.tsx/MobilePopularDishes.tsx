@@ -130,7 +130,7 @@ export default function PopularDishes() {
                 {group.name}
               </h4>
             </div>
-            <div className="grid grid-cols-2 gap-4 px-4">
+            <div className="grid grid-cols-2 gap-4 px-2">
               {group.items.map((dish) => (
                 <div
                   key={dish.id}
@@ -143,10 +143,10 @@ export default function PopularDishes() {
                       setSelectedDish(dish);
                     }
                   }}
-                  className="relative flex flex-col rounded-[2rem] bg-slate-100 p-4 transition-all active:scale-[0.98]"
+                  className="relative flex flex-col rounded-[2rem] bg-slate-100 p-3 transition-all active:scale-[0.98]"
                 >
                   {/* TOP SECTION: Title and Wishlist */}
-                  <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex items-start justify-between gap-2 mb-1">
                     <h4 className="text-[14px] font-semibold leading-tight text-slate-800 line-clamp-2">
                       {dish.name}
                     </h4>
@@ -178,12 +178,12 @@ export default function PopularDishes() {
                           event.currentTarget.src = "/popular-dishes/burger.png";
                         }
                       }}
-                      className="object-contain p-2"
+                      className="object-contain p-0"
                     />
                   </div>
 
                   {/* BOTTOM SECTION: Calories and Price */}
-                  <div className="mt-3 flex items-center justify-between">
+                  <div className="mt-2 flex items-center justify-between">
                     {/* Calories on the Left */}
                     <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-400">
                       <Flame size={12} className="text-orange-500" />

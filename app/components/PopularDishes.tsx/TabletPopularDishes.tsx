@@ -149,10 +149,10 @@ export default function TabletPopularDishes() {
                       setSelectedDish(dish);
                     }
                   }}
-                  className="group relative flex flex-col rounded-[2rem] bg-slate-100 p-4 border border-slate-100/40 transition-all duration-200 hover:bg-white hover:shadow-lg hover:shadow-slate-200/40 active:scale-[0.98]"
+                  className="group relative flex flex-col rounded-[2rem] bg-slate-100 p-3 border border-slate-100/40 transition-all duration-200 hover:bg-white hover:shadow-lg hover:shadow-slate-200/40 active:scale-[0.98]"
                 >
                   {/* TOP SECTION: Title and Wishlist */}
-                  <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex items-start justify-between gap-2 mb-1">
                     <h4 className="text-[15px] font-semibold leading-snug text-slate-800 line-clamp-2 transition-colors group-hover:text-slate-900">
                       {dish.name}
                     </h4>
@@ -174,7 +174,7 @@ export default function TabletPopularDishes() {
                   </div>
 
                   {/* MIDDLE SECTION: Image box with subtle zoom feedback */}
-                  <div className="relative aspect-square w-full my-2 overflow-hidden">
+                  <div className="relative aspect-square w-full my-1 overflow-hidden">
                     <Image
                       src={dish.img}
                       alt={dish.name}
@@ -184,12 +184,12 @@ export default function TabletPopularDishes() {
                           event.currentTarget.src = "/popular-dishes/burger.png";
                         }
                       }}
-                      className="object-contain p-2 transition-transform duration-300 group-hover:scale-105"
+                      className="object-contain p-0 transition-transform duration-300 group-hover:scale-105"
                     />
                   </div>
 
                   {/* BOTTOM SECTION: Calories (Left) and Price (Right) */}
-                  <div className="mt-auto pt-2 flex items-center justify-between">
+                  <div className="mt-auto pt-1 flex items-center justify-between">
                     {/* Calories */}
                     <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 bg-slate-100/70 group-hover:bg-slate-50 px-2 py-0.5 rounded-full transition-colors">
                       <Flame size={12} className="text-orange-500" />
