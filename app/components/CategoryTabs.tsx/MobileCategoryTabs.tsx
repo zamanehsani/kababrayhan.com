@@ -201,10 +201,10 @@ export default function CategoryTabs() {
         <h3 className="text-xl font-normal tracking-wide text-slate-900">
           Categories
         </h3>
-        <button className="flex items-center gap-1 text-sm font-normal text-slate-500 active:opacity-70">
+        {/* <button className="flex items-center gap-1 text-sm font-normal text-slate-500 active:opacity-70">
           See all
           <ChevronRight size={14} />
-        </button>
+        </button> */}
       </div>
 
       {/* Sticky-on-threshold category bar */}

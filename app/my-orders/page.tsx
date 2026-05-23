@@ -190,9 +190,21 @@ export default function MyOrdersPage() {
 
   const orders = useMemo(() => {
     return [...(data ?? [])].sort((a: SalesOrderSummary, b: SalesOrderSummary) => {
-      const aTime = new Date(a.transaction_date).getTime();
-      const bTime = new Date(b.transaction_date).getTime();
-      return bTime - aTime;
+      const creationA = Date.parse(a.creation ?? "");
+      const creationB = Date.parse(b.creation ?? "");
+
+      if (Number.isFinite(creationA) && Number.isFinite(creationB)) {
+        return creationB - creationA;
+      }
+
+      const aTime = Date.parse(a.transaction_date);
+      const bTime = Date.parse(b.transaction_date);
+
+      if (Number.isFinite(aTime) && Number.isFinite(bTime)) {
+        return bTime - aTime;
+      }
+
+      return b.name.localeCompare(a.name);
     });
   }, [data]);
 

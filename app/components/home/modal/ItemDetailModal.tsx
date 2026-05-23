@@ -2,7 +2,6 @@ import {
   ChevronLeft,
   Clock,
   Flame,
-  Heart,
   Minus,
   Plus,
   Star,
@@ -22,7 +21,9 @@ export function ItemDetailModal({
   onClose: () => void;
 }>) {
   const [quantity, setQuantity] = useState(1);
-  const [isCustomizationOpen, setIsCustomizationOpen] = useState(false);
+  const [isCustomizationOpen, setIsCustomizationOpen] = useState(
+    Boolean(dish.hasVariants)
+  );
   const itemCode = useMemo(() => String(dish.id ?? ""), [dish.id]);
   const {
     variationGroups,
@@ -31,14 +32,19 @@ export function ItemDetailModal({
     selectedCount,
     selectedAddOns,
     selectedAddOnPrice,
+    selectedVariantItem,
+    isVariantSelectionRequired,
+    isVariantDataLoading,
+    variantOptionsCount,
+    canAddToCart,
     handleSingleSelect,
     handleMultiToggle,
-  } = useItemCustomizationState(itemCode);
+  } = useItemCustomizationState(itemCode, Boolean(dish.hasVariants));
 
   const basePrice = useMemo(() => {
-    const parsed = Number(dish.price);
+    const parsed = Number(selectedVariantItem?.standard_rate ?? dish.price);
     return Number.isFinite(parsed) ? parsed : 0;
-  }, [dish.price]);
+  }, [dish.price, selectedVariantItem]);
 
   const unitPrice = useMemo(
     () => basePrice + selectedAddOnPrice,
@@ -47,9 +53,59 @@ export function ItemDetailModal({
 
   const totalPrice = useMemo(() => unitPrice * quantity, [unitPrice, quantity]);
 
+  const dishForCart = useMemo<Dish>(() => {
+    if (!selectedVariantItem) {
+      return {
+        ...dish,
+        price: basePrice.toFixed(2),
+      };
+    }
+
+    const resolvedId =
+      (typeof selectedVariantItem.item_code === "string" &&
+      selectedVariantItem.item_code.trim()) ||
+      (typeof selectedVariantItem.name === "string" &&
+      selectedVariantItem.name.trim()) ||
+      String(dish.id);
+
+    return {
+      ...dish,
+      id: resolvedId,
+      name: selectedVariantItem.item_name || dish.name,
+      price: basePrice.toFixed(2),
+      cal:
+        typeof selectedVariantItem.custom_calories === "number"
+          ? selectedVariantItem.custom_calories.toString()
+          : dish.cal,
+      time:
+        typeof selectedVariantItem.custom_prep_time === "number"
+          ? `${selectedVariantItem.custom_prep_time} min`
+          : dish.time,
+      description:
+        typeof selectedVariantItem.description === "string" &&
+        selectedVariantItem.description.trim()
+          ? selectedVariantItem.description
+          : dish.description,
+    };
+  }, [basePrice, dish, selectedVariantItem]);
+
+  const variantGateMessage = useMemo(() => {
+    if (!isVariantSelectionRequired || canAddToCart) return "";
+    if (isVariantDataLoading) return "Loading variants...";
+    if (variantOptionsCount === 0) return "No variants are available for this item.";
+    return "Please select a variant before adding to cart.";
+  }, [
+    canAddToCart,
+    isVariantDataLoading,
+    isVariantSelectionRequired,
+    variantOptionsCount,
+  ]);
+
   const handleAddToCart = () => {
+    if (!canAddToCart) return;
+
     addDishToCart(
-      dish,
+      dishForCart,
       quantity,
       selectedAddOns.map((addOn) => ({
         id: addOn.id,
@@ -81,59 +137,73 @@ export function ItemDetailModal({
       open
       aria-labelledby="dish-details-title"
     >
-      {/* 1. TOP ACTION BAR */}
-      <div className="flex items-center justify-between px-4 pt-3">
-        <button
-          onClick={onClose}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-800 shadow-sm active:scale-95"
-        >
-          <ChevronLeft size={20} />
-        </button>
-        <h2
-          id="dish-details-title"
-          className="text-2xl font-semibold text-slate-800"
-        >
-          Details
-        </h2>
-        <button className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-100 bg-white text-red-500 shadow-sm active:scale-95">
-          <Heart size={20} fill={dish.liked ? "currentColor" : "none"} />
-        </button>
-      </div>
-
-      {/* 2. DISH HERO IMAGE */}
+      {/* 1 + 2. HERO IMAGE with overlaid action bar */}
       {isCustomizationOpen ? (
-        <ItemCustomizationSheet
-          variationGroups={variationGroups}
-          addOnGroups={addOnGroups}
-          selections={resolvedSelections}
-          onSingleSelect={handleSingleSelect}
-          onMultiToggle={handleMultiToggle}
-          onBack={() => setIsCustomizationOpen(false)}
-        />
+        <>
+          {/* Action bar for customization view */}
+          <div className="flex items-center justify-between px-4 pt-3">
+            <button
+              onClick={onClose}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-800 shadow-sm active:scale-95"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <h2
+              id="dish-details-title"
+              className="text-2xl font-semibold text-slate-800"
+            >
+              Details
+            </h2>
+            <div className="h-10 w-10" />
+          </div>
+          <ItemCustomizationSheet
+            variationGroups={variationGroups}
+            addOnGroups={addOnGroups}
+            selections={resolvedSelections}
+            onSingleSelect={handleSingleSelect}
+            onMultiToggle={handleMultiToggle}
+            onBack={() => setIsCustomizationOpen(false)}
+          />
+        </>
       ) : (
         <>
-          <div className="relative w-full aspect-4/3 flex items-center justify-center px-6 overflow-hidden">
-            {/* The Background Blur Layer */}
-            <div className="absolute inset-0 scale-150 blur-3xl opacity-30 pointer-events-none transform">
+          {/* Full-bleed hero image with overlay action bar */}
+          <div className="relative w-full aspect-4/3 overflow-hidden">
+            {/* Background blur */}
+            <div className="absolute inset-0 scale-150 blur-3xl opacity-30 pointer-events-none">
               <Image src={dish.img} alt="" fill className="object-cover" />
             </div>
-
-            <div className="relative w-full h-full">
-              <Image
-                src={dish.img}
-                alt={dish.name}
-                fill
-                className="object-contain"
-                priority
-              />
+            {/* Main image */}
+            <Image
+              src={dish.img}
+              alt={dish.name}
+              fill
+              className="object-contain"
+              priority
+            />
+            {/* Overlaid action bar */}
+            <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-3">
+              <button
+                onClick={onClose}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm text-slate-800 shadow-sm active:scale-95"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <h2
+                id="dish-details-title"
+                className="hidden md:block text-lg font-semibold text-slate-800 bg-white/70 backdrop-blur-sm px-4 py-1.5 rounded-full shadow-sm"
+              >
+                Details
+              </h2>
+              <div className="h-10 w-10" />
             </div>
           </div>
 
           {/* CAROUSEL DOTS INDICATOR */}
-          <div className="flex justify-center gap-1.5 mb-4">
+          {/* <div className="flex justify-center gap-1.5 mb-4">
             <span className="h-1.5 w-3 rounded-full bg-yellow-400"></span>
             <span className="h-1.5 w-1.5 rounded-full bg-slate-200"></span>
-          </div>
+          </div> */}
 
           {/* 4. DISH NAME AND PRICE TITLE */}
           <div className="flex items-start justify-between px-5 mb-4">
@@ -234,9 +304,16 @@ export function ItemDetailModal({
         <button
           type="button"
           onClick={handleAddToCart}
-          className="flex-1 h-12 bg-yellow-400 text-slate-800 rounded-full font-semibold text-sm tracking-wide shadow-md shadow-yellow-200/50 active:scale-[0.98] transition-transform"
+          disabled={!canAddToCart}
+          className={`flex-1 h-12 rounded-full font-semibold text-sm tracking-wide shadow-md transition-transform ${
+            canAddToCart
+              ? "bg-yellow-400 text-slate-800 shadow-yellow-200/50 active:scale-[0.98]"
+              : "bg-slate-200 text-slate-500 shadow-slate-100 cursor-not-allowed"
+          }`}
         >
-          Add to Cart • AED {totalPrice.toFixed(2)}
+          {canAddToCart
+            ? `Add to Cart • AED ${totalPrice.toFixed(2)}`
+            : variantGateMessage || "Select Required Options"}
         </button>
       </div>
     </dialog>

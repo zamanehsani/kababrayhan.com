@@ -11,6 +11,7 @@ export interface CustomGroup {
   title: string;
   type: "single" | "multiple";
   required: boolean;
+  autoSelectFirst?: boolean;
   options: CustomOption[];
 }
 

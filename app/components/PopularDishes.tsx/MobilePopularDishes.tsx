@@ -40,7 +40,9 @@ export default function PopularDishes() {
 
   const dishes: Dish[] = useMemo(
     () =>
-      items?.map((item) => ({
+      (items ?? [])
+        .filter((item) => !item.variant_of)
+        .map((item) => ({
         id: item.item_code || item.name,
         name: item.item_name ?? item.name ?? "Menu Item",
         price: item.standard_rate ? item.standard_rate.toFixed(2) : "0.00",
@@ -56,7 +58,11 @@ export default function PopularDishes() {
           "A delicious selection from our menu, prepared fresh for you.",
         img: resolveDishImage(item.image),
         liked: false,
-      })) ?? [],
+        hasVariants:
+          typeof item.has_variants === "number"
+            ? item.has_variants === 1
+            : Boolean(item.has_variants),
+      })),
     [items]
   );
 
@@ -91,9 +97,9 @@ export default function PopularDishes() {
         <h3 className="text-xl font-normal tracking-wide text-slate-900">
           Popular Dishes
         </h3>
-        <button className="text-sm font-normal text-slate-500 active:opacity-70">
+        {/* <button className="text-sm font-normal text-slate-500 active:opacity-70">
           See all
-        </button>
+        </button> */}
       </div>
 
       <div
@@ -144,7 +150,7 @@ export default function PopularDishes() {
                     <h4 className="text-[14px] font-semibold leading-tight text-slate-800 line-clamp-2">
                       {dish.name}
                     </h4>
-                    <button
+                    {/* <button
                       onClick={(e) => {
                         e.stopPropagation();
                       }}
@@ -158,7 +164,7 @@ export default function PopularDishes() {
                         fill={dish.liked ? "currentColor" : "none"}
                         strokeWidth={2.5}
                       />
-                    </button>
+                    </button> */}
                   </div>
 
                   {/* MIDDLE SECTION: Image centered on the gray card */}
@@ -185,8 +191,8 @@ export default function PopularDishes() {
                     </div>
 
                     {/* Price on the Right */}
-                    <span className="text-[16px] font-semibold text-yellow-400">
-                      <span className="text-xs font-bold text-yellow-400 mr-0.5">
+                    <span className="text-[16px] font-semibold text-emerald-600">
+                      <span className="text-xs font-bold text-emerald-600 mr-0.5">
                         AED
                       </span>
                       {dish.price}

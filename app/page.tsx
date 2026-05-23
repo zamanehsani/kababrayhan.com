@@ -27,7 +27,7 @@ export default function Home() {
 
       {/* <Header /> */}
       <SearchBar />
-      <PromoBanner />
+      {/* <PromoBanner /> */}
       <CategoryTabs />
       <PopularDishes />
 

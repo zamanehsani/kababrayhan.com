@@ -10,6 +10,7 @@ export type Dish = {
   description: string;
   img: string;
   liked: boolean;
+  hasVariants?: boolean;
 };
 
 export type Address = {

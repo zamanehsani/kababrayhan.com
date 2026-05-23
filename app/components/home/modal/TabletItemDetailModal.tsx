@@ -15,7 +15,9 @@ export function TabletItemDetailModal({
   onClose: () => void;
 }>) {
   const [quantity, setQuantity] = useState(1);
-  const [isCustomizationOpen, setIsCustomizationOpen] = useState(false);
+  const [isCustomizationOpen, setIsCustomizationOpen] = useState(
+    Boolean(dish.hasVariants)
+  );
   const itemCode = useMemo(() => String(dish.id ?? ""), [dish.id]);
 
   const {
@@ -25,21 +27,76 @@ export function TabletItemDetailModal({
     selectedCount,
     selectedAddOns,
     selectedAddOnPrice,
+    selectedVariantItem,
+    isVariantSelectionRequired,
+    isVariantDataLoading,
+    variantOptionsCount,
+    canAddToCart,
     handleSingleSelect,
     handleMultiToggle,
-  } = useItemCustomizationState(itemCode);
+  } = useItemCustomizationState(itemCode, Boolean(dish.hasVariants));
 
   const basePrice = useMemo(() => {
-    const parsed = Number(dish.price);
+    const parsed = Number(selectedVariantItem?.standard_rate ?? dish.price);
     return Number.isFinite(parsed) ? parsed : 0;
-  }, [dish.price]);
+  }, [dish.price, selectedVariantItem]);
 
   const unitPrice = basePrice + selectedAddOnPrice;
   const totalPrice = unitPrice * quantity;
 
+  const dishForCart = useMemo<Dish>(() => {
+    if (!selectedVariantItem) {
+      return {
+        ...dish,
+        price: basePrice.toFixed(2),
+      };
+    }
+
+    const resolvedId =
+      (typeof selectedVariantItem.item_code === "string" &&
+      selectedVariantItem.item_code.trim()) ||
+      (typeof selectedVariantItem.name === "string" &&
+      selectedVariantItem.name.trim()) ||
+      String(dish.id);
+
+    return {
+      ...dish,
+      id: resolvedId,
+      name: selectedVariantItem.item_name || dish.name,
+      price: basePrice.toFixed(2),
+      cal:
+        typeof selectedVariantItem.custom_calories === "number"
+          ? selectedVariantItem.custom_calories.toString()
+          : dish.cal,
+      time:
+        typeof selectedVariantItem.custom_prep_time === "number"
+          ? `${selectedVariantItem.custom_prep_time} min`
+          : dish.time,
+      description:
+        typeof selectedVariantItem.description === "string" &&
+        selectedVariantItem.description.trim()
+          ? selectedVariantItem.description
+          : dish.description,
+    };
+  }, [basePrice, dish, selectedVariantItem]);
+
+  const variantGateMessage = useMemo(() => {
+    if (!isVariantSelectionRequired || canAddToCart) return "";
+    if (isVariantDataLoading) return "Loading variants...";
+    if (variantOptionsCount === 0) return "No variants are available for this item.";
+    return "Please select a variant before adding to cart.";
+  }, [
+    canAddToCart,
+    isVariantDataLoading,
+    isVariantSelectionRequired,
+    variantOptionsCount,
+  ]);
+
   const handleAddToCart = () => {
+    if (!canAddToCart) return;
+
     addDishToCart(
-      dish,
+      dishForCart,
       quantity,
       selectedAddOns.map((addOn) => ({
         id: addOn.id,
@@ -93,9 +150,9 @@ export function TabletItemDetailModal({
           >
             <X size={18} />
           </button>
-          <button className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full border border-slate-100/10 bg-white/80 text-red-500 backdrop-blur-md shadow-sm active:scale-95 transition-all">
+          {/* <button className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full border border-slate-100/10 bg-white/80 text-red-500 backdrop-blur-md shadow-sm active:scale-95 transition-all">
             <Heart size={18} fill={dish.liked ? "currentColor" : "none"} />
-          </button>
+          </button> */}
         </div>
 
         <div className="flex-1 overflow-y-auto no-scrollbar">
@@ -227,9 +284,16 @@ export function TabletItemDetailModal({
           <button
             type="button"
             onClick={handleAddToCart}
-            className="h-12 flex-1 rounded-full bg-yellow-400 text-sm font-medium tracking-wide text-slate-800 shadow-md shadow-yellow-200/40 transition-all active:scale-[0.98]"
+            disabled={!canAddToCart}
+            className={`h-12 flex-1 rounded-full text-sm font-medium tracking-wide shadow-md transition-all ${
+              canAddToCart
+                ? "bg-yellow-400 text-slate-800 shadow-yellow-200/40 active:scale-[0.98]"
+                : "bg-slate-200 text-slate-500 shadow-slate-100 cursor-not-allowed"
+            }`}
           >
-            Add to Cart • AED {totalPrice.toFixed(2)}
+            {canAddToCart
+              ? `Add to Cart • AED ${totalPrice.toFixed(2)}`
+              : variantGateMessage || "Select Required Options"}
           </button>
         </div>
       </dialog>

@@ -196,10 +196,10 @@ export default function TabletCategoryTabs() {
         <h3 className="text-2xl font-semibold tracking-wide text-slate-900">
           Categories
         </h3>
-        <button className="flex items-center gap-1 text-base font-semibold tracking-wide text-slate-500 hover:text-slate-700 active:opacity-70 transition-colors">
+        {/* <button className="flex items-center gap-1 text-base font-semibold tracking-wide text-slate-500 hover:text-slate-700 active:opacity-70 transition-colors">
           See all categories
           <ChevronRight size={16} />
-        </button>
+        </button> */}
       </div>
       <div ref={stickySentinelRef}>
         <div

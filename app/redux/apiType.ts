@@ -33,6 +33,7 @@ export interface CreateAddressResponse {
     [key: string]: any;
   };
 }
+
 // --- OTP Verification Types ---
 export interface VerifyOtpRequest {
   mobile: string;
@@ -56,10 +57,13 @@ export interface Item {
   item_name: string;
   item_code: string;
   item_group: string;
+  has_variants: boolean | number;
+  attributes?: Array<Record<string, unknown>>;
+  variant_of: string | null;
   standard_rate: number;
   image?: string;
   description?: string;
-  max_discount : string;
+  max_discount: string;
   custom_calories?: number;
   custom_prep_time?: number;
 }
@@ -76,6 +80,8 @@ export interface ItemDetails {
   description?: string;
   image?: string;
   standard_rate?: number;
+  has_variants?: boolean | number;
+  variant_of?: string | null;
   attributes?: Array<Record<string, unknown>>;
   custom_allowed_addons?: ItemAddOnLink[];
   allowed_add_ons?: ItemAddOnLink[];
@@ -245,6 +251,7 @@ export interface SalesOrderItem {
 
 export interface SalesOrderSummary {
   name: string;
+  creation?: string;
   transaction_date: string;
   grand_total: number;
   status: string;

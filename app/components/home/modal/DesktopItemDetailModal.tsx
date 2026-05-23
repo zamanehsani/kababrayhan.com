@@ -15,7 +15,9 @@ export function DesktopItemDetailModal({
   onClose: () => void;
 }>) {
   const [quantity, setQuantity] = useState(1);
-  const [isCustomizationOpen, setIsCustomizationOpen] = useState(false);
+  const [isCustomizationOpen, setIsCustomizationOpen] = useState(
+    Boolean(dish.hasVariants)
+  );
   const itemCode = useMemo(() => String(dish.id ?? ""), [dish.id]);
 
   const {
@@ -25,20 +27,75 @@ export function DesktopItemDetailModal({
     selectedCount,
     selectedAddOns,
     selectedAddOnPrice,
+    selectedVariantItem,
+    isVariantSelectionRequired,
+    isVariantDataLoading,
+    variantOptionsCount,
+    canAddToCart,
     handleSingleSelect,
     handleMultiToggle,
-  } = useItemCustomizationState(itemCode);
+  } = useItemCustomizationState(itemCode, Boolean(dish.hasVariants));
 
   const basePrice = useMemo(() => {
-    const parsed = Number(dish.price);
+    const parsed = Number(selectedVariantItem?.standard_rate ?? dish.price);
     return Number.isFinite(parsed) ? parsed : 0;
-  }, [dish.price]);
+  }, [dish.price, selectedVariantItem]);
 
   const totalPrice = ((basePrice + selectedAddOnPrice) * quantity).toFixed(2);
 
+  const dishForCart = useMemo<Dish>(() => {
+    if (!selectedVariantItem) {
+      return {
+        ...dish,
+        price: basePrice.toFixed(2),
+      };
+    }
+
+    const resolvedId =
+      (typeof selectedVariantItem.item_code === "string" &&
+      selectedVariantItem.item_code.trim()) ||
+      (typeof selectedVariantItem.name === "string" &&
+      selectedVariantItem.name.trim()) ||
+      String(dish.id);
+
+    return {
+      ...dish,
+      id: resolvedId,
+      name: selectedVariantItem.item_name || dish.name,
+      price: basePrice.toFixed(2),
+      cal:
+        typeof selectedVariantItem.custom_calories === "number"
+          ? selectedVariantItem.custom_calories.toString()
+          : dish.cal,
+      time:
+        typeof selectedVariantItem.custom_prep_time === "number"
+          ? `${selectedVariantItem.custom_prep_time} min`
+          : dish.time,
+      description:
+        typeof selectedVariantItem.description === "string" &&
+        selectedVariantItem.description.trim()
+          ? selectedVariantItem.description
+          : dish.description,
+    };
+  }, [basePrice, dish, selectedVariantItem]);
+
+  const variantGateMessage = useMemo(() => {
+    if (!isVariantSelectionRequired || canAddToCart) return "";
+    if (isVariantDataLoading) return "Loading variants...";
+    if (variantOptionsCount === 0) return "No variants are available for this item.";
+    return "Please select a variant before adding to cart.";
+  }, [
+    canAddToCart,
+    isVariantDataLoading,
+    isVariantSelectionRequired,
+    variantOptionsCount,
+  ]);
+
   const handleAddToCart = () => {
+    if (!canAddToCart) return;
+
     addDishToCart(
-      dish,
+      dishForCart,
       quantity,
       selectedAddOns.map((addOn) => ({
         id: addOn.id,
@@ -111,12 +168,12 @@ export function DesktopItemDetailModal({
                       {selectedCount} selected
                     </span>
                   )}
-                  <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200/60 bg-white text-red-500 shadow-sm transition-transform hover:scale-105 active:scale-95">
+                  {/* <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200/60 bg-white text-red-500 shadow-sm transition-transform hover:scale-105 active:scale-95">
                     <Heart
                       size={18}
                       fill={dish.liked ? "currentColor" : "none"}
                     />
-                  </button>
+                  </button> */}
                 </div>
               </div>
             </div>
@@ -164,9 +221,14 @@ export function DesktopItemDetailModal({
                 <button
                   type="button"
                   onClick={handleAddToCart}
-                  className="h-12 rounded-full bg-yellow-400 px-8 text-sm font-medium tracking-wide text-slate-800 shadow-md shadow-yellow-200/40 transition-all hover:bg-yellow-500 active:scale-[0.98]"
+                  disabled={!canAddToCart}
+                  className={`h-12 rounded-full px-8 text-sm font-medium tracking-wide shadow-md transition-all ${
+                    canAddToCart
+                      ? "bg-yellow-400 text-slate-800 shadow-yellow-200/40 hover:bg-yellow-500 active:scale-[0.98]"
+                      : "bg-slate-200 text-slate-500 shadow-slate-100 cursor-not-allowed"
+                  }`}
                 >
-                  Add to Cart
+                  {canAddToCart ? "Add to Cart" : variantGateMessage || "Select Required Options"}
                 </button>
               </div>
             </div>
@@ -207,12 +269,12 @@ export function DesktopItemDetailModal({
                     </h1>
                   </div>
 
-                  <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200/60 bg-white text-red-500 shadow-sm transition-transform hover:scale-105 active:scale-95">
+                  {/* <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200/60 bg-white text-red-500 shadow-sm transition-transform hover:scale-105 active:scale-95">
                     <Heart
                       size={18}
                       fill={dish.liked ? "currentColor" : "none"}
                     />
-                  </button>
+                  </button> */}
                 </div>
               </div>
 
@@ -303,9 +365,14 @@ export function DesktopItemDetailModal({
                   <button
                     type="button"
                     onClick={handleAddToCart}
-                    className="h-12 rounded-full bg-yellow-400 px-8 text-sm font-medium tracking-wide text-slate-800 shadow-md shadow-yellow-200/40 transition-all hover:bg-yellow-500 active:scale-[0.98]"
+                    disabled={!canAddToCart}
+                    className={`h-12 rounded-full px-8 text-sm font-medium tracking-wide shadow-md transition-all ${
+                      canAddToCart
+                        ? "bg-yellow-400 text-slate-800 shadow-yellow-200/40 hover:bg-yellow-500 active:scale-[0.98]"
+                        : "bg-slate-200 text-slate-500 shadow-slate-100 cursor-not-allowed"
+                    }`}
                   >
-                    Add to Cart
+                    {canAddToCart ? "Add to Cart" : variantGateMessage || "Select Required Options"}
                   </button>
                 </div>
               </div>

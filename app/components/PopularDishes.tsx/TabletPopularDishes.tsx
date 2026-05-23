@@ -39,7 +39,9 @@ export default function TabletPopularDishes() {
 
   const dishes: Dish[] = useMemo(
     () =>
-      items?.map((item) => ({
+      (items ?? [])
+        .filter((item) => !item.variant_of)
+        .map((item) => ({
         id: item.item_code || item.name,
         name: item.item_name ?? item.name ?? "Menu Item",
         price: item.standard_rate ? item.standard_rate.toFixed(2) : "0.00",
@@ -55,7 +57,11 @@ export default function TabletPopularDishes() {
           "A delicious selection from our menu, prepared fresh for you.",
         img: resolveDishImage(item.image),
         liked: false,
-      })) ?? [],
+        hasVariants:
+          typeof item.has_variants === "number"
+            ? item.has_variants === 1
+            : Boolean(item.has_variants),
+      })),
     [items]
   );
 
@@ -95,9 +101,9 @@ export default function TabletPopularDishes() {
         <h3 className="text-2xl font-semibold tracking-wide text-slate-900">
           Popular Dishes
         </h3>
-        <button className="text-sm font-semibold text-slate-500 active:opacity-70 tracking-wide">
+        {/* <button className="text-sm font-semibold text-slate-500 active:opacity-70 tracking-wide">
           See all
-        </button>
+        </button> */}
       </div>
 
       <div
@@ -150,7 +156,7 @@ export default function TabletPopularDishes() {
                     <h4 className="text-[15px] font-semibold leading-snug text-slate-800 line-clamp-2 transition-colors group-hover:text-slate-900">
                       {dish.name}
                     </h4>
-                    <button
+                    {/* <button
                       onClick={(e) => {
                         e.stopPropagation();
                       }}
@@ -164,7 +170,7 @@ export default function TabletPopularDishes() {
                         fill={dish.liked ? "currentColor" : "none"}
                         strokeWidth={2.5}
                       />
-                    </button>
+                    </button> */}
                   </div>
 
                   {/* MIDDLE SECTION: Image box with subtle zoom feedback */}
@@ -191,8 +197,8 @@ export default function TabletPopularDishes() {
                     </div>
 
                     {/* Price */}
-                    <span className="text-[17px] font-bold text-yellow-500 transition-colors group-hover:text-yellow-600">
-                      <span className="text-xs font-bold text-yellow-500 mr-0.5">
+                    <span className="text-[17px] font-bold text-emerald-600 transition-colors group-hover:text-emerald-700">
+                      <span className="text-xs font-bold text-emerald-600 mr-0.5">
                         AED
                       </span>
                       {dish.price}

@@ -143,13 +143,13 @@ export default function DesktopCategoryTabs() {
             Filter your favorite items directly
           </p>
         </div>
-        <button className="flex items-center gap-1.5 text-base font-semibold tracking-wide text-slate-500 hover:text-orange-500 transition-colors group">
+        {/* <button className="flex items-center gap-1.5 text-base font-semibold tracking-wide text-slate-500 hover:text-orange-500 transition-colors group">
           View Full Menu
           <ChevronRight
             size={18}
             className="transition-transform group-hover:translate-x-1"
           />
-        </button>
+        </button> */}
       </div>
 
       {/* Premium Dashboard Grid Layout */}

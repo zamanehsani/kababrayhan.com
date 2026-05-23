@@ -38,7 +38,9 @@ export default function DesktopPopularDishes() {
 
   const dishes: Dish[] = useMemo(
     () =>
-      items?.map((item) => ({
+      (items ?? [])
+        .filter((item) => !item.variant_of)
+        .map((item) => ({
         id: item.item_code || item.name,
         name: item.item_name ?? item.name ?? "Menu Item",
         price: item.standard_rate ? item.standard_rate.toFixed(2) : "0.00",
@@ -54,7 +56,11 @@ export default function DesktopPopularDishes() {
           "A delicious selection from our menu, prepared fresh for you.",
         img: resolveDishImage(item.image),
         liked: false,
-      })) ?? [],
+        hasVariants:
+          typeof item.has_variants === "number"
+            ? item.has_variants === 1
+            : Boolean(item.has_variants),
+      })),
     [items]
   );
 
@@ -96,9 +102,9 @@ export default function DesktopPopularDishes() {
         <h3 className="text-2xl font-semibold tracking-wide text-slate-900">
           Popular Dishes
         </h3>
-        <button className="text-sm font-semibold tracking-wide text-slate-500 hover:text-slate-800 transition-colors active:opacity-70">
+        {/* <button className="text-sm font-semibold tracking-wide text-slate-500 hover:text-slate-800 transition-colors active:opacity-70">
           See all
-        </button>
+        </button> */}
       </div>
 
       <div
@@ -154,7 +160,7 @@ export default function DesktopPopularDishes() {
                     <h4 className="text-[16px] font-semibold leading-snug tracking-wide text-slate-800 line-clamp-2 group-hover:text-slate-900 transition-colors">
                       {dish.name}
                     </h4>
-                    <button
+                    {/* <button
                       onClick={(e) => {
                         e.stopPropagation();
                       }}
@@ -168,7 +174,7 @@ export default function DesktopPopularDishes() {
                         fill={dish.liked ? "currentColor" : "none"}
                         strokeWidth={2.5}
                       />
-                    </button>
+                    </button> */}
                   </div>
 
                   {/* MIDDLE SECTION: Image centered with a soft hover scale effect */}
@@ -195,7 +201,7 @@ export default function DesktopPopularDishes() {
                     </div>
 
                     {/* Price (Right) */}
-                    <span className="text-[18px] font-semibold tracking-wide text-amber-500 group-hover:text-amber-600 transition-colors">
+                    <span className="text-[18px] font-semibold tracking-wide text-emerald-600 group-hover:text-emerald-700 transition-colors">
                       <span className="text-xs font-bold mr-0.5">AED</span>
                       {dish.price}
                     </span>
