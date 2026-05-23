@@ -43,11 +43,11 @@ export function CustomizationPanel({
             </h3>
             {group.required ? (
               <span className="text-[10px] font-bold bg-amber-50 text-amber-600 px-2 py-0.5 rounded-md">
-                REQUIRED
+                Required
               </span>
             ) : (
               <span className="text-[10px] font-medium text-slate-400">
-                OPTIONAL
+                Optional
               </span>
             )}
           </div>

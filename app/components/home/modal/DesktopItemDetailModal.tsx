@@ -1,11 +1,10 @@
-import { X, Clock, Flame, Heart, Minus, Plus, Star } from "lucide-react";
+import { ChevronLeft, X, Clock, Flame, Minus, Plus, Star } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Dish } from "@/app/types/type";
 import { addDishToCart } from "@/app/lib/cart";
 import { DesktopCustomizationSheet } from "./desktop/DesktopCustomizationSheet";
 import { useItemCustomizationState } from "./shared/useItemCustomizationState";
-
 
 export function DesktopItemDetailModal({
   dish,
@@ -35,6 +34,9 @@ export function DesktopItemDetailModal({
     handleSingleSelect,
     handleMultiToggle,
   } = useItemCustomizationState(itemCode, Boolean(dish.hasVariants));
+
+  const hasCustomizationOptions =
+    variationGroups.length > 0 || addOnGroups.length > 0;
 
   const basePrice = useMemo(() => {
     const parsed = Number(selectedVariantItem?.standard_rate ?? dish.price);
@@ -81,9 +83,9 @@ export function DesktopItemDetailModal({
 
   const variantGateMessage = useMemo(() => {
     if (!isVariantSelectionRequired || canAddToCart) return "";
-    if (isVariantDataLoading) return "Loading variants...";
-    if (variantOptionsCount === 0) return "No variants are available for this item.";
-    return "Please select a variant before adding to cart.";
+    if (isVariantDataLoading) return "Loading options...";
+    if (variantOptionsCount === 0) return "No options are available for this item.";
+    return "Please choose an option before adding to cart.";
   }, [
     canAddToCart,
     isVariantDataLoading,
@@ -140,7 +142,7 @@ export function DesktopItemDetailModal({
         {/* Close Button Anchor */}
         <button
           onClick={onClose}
-          className="absolute top-5 left-5 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-800 shadow-md border border-slate-100 hover:bg-slate-50 active:scale-95 transition-all"
+          className="absolute top-5 right-5 z-30 flex h-10 w-10 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-800 shadow-md transition-all hover:bg-slate-50 active:scale-95"
         >
           <X size={18} />
         </button>
@@ -151,7 +153,7 @@ export function DesktopItemDetailModal({
               {dish.name} details
             </h2>
 
-            <div className="border-b border-slate-100 px-8 pb-5 pl-24 pt-7">
+            <div className="border-b border-slate-100 pl-8 pr-24 pb-5 pt-7">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <span className="text-xs font-medium uppercase tracking-wide text-orange-500">
@@ -165,15 +167,9 @@ export function DesktopItemDetailModal({
                 <div className="flex items-center gap-2">
                   {selectedCount > 0 && (
                     <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-medium tracking-wide text-yellow-700">
-                      {selectedCount} selected
+                      {selectedCount} chosen
                     </span>
                   )}
-                  {/* <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200/60 bg-white text-red-500 shadow-sm transition-transform hover:scale-105 active:scale-95">
-                    <Heart
-                      size={18}
-                      fill={dish.liked ? "currentColor" : "none"}
-                    />
-                  </button> */}
                 </div>
               </div>
             </div>
@@ -228,7 +224,9 @@ export function DesktopItemDetailModal({
                       : "bg-slate-200 text-slate-500 shadow-slate-100 cursor-not-allowed"
                   }`}
                 >
-                  {canAddToCart ? "Add to Cart" : variantGateMessage || "Select Required Options"}
+                  {canAddToCart
+                    ? "Add to cart"
+                    : variantGateMessage || "Choose required options"}
                 </button>
               </div>
             </div>
@@ -258,7 +256,7 @@ export function DesktopItemDetailModal({
               </h2>
 
               {/* Header Data Group */}
-              <div className="border-b border-slate-100 px-8 pb-5 pt-7">
+              <div className="border-b border-slate-100 pl-8 pr-24 pb-5 pt-7">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <span className="text-xs font-medium uppercase tracking-wide text-orange-500">
@@ -269,12 +267,6 @@ export function DesktopItemDetailModal({
                     </h1>
                   </div>
 
-                  {/* <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200/60 bg-white text-red-500 shadow-sm transition-transform hover:scale-105 active:scale-95">
-                    <Heart
-                      size={18}
-                      fill={dish.liked ? "currentColor" : "none"}
-                    />
-                  </button> */}
                 </div>
               </div>
 
@@ -288,19 +280,19 @@ export function DesktopItemDetailModal({
                   <div className="h-4 w-px bg-slate-200"></div>
                   <div className="flex items-center gap-1.5">
                     <Clock size={15} className="text-slate-400" />
-                    <span>{dish.time}</span>
+                    <span>Ready in {dish.time}</span>
                   </div>
                   <div className="h-4 w-px bg-slate-200"></div>
                   <div className="flex items-center gap-1.5">
                     <Star size={15} className="fill-yellow-400 text-yellow-400" />
-                    <span className="text-slate-800">{dish.rating} Rating</span>
+                    <span className="text-slate-800">{dish.rating} stars</span>
                   </div>
                 </div>
 
                 {/* Description Block */}
                 <div>
                   <h3 className="mb-1.5 text-sm font-medium tracking-wide text-slate-800">
-                    Description
+                    About this item
                   </h3>
                   <div
                     className="prose prose-sm max-w-none font-sans leading-relaxed tracking-wide text-slate-400 prose-p:my-1 prose-p:text-xs prose-p:text-slate-400 prose-strong:text-xs prose-strong:font-normal prose-strong:text-slate-700 prose-ul:list-disc prose-ul:pl-4 prose-li:my-0.5 prose-li:text-xs"
@@ -309,27 +301,43 @@ export function DesktopItemDetailModal({
                 </div>
               </div>
 
-              <div className="flex items-center justify-between border-t border-slate-100/80 bg-white px-8 py-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium tracking-wide text-slate-800">
-                    Modification
-                  </span>
-                  {selectedCount > 0 && (
-                    <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-medium tracking-wide text-yellow-700">
-                      {selectedCount} selected
+              {hasCustomizationOptions && (
+                <div className="flex items-center justify-between border-t border-slate-100/80 bg-white px-8 py-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium tracking-wide text-slate-800">
+                      Modification
                     </span>
-                  )}
+                    {selectedCount > 0 && (
+                      <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-medium tracking-wide text-yellow-700">
+                        {selectedCount} chosen
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomizationOpen((current) => !current)}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium tracking-wide text-slate-700 transition-colors hover:bg-white"
+                    aria-expanded={isCustomizationOpen}
+                    aria-label={
+                      isCustomizationOpen
+                        ? "Back to item details"
+                        : "Open modification options"
+                    }
+                  >
+                    {isCustomizationOpen ? (
+                      <>
+                        <ChevronLeft size={13} className="shrink-0" />
+                        <span>Back to item</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Modify options</span>
+                        <span className="text-[10px]">▼</span>
+                      </>
+                    )}
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setIsCustomizationOpen((current) => !current)}
-                  className="flex items-center gap-0.5 text-xs font-medium tracking-wide text-yellow-600"
-                  aria-expanded={isCustomizationOpen}
-                >
-                  <span>More Details</span>
-                  <span className="text-[10px]">▼</span>
-                </button>
-              </div>
+              )}
 
               {/* Price View Layout */}
               <div className="flex items-center justify-between gap-4 border-t border-slate-100 bg-white px-8 py-5">
@@ -372,7 +380,9 @@ export function DesktopItemDetailModal({
                         : "bg-slate-200 text-slate-500 shadow-slate-100 cursor-not-allowed"
                     }`}
                   >
-                    {canAddToCart ? "Add to Cart" : variantGateMessage || "Select Required Options"}
+                    {canAddToCart
+                      ? "Add to cart"
+                      : variantGateMessage || "Choose required options"}
                   </button>
                 </div>
               </div>

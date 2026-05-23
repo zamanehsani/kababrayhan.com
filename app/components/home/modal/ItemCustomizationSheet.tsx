@@ -18,11 +18,13 @@ export function ItemCustomizationSheet({
   onMultiToggle,
   onBack,
 }: Readonly<ItemCustomizationSheetProps>) {
+  const hasVariationGroups = variationGroups.length > 0;
+
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar border-y border-slate-100 bg-slate-50/40">
-      <div className="sticky top-0 z-10 flex items-center justify-between bg-white/90 px-5 py-3 backdrop-blur border-b border-slate-100">
+      {/* <div className="sticky top-0 z-10 flex items-center justify-between bg-white/90 px-5 py-3 backdrop-blur border-b border-slate-100">
         <h3 className="text-base font-semibold tracking-wide text-slate-800">
-          Customization Details
+          Customize your order
         </h3>
         <button
           type="button"
@@ -30,33 +32,35 @@ export function ItemCustomizationSheet({
           className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500"
         >
           <ChevronLeft size={14} />
-          Back
+          Back to item
         </button>
-      </div>
+      </div> */}
 
       <div className="px-5 py-4 space-y-6">
-        <section>
-          <h4 className="text-sm font-semibold tracking-wide text-slate-800">
-            Variations & Attributes
-          </h4>
-          <p className="mt-1 text-xs font-medium text-slate-400">
-            Choose size, color, and style for this item.
-          </p>
-          <CustomizationPanel
-            className="mt-3 flex flex-col gap-4"
-            customizations={variationGroups}
-            selections={selections}
-            onSingleSelect={onSingleSelect}
-            onMultiToggle={onMultiToggle}
-          />
-        </section>
+        {hasVariationGroups && (
+          <section>
+            <h4 className="text-sm font-semibold tracking-wide text-slate-800">
+              Choose your option
+            </h4>
+            <p className="mt-1 text-xs font-medium text-slate-400">
+              Select from the available options for this item.
+            </p>
+            <CustomizationPanel
+              className="mt-3 flex flex-col gap-4"
+              customizations={variationGroups}
+              selections={selections}
+              onSingleSelect={onSingleSelect}
+              onMultiToggle={onMultiToggle}
+            />
+          </section>
+        )}
 
         <section>
           <h4 className="text-sm font-semibold tracking-wide text-slate-800">
             Add-ons
           </h4>
           <p className="mt-1 text-xs font-medium text-slate-400">
-            Add extras to your order.
+            Add extras if you like.
           </p>
           <CustomizationPanel
             className="mt-3 flex flex-col gap-4 pb-2"

@@ -41,6 +41,9 @@ export function ItemDetailModal({
     handleMultiToggle,
   } = useItemCustomizationState(itemCode, Boolean(dish.hasVariants));
 
+  const hasCustomizationOptions =
+    variationGroups.length > 0 || addOnGroups.length > 0;
+
   const basePrice = useMemo(() => {
     const parsed = Number(selectedVariantItem?.standard_rate ?? dish.price);
     return Number.isFinite(parsed) ? parsed : 0;
@@ -91,9 +94,9 @@ export function ItemDetailModal({
 
   const variantGateMessage = useMemo(() => {
     if (!isVariantSelectionRequired || canAddToCart) return "";
-    if (isVariantDataLoading) return "Loading variants...";
-    if (variantOptionsCount === 0) return "No variants are available for this item.";
-    return "Please select a variant before adding to cart.";
+    if (isVariantDataLoading) return "Loading options...";
+    if (variantOptionsCount === 0) return "No options are available for this item.";
+    return "Please choose an option before adding to cart.";
   }, [
     canAddToCart,
     isVariantDataLoading,
@@ -152,7 +155,7 @@ export function ItemDetailModal({
               id="dish-details-title"
               className="text-2xl font-semibold text-slate-800"
             >
-              Details
+              Item details
             </h2>
             <div className="h-10 w-10" />
           </div>
@@ -193,7 +196,7 @@ export function ItemDetailModal({
                 id="dish-details-title"
                 className="hidden md:block text-lg font-semibold text-slate-800 bg-white/70 backdrop-blur-sm px-4 py-1.5 rounded-full shadow-sm"
               >
-                Details
+                Item details
               </h2>
               <div className="h-10 w-10" />
             </div>
@@ -225,19 +228,19 @@ export function ItemDetailModal({
             <div className="h-4 w-px bg-slate-200"></div>
             <div className="flex items-center gap-1">
               <Clock size={14} className="text-slate-400" />
-              <span>Time {dish.time}</span>
+              <span>Ready in {dish.time}</span>
             </div>
             <div className="h-4 w-px bg-slate-200"></div>
             <div className="flex items-center gap-1">
               <Star size={14} className="text-yellow-400 fill-yellow-400" />
-              <span>{dish.rating} Rating</span>
+              <span>{dish.rating} stars</span>
             </div>
           </div>
 
           {/* 6. DESCRIPTION SECTION */}
           <div className="px-5 mb-2">
             <h3 className="text-base font-semibold tracking-wide text-slate-800 mb-2">
-              Description
+              About this item
             </h3>
             <div
               className="prose prose-sm font-sans leading-relaxed tracking-wide text-slate-400 max-w-none
@@ -251,33 +254,43 @@ export function ItemDetailModal({
       )}
 
       {/* 7. Modification LINK */}
-      <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100/80 mb-auto">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold tracking-wide text-slate-800">
-            Modification
-          </span>
-          {selectedCount > 0 && (
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">
-              {selectedCount} selected
+      {hasCustomizationOptions && (
+        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100/80 mb-auto">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold tracking-wide text-slate-800">
+              Modification
             </span>
-          )}
-        </div>
-        <button
-          type="button"
-          onClick={() => setIsCustomizationOpen((current) => !current)}
-          className="text-xs font-semibold tracking-wide text-yellow-500 flex items-center gap-0.5"
-          aria-expanded={isCustomizationOpen}
-        >
-          {isCustomizationOpen ? "Back to Details" : "More Details"}
-          <span
-            className={`text-[10px] transition-transform ${
-              isCustomizationOpen ? "rotate-180" : ""
-            }`}
+            {selectedCount > 0 && (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">
+                {selectedCount} chosen
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsCustomizationOpen((current) => !current)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold tracking-wide text-slate-700 transition-colors hover:bg-white"
+            aria-expanded={isCustomizationOpen}
+            aria-label={
+              isCustomizationOpen
+                ? "Back to item details"
+                : "Open modification options"
+            }
           >
-            ▼
-          </span>
-        </button>
-      </div>
+            {isCustomizationOpen ? (
+              <>
+                <ChevronLeft size={13} className="shrink-0" />
+                <span>Back to item</span>
+              </>
+            ) : (
+              <>
+                <span>Modify options</span>
+                <span className="text-[10px]">▼</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* 8. BOTTOM QUANTITY AND PURCHASE PANEL */}
       <div className="mt-auto bg-white px-4 pt-4 pb-8 flex items-center gap-4 border-t border-slate-50">
@@ -313,7 +326,7 @@ export function ItemDetailModal({
         >
           {canAddToCart
             ? `Add to Cart • AED ${totalPrice.toFixed(2)}`
-            : variantGateMessage || "Select Required Options"}
+            : variantGateMessage || "Choose required options"}
         </button>
       </div>
     </dialog>

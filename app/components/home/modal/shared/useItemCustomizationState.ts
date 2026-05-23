@@ -131,7 +131,7 @@ export function useItemCustomizationState(
 
     return {
       id: VARIANT_SELECTION_GROUP_ID,
-      title: "Choose Variant",
+      title: "Choose an option",
       type: "single",
       required: true,
       autoSelectFirst: false,

@@ -29,11 +29,11 @@ export function ModeCustomizationPanel({
             </h3>
             {group.required ? (
               <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-600">
-                REQUIRED
+                Required
               </span>
             ) : (
               <span className="text-[10px] font-normal text-slate-400">
-                OPTIONAL
+                Optional
               </span>
             )}
           </div>

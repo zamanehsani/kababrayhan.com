@@ -1,42 +1,6 @@
 import type { CustomGroup, CustomOption } from "./CustomizationPanel";
 import type { ItemDetails } from "@/app/redux/apiType";
 
-const FALLBACK_VARIATION_GROUPS: CustomGroup[] = [
-  {
-    id: "size",
-    title: "Select Size",
-    type: "single",
-    required: true,
-    options: [
-      { id: "sz-sm", name: 'Small (10")', price: 0 },
-      { id: "sz-md", name: 'Medium (12")', price: 3.5 },
-      { id: "sz-lg", name: 'Large (14")', price: 6 },
-    ],
-  },
-  {
-    id: "color",
-    title: "Choose Color Style",
-    type: "single",
-    required: false,
-    options: [
-      { id: "clr-classic", name: "Classic", price: 0 },
-      { id: "clr-golden", name: "Golden", price: 0.5 },
-      { id: "clr-spicy", name: "Spicy Red", price: 0.8 },
-    ],
-  },
-  {
-    id: "style",
-    title: "Preparation Style",
-    type: "single",
-    required: true,
-    options: [
-      { id: "st-regular", name: "Regular", price: 0 },
-      { id: "st-light", name: "Light", price: 0 },
-      { id: "st-premium", name: "Chef Premium", price: 2 },
-    ],
-  },
-];
-
 const toNumber = (value: unknown) => {
   if (typeof value === "number") return value;
   if (typeof value === "string") {
@@ -168,8 +132,7 @@ const extractVariationGroups = (
     .map((attr, groupIndex) => createVariationGroup(attr, groupIndex))
     .filter((group): group is CustomGroup => group !== null);
 
-  if (derivedGroups.length > 0) return derivedGroups;
-  return FALLBACK_VARIATION_GROUPS;
+  return derivedGroups;
 };
 
 const extractAddOnGroups = (itemDetails?: ItemDetails): CustomGroup[] => {

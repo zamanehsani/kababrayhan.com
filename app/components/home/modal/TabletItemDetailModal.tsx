@@ -1,11 +1,10 @@
-import { X, Clock, Flame, Heart, Minus, Plus, Star } from "lucide-react";
+import { ChevronLeft, X, Clock, Flame, Minus, Plus, Star } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Dish } from "@/app/types/type";
 import { addDishToCart } from "@/app/lib/cart";
 import { TabletCustomizationSheet } from "./tablet/TabletCustomizationSheet";
 import { useItemCustomizationState } from "./shared/useItemCustomizationState";
-
 
 export function TabletItemDetailModal({
   dish,
@@ -35,6 +34,9 @@ export function TabletItemDetailModal({
     handleSingleSelect,
     handleMultiToggle,
   } = useItemCustomizationState(itemCode, Boolean(dish.hasVariants));
+
+  const hasCustomizationOptions =
+    variationGroups.length > 0 || addOnGroups.length > 0;
 
   const basePrice = useMemo(() => {
     const parsed = Number(selectedVariantItem?.standard_rate ?? dish.price);
@@ -82,9 +84,9 @@ export function TabletItemDetailModal({
 
   const variantGateMessage = useMemo(() => {
     if (!isVariantSelectionRequired || canAddToCart) return "";
-    if (isVariantDataLoading) return "Loading variants...";
-    if (variantOptionsCount === 0) return "No variants are available for this item.";
-    return "Please select a variant before adding to cart.";
+    if (isVariantDataLoading) return "Loading options...";
+    if (variantOptionsCount === 0) return "No options are available for this item.";
+    return "Please choose an option before adding to cart.";
   }, [
     canAddToCart,
     isVariantDataLoading,
@@ -143,16 +145,13 @@ export function TabletItemDetailModal({
         </h2>
 
         {/* Header Actions Container */}
-        <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none">
+        <div className="absolute top-4 right-4 z-20 flex items-center justify-end pointer-events-none">
           <button
             onClick={onClose}
-            className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full border border-slate-100/10 bg-white/80 text-slate-800 backdrop-blur-md shadow-sm active:scale-95 transition-all"
+            className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full border border-slate-100/10 bg-white/80 text-slate-800 backdrop-blur-md shadow-sm transition-all active:scale-95"
           >
             <X size={18} />
           </button>
-          {/* <button className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full border border-slate-100/10 bg-white/80 text-red-500 backdrop-blur-md shadow-sm active:scale-95 transition-all">
-            <Heart size={18} fill={dish.liked ? "currentColor" : "none"} />
-          </button> */}
         </div>
 
         <div className="flex-1 overflow-y-auto no-scrollbar">
@@ -210,18 +209,18 @@ export function TabletItemDetailModal({
                   <div className="h-3 w-px bg-slate-200"></div>
                   <div className="flex items-center gap-1.5">
                     <Clock size={14} className="text-slate-400" />
-                    <span>{dish.time}</span>
+                    <span>Ready in {dish.time}</span>
                   </div>
                   <div className="h-3 w-px bg-slate-200"></div>
                   <div className="flex items-center gap-1.5">
                     <Star size={14} className="fill-yellow-400 text-yellow-400" />
-                    <span>{dish.rating} Rating</span>
+                    <span>{dish.rating} stars</span>
                   </div>
                 </div>
 
                 <div>
                   <h3 className="mb-1 text-sm font-medium tracking-wide text-slate-800">
-                    Description
+                    About this item
                   </h3>
                   <div
                     className="prose prose-sm max-w-none font-sans leading-relaxed tracking-wide text-slate-400 prose-p:my-1 prose-p:text-slate-400 prose-strong:font-normal prose-strong:text-slate-700 prose-ul:list-disc prose-ul:pl-4 prose-li:my-0.5"
@@ -233,33 +232,43 @@ export function TabletItemDetailModal({
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t border-slate-100/80 bg-white px-6 py-3">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium tracking-wide text-slate-800">
-              Modification
-            </span>
-            {selectedCount > 0 && (
-              <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-medium tracking-wide text-yellow-700">
-                {selectedCount} selected
+        {hasCustomizationOptions && (
+          <div className="flex items-center justify-between border-t border-slate-100/80 bg-white px-6 py-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium tracking-wide text-slate-800">
+                Modification
               </span>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsCustomizationOpen((current) => !current)}
-            className="flex items-center gap-0.5 text-xs font-medium tracking-wide text-yellow-600"
-            aria-expanded={isCustomizationOpen}
-          >
-            {isCustomizationOpen ? "Back to Details" : "More Details"}
-            <span
-              className={`text-[10px] transition-transform ${
-                isCustomizationOpen ? "rotate-180" : ""
-              }`}
+              {selectedCount > 0 && (
+                <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-medium tracking-wide text-yellow-700">
+                  {selectedCount} chosen
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsCustomizationOpen((current) => !current)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium tracking-wide text-slate-700 transition-colors hover:bg-white"
+              aria-expanded={isCustomizationOpen}
+              aria-label={
+                isCustomizationOpen
+                  ? "Back to item details"
+                  : "Open modification options"
+              }
             >
-              ▼
-            </span>
-          </button>
-        </div>
+              {isCustomizationOpen ? (
+                <>
+                  <ChevronLeft size={13} className="shrink-0" />
+                  <span>Back to item</span>
+                </>
+              ) : (
+                <>
+                  <span>Modify options</span>
+                  <span className="text-[10px]">▼</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
 
         {/* Footer control bracket */}
         <div className="mt-auto flex items-center gap-4 border-t border-slate-50 bg-white p-6">
@@ -293,7 +302,7 @@ export function TabletItemDetailModal({
           >
             {canAddToCart
               ? `Add to Cart • AED ${totalPrice.toFixed(2)}`
-              : variantGateMessage || "Select Required Options"}
+              : variantGateMessage || "Choose required options"}
           </button>
         </div>
       </dialog>
