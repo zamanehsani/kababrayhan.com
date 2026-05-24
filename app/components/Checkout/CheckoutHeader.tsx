@@ -25,7 +25,7 @@ const CheckoutHeader: React.FC<CheckoutHeaderProps> = ({
         <div className="flex items-center gap-2">
           {/* Brand Pill */}
           <div className="h-1.5 w-4 rounded-full bg-brand-400" />
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-400">
+          <p className="text-[14px] font-medium uppercase tracking-wide text-brand-400">
             {tag}
           </p>
         </div>
@@ -34,7 +34,7 @@ const CheckoutHeader: React.FC<CheckoutHeaderProps> = ({
           <button
             type="button"
             onClick={onClick}
-            className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-stone-400 transition-all hover:text-brand-400"
+            className="group flex items-center gap-2 text-[14px] font-medium uppercase tracking-wide text-stone-400 transition-all hover:text-brand-400"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -55,7 +55,7 @@ const CheckoutHeader: React.FC<CheckoutHeaderProps> = ({
         ) : (
           <Link
             href={backLink}
-            className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-stone-400 transition-all hover:text-brand-400"
+            className="group flex items-center gap-2 text-[10px] font-medium uppercase tracking-widest text-stone-400 transition-all hover:text-brand-400"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -78,10 +78,10 @@ const CheckoutHeader: React.FC<CheckoutHeaderProps> = ({
 
       {/* Main Title Area */}
       <div className="max-w-2xl">
-        <h1 className="text-2xl font-black tracking-[-0.03em] text-stone-900 md:text-4xl">
+        <p className="text-2xl font-medium tracking-wide text-stone-900 md:text-3xl">
           {title}
-        </h1>
-        <p className="mt-3 text-sm font-medium leading-relaxed text-stone-500/80">
+        </p>
+        <p className="mt-3 text-sm font-medium leading-relaxed text-stone-500/80 tracking-wide">
           {subtitle}
         </p>
       </div>

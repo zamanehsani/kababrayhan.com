@@ -30,7 +30,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
   return (
     <section className="rounded-[2rem] bg-white p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-stone-100">
-      <h2 className="mb-8 text-xl font-black tracking-tight text-stone-900 flex items-center gap-3">
+      <h2 className="mb-8 text-xl font-medium tracking-wide text-stone-900 flex items-center gap-3">
         <span className="h-6 w-1 rounded-full bg-brand-400" />
         Delivery Details
       </h2>
@@ -38,7 +38,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
       <div className="space-y-8">
         {/* Contact Phone Row */}
         <div className="group">
-          <label className="mb-3 ml-1 block text-[10px] font-black uppercase tracking-[0.2em] text-stone-400">
+          <label className="mb-3 ml-1 block text-[13px] font-medium uppercase tracking-wide text-stone-400">
             Contact Phone
           </label>
           <div className="flex items-center gap-4 rounded-2xl border-2 border-stone-50 bg-stone-50/50 px-5 py-4">
@@ -48,15 +48,15 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
               </svg>
             </div>
             <div className="flex flex-1 flex-col">
-              <span className="text-xs font-black uppercase tracking-tighter text-green-600">Verified</span>
-              <span className="font-bold text-stone-900">{form.phone}</span>
+              <span className="text-xs font-medium uppercase tracking-wide text-green-600">Verified</span>
+              <span className="font-medium text-stone-900">{form.phone}</span>
             </div>
           </div>
         </div>
 
         {/* Enhanced Address Card */}
         <div className="group">
-          <label className="mb-3 ml-1 block text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 group-hover:text-brand-400 transition-colors">
+          <label className="mb-3 ml-1 block text-[13px] font-medium uppercase tracking-wide text-stone-400 group-hover:text-brand-400 transition-colors">
             Shipping To
           </label>
           
@@ -78,7 +78,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
             {/* Text Content */}
             <div className="flex-1 overflow-hidden">
-              <p className={`text-sm font-bold leading-snug ${form.address ? "text-stone-900" : "text-stone-400 italic"}`}>
+              <p className={`text-sm font-medium leading-snug ${form.address ? "text-stone-900" : "text-stone-400 italic"}`}>
                 {form.address || "Your pizza needs a destination..."}
               </p>
             </div>
@@ -87,7 +87,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
             <button
               type="button"
               onClick={() => setIsMapOpen(true)}
-              className={`shrink-0 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 ${
+              className={`shrink-0 rounded-xl px-4 py-2 text-[13px] font-medium uppercase tracking-widest transition-all active:scale-95 ${
                 form.address 
                   ? "bg-stone-100 text-stone-600 hover:bg-brand-400 hover:text-white" 
                   : "bg-brand-400 text-white shadow-lg shadow-red-200"
@@ -100,7 +100,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
       </div>
 
       {error && (
-        <div className="mt-8 flex items-center gap-3 rounded-2xl bg-red-50 p-4 text-xs font-bold text-brand-400 ring-1 ring-red-100 animate-in fade-in slide-in-from-top-2">
+        <div className="mt-8 flex items-center gap-3 rounded-2xl bg-red-50 p-4 text-xs font-medium text-brand-400 ring-1 ring-red-100 animate-in fade-in slide-in-from-top-2">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 shrink-0">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
           </svg>

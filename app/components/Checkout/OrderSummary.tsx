@@ -26,11 +26,11 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total }) => {
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="h-6 w-1 rounded-full bg-brand-400" />
-          <h2 className="text-xl font-black tracking-tight text-stone-900">
+          <h2 className="text-xl font-medium tracking-wide text-stone-900">
             Your Order
           </h2>
         </div>
-        <span className="rounded-full bg-stone-100 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-stone-500">
+        <span className="rounded-full bg-stone-100 px-3 py-1 text-[13px] font-medium uppercase tracking-wider text-stone-500">
           {cart.length} {cart.length === 1 ? 'Item' : 'Items'}
         </span>
       </div>
@@ -51,11 +51,11 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total }) => {
                 />
               </div>
               <div>
-                <div className="text-sm font-bold text-stone-900 leading-tight">
+                <div className="text-base font-medium text-stone-900 leading-tight">
                   <span className="text-brand-400">{entry.qty || 1}x</span> {entry.item?.title}
                 </div>
                 {entry.addon?.title && (
-                  <div className="mt-1 text-[11px] font-medium text-stone-400">
+                  <div className="mt-1 text-[12px] font-medium text-stone-400">
                     + {entry.addon.title}
                   </div>
                 )}
@@ -63,7 +63,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total }) => {
             </div>
             
             <div className="text-right">
-              <div className="flex items-center justify-end gap-0.5 text-sm font-black text-stone-900">
+              <div className="flex items-center justify-end gap-0.5 text-base font-medium text-stone-900">
                 <DirhamIcon size={11} className="text-stone-900" />
                 {((entry.item?.discountedPrice || 0) * (entry.qty || 1)).toFixed(2)}
               </div>
@@ -87,13 +87,13 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total }) => {
         
         {/* Total Highlight */}
         <div className="mt-6 flex items-center justify-between rounded-[2rem] bg-stone-900 p-6 shadow-xl shadow-stone-200">
-          <span className="text-base font-bold text-white uppercase tracking-widest">Total</span>
+          <span className="text-base font-medium text-white uppercase tracking-widest">Total</span>
           <div className="text-right">
-            <span className="flex items-center gap-0.5 text-2xl font-black text-red-500 leading-none">
-              <DirhamIcon size={16} className="text-red-500" />
+            <span className="flex items-center gap-0.5 text-2xl font-medium text-brand-500 leading-none">
+              <DirhamIcon size={16} className="text-brand-500" />
               {total.toFixed(2)}
             </span>
-            <span className="mt-1 block text-[10px] font-bold text-stone-500 uppercase tracking-tighter">
+            <span className="mt-1 block text-[11px] font-medium text-stone-500 uppercase tracking-tighter">
               VAT Included
             </span>
           </div>
