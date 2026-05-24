@@ -4,8 +4,9 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Dish } from "@/app/types/type";
-import { ERP_API_BASE_URL, useGetItemsQuery } from "../../redux/api";
+import { ERP_API_BASE_URL, useGetItemByCodeQuery, useGetItemsQuery } from "../../redux/api";
 import { DesktopItemDetailModal } from "../home/modal/DesktopItemDetailModal";
+import DirhamIcon from "../icon/DirhamIcon";
 
 export default function DesktopPopularDishes() {
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
@@ -14,6 +15,9 @@ export default function DesktopPopularDishes() {
   const searchValue = searchParams.get("search") ?? "";
   const normalizedSearchValue = searchValue.trim().toLowerCase();
 
+  const {data: itembycode}= useGetItemByCodeQuery("RYH-DRK-014");
+
+  console.log("Item by code data:", itembycode);
   const slugify = (value: string) =>
     value
       .toLowerCase()
@@ -39,28 +43,30 @@ export default function DesktopPopularDishes() {
   const dishes: Dish[] = useMemo(
     () =>
       (items ?? [])
-        .filter((item) => !item.variant_of)
+        .filter((item) => !item.variant_of && item.disabled !== 1)
         .map((item) => ({
-        id: item.item_code || item.name,
-        name: item.item_name ?? item.name ?? "Menu Item",
-        price: item.standard_rate ? item.standard_rate.toFixed(2) : "0.00",
-        cal: item.custom_calories ? item.custom_calories.toString() : "170",
-        time: item.custom_prep_time ? `${item.custom_prep_time} min` : "15-20 min",
-        rating: "4.7",
-        restaurant: item.item_group ?? "Popular",
-        tags: item.item_group
-          ? `${item.item_group} • Popular`
-          : "Chef's Choice • Popular",
-        description:
-          item.description ??
-          "A delicious selection from our menu, prepared fresh for you.",
-        img: resolveDishImage(item.image),
-        liked: false,
-        hasVariants:
-          typeof item.has_variants === "number"
-            ? item.has_variants === 1
-            : Boolean(item.has_variants),
-      })),
+          id: item.item_code || item.name,
+          name: item.item_name ?? item.name ?? "Menu Item",
+          price: item.standard_rate ? item.standard_rate.toFixed(2) : "0.00",
+          cal: item.custom_calories ? item.custom_calories.toString() : "170",
+          time: item.custom_prep_time
+            ? `${item.custom_prep_time} min`
+            : "15-20 min",
+          rating: "4.7",
+          restaurant: item.item_group ?? "Popular",
+          tags: item.item_group
+            ? `${item.item_group} • Popular`
+            : "Chef's Choice • Popular",
+          description:
+            item.description ??
+            "A delicious selection from our menu, prepared fresh for you.",
+          img: resolveDishImage(item.image),
+          liked: false,
+          hasVariants:
+            typeof item.has_variants === "number"
+              ? item.has_variants === 1
+              : Boolean(item.has_variants),
+        })),
     [items]
   );
 
@@ -118,7 +124,10 @@ export default function DesktopPopularDishes() {
         <div className="rounded-3xl border border-slate-100 bg-slate-50/70 px-6 py-16 text-center">
           <p className="text-base font-medium text-slate-700">
             No dishes found for{" "}
-            <span className="font-semibold text-slate-900">{searchValue.trim()}</span>.
+            <span className="font-semibold text-slate-900">
+              {searchValue.trim()}
+            </span>
+            .
           </p>
         </div>
       ) : (
@@ -184,8 +193,13 @@ export default function DesktopPopularDishes() {
                       alt={dish.name}
                       fill
                       onError={(event) => {
-                        if (!event.currentTarget.src.includes("/popular-dishes/burger.png")) {
-                          event.currentTarget.src = "/popular-dishes/burger.png";
+                        if (
+                          !event.currentTarget.src.includes(
+                            "/popular-dishes/burger.png"
+                          )
+                        ) {
+                          event.currentTarget.src =
+                            "/popular-dishes/burger.png";
                         }
                       }}
                       className="object-contain p-0 transition-transform duration-500 ease-out group-hover:scale-105"
@@ -201,10 +215,20 @@ export default function DesktopPopularDishes() {
                     </div>
 
                     {/* Price (Right) */}
-                    <span className="text-[18px] font-semibold tracking-wide text-emerald-600 group-hover:text-emerald-700 transition-colors">
-                      <span className="text-xs font-bold mr-0.5">AED</span>
-                      {dish.price}
-                    </span>
+                    {dish.hasVariants ? (
+                      <span className="text-[12px] font-bold uppercase tracking-wide text-slate-500 bg-slate-200 group-hover:bg-slate-300 px-2.5 py-1 rounded-full transition-colors">
+                        Options
+                      </span>
+                    ) : (
+                      <span className="flex items-center text-[18px] font-semibold tracking-wide text-emerald-600 group-hover:text-emerald-700 transition-colors">
+                        <DirhamIcon
+                          size={14}
+                          className="mr-1 text-emerald-600 group-hover:text-emerald-700 transition-colors"
+                        />
+                        {dish.price}
+                      </span>
+                  
+                    )}
                   </div>
                 </div>
               ))}

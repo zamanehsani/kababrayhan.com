@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Dish } from "@/app/types/type";
 import { TabletItemDetailModal } from "../home/modal/TabletItemDetailModal";
 import { ERP_API_BASE_URL, useGetItemsQuery } from "../../redux/api";
+import DirhamIcon from "../icon/DirhamIcon";
 
 
 export default function TabletPopularDishes() {
@@ -40,7 +41,7 @@ export default function TabletPopularDishes() {
   const dishes: Dish[] = useMemo(
     () =>
       (items ?? [])
-        .filter((item) => !item.variant_of)
+        .filter((item) => !item.variant_of && item.disabled !== 1)
         .map((item) => ({
         id: item.item_code || item.name,
         name: item.item_name ?? item.name ?? "Menu Item",
@@ -197,12 +198,16 @@ export default function TabletPopularDishes() {
                     </div>
 
                     {/* Price */}
-                    <span className="text-[17px] font-bold text-emerald-600 transition-colors group-hover:text-emerald-700">
-                      <span className="text-xs font-bold text-emerald-600 mr-0.5">
-                        AED
+                    {dish.hasVariants ? (
+                      <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500 bg-slate-200 group-hover:bg-slate-300 px-2.5 py-1 rounded-full transition-colors">
+                        Options
                       </span>
-                      {dish.price}
-                    </span>
+                    ) : (
+                      <span className="flex items-center text-[17px] font-bold text-emerald-600 transition-colors group-hover:text-emerald-700">
+                        <DirhamIcon size={13} className="mr-0.5 text-emerald-600 group-hover:text-emerald-700 transition-colors" />
+                        {dish.price}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

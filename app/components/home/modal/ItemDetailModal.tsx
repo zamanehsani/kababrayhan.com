@@ -12,6 +12,7 @@ import { Dish } from "@/app/types/type";
 import { addDishToCart } from "@/app/lib/cart";
 import { ItemCustomizationSheet } from "./ItemCustomizationSheet";
 import { useItemCustomizationState } from "./shared/useItemCustomizationState";
+import DirhamIcon from "../../icon/DirhamIcon";
 
 export function ItemDetailModal({
   dish,
@@ -213,8 +214,8 @@ export function ItemDetailModal({
             <h1 className="text-xl font-medium text-slate-800 tracking-wide max-w-[70%]">
               {dish.name}
             </h1>
-            <span className="text-xl font-semibold text-emerald-600">
-              <span className="text-xl font-semibold mr-0.5">AED</span>
+            <span className="flex items-center text-xl font-semibold text-emerald-600">
+              <DirhamIcon size={16} className="mr-0.5 text-emerald-600" />
               {unitPrice.toFixed(2)}
             </span>
           </div>

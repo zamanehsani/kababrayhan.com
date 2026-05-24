@@ -66,6 +66,7 @@ export interface Item {
   max_discount: string;
   custom_calories?: number;
   custom_prep_time?: number;
+  disabled?: 0 | 1;
 }
 
 export interface ItemAddOnLink {
@@ -95,16 +96,41 @@ export interface OrderCartItem {
   qty: number;
 }
 
+export interface CreateSalesOrderTaxLine {
+  charge_type: string;
+  account_head: string;
+  description: string;
+  rate: number;
+  included_in_print_rate: 0 | 1;
+}
+
 export interface CreateSalesOrderItem {
   item_code: string;
+  item_name?: string;
   qty: number;
   rate: number;
+  amount?: number;
+  warehouse?: string;
+  delivery_date?: string;
+  uom?: string;
   custom_selected_addons?: string;
+  is_free_item?: 0 | 1;
 }
 
 export interface CreateSalesOrderRequest {
+  doctype?: string;
   customer: string;
+  transaction_date?: string;
   delivery_date: string;
+  company?: string;
+  selling_price_list?: string;
+  currency?: string;
+  price_list_currency?: string;
+  conversion_rate?: number;
+  plc_conversion_rate?: number;
+  customer_address?: string;
+  taxes_and_charges?: string;
+  taxes?: CreateSalesOrderTaxLine[];
   items: CreateSalesOrderItem[];
 }
 

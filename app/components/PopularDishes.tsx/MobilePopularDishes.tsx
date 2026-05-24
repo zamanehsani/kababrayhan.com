@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { ItemDetailModal } from "../home/modal/ItemDetailModal";
 import { Dish } from "@/app/types/type";
 import { ERP_API_BASE_URL, useGetItemsQuery } from "../../redux/api";
+import DirhamIcon from "../icon/DirhamIcon";
 
 
 
@@ -15,6 +16,8 @@ export default function PopularDishes() {
   const searchParams = useSearchParams();
   const searchValue = searchParams.get("search") ?? "";
   const normalizedSearchValue = searchValue.trim().toLowerCase();
+
+
 
   const slugify = (value: string) =>
     value
@@ -41,7 +44,7 @@ export default function PopularDishes() {
   const dishes: Dish[] = useMemo(
     () =>
       (items ?? [])
-        .filter((item) => !item.variant_of)
+        .filter((item) => !item.variant_of && item.disabled !== 1)
         .map((item) => ({
         id: item.item_code || item.name,
         name: item.item_name ?? item.name ?? "Menu Item",
@@ -191,12 +194,16 @@ export default function PopularDishes() {
                     </div>
 
                     {/* Price on the Right */}
-                    <span className="text-[16px] font-semibold text-emerald-600">
-                      <span className="text-xs font-bold text-emerald-600 mr-0.5">
-                        AED
+                    {dish.hasVariants ? (
+                      <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500 bg-slate-200 px-2 py-0.5 rounded-full">
+                        Options
                       </span>
-                      {dish.price}
-                    </span>
+                    ) : (
+                      <span className="flex items-center text-[16px] font-semibold text-emerald-600">
+                        <DirhamIcon size={12} className="mr-0.5 text-emerald-600" />
+                        {dish.price}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

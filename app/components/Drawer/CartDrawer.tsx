@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, ShoppingBag, ArrowRight } from "lucide-react";
+import DirhamIcon from "../icon/DirhamIcon";
 import PhoneModal from "../home/modal/PhoneModal";
 import PhoneVerifyModal from "../home/modal/PhoneVerifyModal";
 import DeliveryTakeawayModal from "../home/modal/DeliveryTakeawayModal";
@@ -261,14 +262,15 @@ export default function CartDrawer() {
                 {/* Subfooter Actions Grid */}
                 <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-lg font-semibold text-slate-900 tracking-wide">
-                      AED{" "}
+                    <span className="flex items-center gap-0.5 text-lg font-semibold text-slate-900 tracking-wide">
+                      <DirhamIcon size={13} className="text-slate-900" />
                       {Math.round(
                         entry.item.discountedPrice * (entry.qty || 1)
                       )}
                     </span>
-                    <span className="text-xs text-slate-400 line-through font-medium">
-                      AED {Math.round(entry.item.realPrice * (entry.qty || 1))}
+                    <span className="flex items-center gap-0.5 text-xs text-slate-400 line-through font-medium">
+                      <DirhamIcon size={10} className="text-slate-400" />
+                      {Math.round(entry.item.realPrice * (entry.qty || 1))}
                     </span>
                   </div>
 
@@ -302,8 +304,9 @@ export default function CartDrawer() {
         <div className="p-5 border-t border-slate-100 bg-white shadow-[0_-8px_24px_rgba(0,0,0,0.02)]">
           <div className="flex items-center justify-between mb-4 text-sm font-semibold text-slate-800 tracking-wide">
             <span>Subtotal Value</span>
-            <span className="text-base text-slate-900 font-bold">
-              AED {totalPrice}
+            <span className="flex items-center gap-0.5 text-base text-slate-900 font-bold">
+              <DirhamIcon size={13} className="text-slate-900" />
+              {totalPrice}
             </span>
           </div>
 

@@ -5,6 +5,7 @@ import { Dish } from "@/app/types/type";
 import { addDishToCart } from "@/app/lib/cart";
 import { DesktopCustomizationSheet } from "./desktop/DesktopCustomizationSheet";
 import { useItemCustomizationState } from "./shared/useItemCustomizationState";
+import DirhamIcon from "../../icon/DirhamIcon";
 
 export function DesktopItemDetailModal({
   dish,
@@ -189,8 +190,9 @@ export function DesktopItemDetailModal({
                 <span className="text-xs font-normal tracking-wide text-slate-400">
                   Total Price
                 </span>
-                <span className="text-3xl font-medium tracking-wide text-emerald-600">
-                  AED {totalPrice}
+                <span className="flex items-center text-3xl font-medium tracking-wide text-emerald-600">
+                  <DirhamIcon size={22} className="mr-1 text-emerald-600" />
+                  {totalPrice}
                 </span>
               </div>
 
@@ -342,8 +344,9 @@ export function DesktopItemDetailModal({
                   <span className="text-xs font-normal tracking-wide text-slate-400">
                     Total Price
                   </span>
-                  <span className="text-3xl font-medium tracking-wide text-emerald-600">
-                    AED {totalPrice}
+                  <span className="flex items-center text-3xl font-medium tracking-wide text-emerald-600">
+                    <DirhamIcon size={22} className="mr-1 text-emerald-600" />
+                    {totalPrice}
                   </span>
                 </div>
 

@@ -93,6 +93,7 @@ export const erpApi = createApi({
         params: {
           // This tells ERPNext exactly which columns to send back
           limit_page_length: 1000,
+          filters: JSON.stringify([["Item", "disabled", "=", 0]]),
           fields: JSON.stringify([
             "name",
             "item_name",
@@ -107,6 +108,7 @@ export const erpApi = createApi({
             "max_discount",
             "custom_calories",
             "custom_prep_time",
+            "disabled",
           ]),
         },
       }),
@@ -409,9 +411,9 @@ export const erpApi = createApi({
     >({
       queryFn: async (body, _api, _extraOptions, fetchWithBQ) => {
         // ERPNext reads from frappe.form_dict, so send as form-urlencoded
-        // Amount must be in smallest currency unit (fils for AED = amount × 100)
+        // Send raw AED amount — the ERPNext get_stripe_intent endpoint converts to fils (× 100) itself
         const formData = new URLSearchParams();
-        formData.append("amount", String(Math.round(body.amount * 100)));
+        formData.append("amount", String(Math.round(body.amount)));
         formData.append("currency", body.currency ?? "aed");
         formData.append("sales_order", body.sales_order);
 

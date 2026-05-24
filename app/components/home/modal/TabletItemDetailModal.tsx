@@ -5,6 +5,7 @@ import { Dish } from "@/app/types/type";
 import { addDishToCart } from "@/app/lib/cart";
 import { TabletCustomizationSheet } from "./tablet/TabletCustomizationSheet";
 import { useItemCustomizationState } from "./shared/useItemCustomizationState";
+import DirhamIcon from "../../icon/DirhamIcon";
 
 export function TabletItemDetailModal({
   dish,
@@ -195,8 +196,9 @@ export function TabletItemDetailModal({
                       {dish.name}
                     </h1>
                   </div>
-                  <span className="shrink-0 text-2xl font-medium tracking-wide text-emerald-600">
-                    AED {unitPrice.toFixed(2)}
+                  <span className="flex items-center shrink-0 text-2xl font-medium tracking-wide text-emerald-600">
+                    <DirhamIcon size={18} className="mr-0.5 text-emerald-600" />
+                    {unitPrice.toFixed(2)}
                   </span>
                 </div>
 

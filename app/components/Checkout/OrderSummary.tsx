@@ -1,4 +1,5 @@
 import React from "react";
+import DirhamIcon from "../icon/DirhamIcon";
 
 interface CartEntry {
   item: {
@@ -62,8 +63,9 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total }) => {
             </div>
             
             <div className="text-right">
-              <div className="text-sm font-black text-stone-900">
-                AED {((entry.item?.discountedPrice || 0) * (entry.qty || 1)).toFixed(2)}
+              <div className="flex items-center justify-end gap-0.5 text-sm font-black text-stone-900">
+                <DirhamIcon size={11} className="text-stone-900" />
+                {((entry.item?.discountedPrice || 0) * (entry.qty || 1)).toFixed(2)}
               </div>
             </div>
           </div>
@@ -74,7 +76,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total }) => {
       <div className="mt-8 space-y-3 border-t border-stone-100 pt-6">
         <div className="flex items-center justify-between text-sm">
           <span className="font-medium text-stone-500">Subtotal</span>
-          <span className="font-bold text-stone-900">AED {total.toFixed(2)}</span>
+          <span className="flex items-center gap-0.5 font-bold text-stone-900"><DirhamIcon size={12} className="text-stone-900" />{total.toFixed(2)}</span>
         </div>
         <div className="flex items-center justify-between text-sm">
           <span className="font-medium text-stone-500">Delivery Fee</span>
@@ -87,8 +89,9 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total }) => {
         <div className="mt-6 flex items-center justify-between rounded-[2rem] bg-stone-900 p-6 shadow-xl shadow-stone-200">
           <span className="text-base font-bold text-white uppercase tracking-widest">Total</span>
           <div className="text-right">
-            <span className="block text-2xl font-black text-red-500 leading-none">
-              AED {total.toFixed(2)}
+            <span className="flex items-center gap-0.5 text-2xl font-black text-red-500 leading-none">
+              <DirhamIcon size={16} className="text-red-500" />
+              {total.toFixed(2)}
             </span>
             <span className="mt-1 block text-[10px] font-bold text-stone-500 uppercase tracking-tighter">
               VAT Included

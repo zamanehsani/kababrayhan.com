@@ -148,7 +148,7 @@ const CheckoutPage = () => {
   }, []);
 
   useEffect(() => {
-    if (form.address && form.phone && !clientSecret && !isInitializing && cart.length > 0) {
+    if (form.address && form.phone && !salesOrder && !isInitializing && cart.length > 0) {
       handleAutoProceed();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -215,9 +215,10 @@ const CheckoutPage = () => {
             delivery_date: deliveryDate,
             uom: "Nos",
             custom_selected_addons,
+            is_free_item: 0 as const,
           };
         })
-        .filter(Boolean);
+        .filter((item): item is NonNullable<typeof item> => item !== null);
 
       if (!items.length) {
         setOrderError("No valid items in cart. Please add items before checkout.");
@@ -237,8 +238,18 @@ const CheckoutPage = () => {
         conversion_rate: 1,
         plc_conversion_rate: 1,
         customer_address: savedAddressId || undefined,
+        taxes_and_charges: "Food Tax 5%",
+        taxes: [
+          {
+            charge_type: "On Net Total",
+            account_head: "Food Tax 5% - P",
+            description: "VAT 5%",
+            rate: 5,
+            included_in_print_rate: 1 as const,
+          },
+        ],
         items,
-      } as unknown as CreateSalesOrderRequest;
+      } satisfies CreateSalesOrderRequest;
 
       const order = await createSalesOrder(orderPayload).unwrap();
 
@@ -344,6 +355,7 @@ const CheckoutPage = () => {
             step === 3
               ? () => {
                   setClientSecret(null);
+                  setSalesOrder(null);
                   setStep(2);
                 }
               : undefined
