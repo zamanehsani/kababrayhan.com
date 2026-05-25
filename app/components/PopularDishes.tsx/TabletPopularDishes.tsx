@@ -7,11 +7,13 @@ import { Dish } from "@/app/types/type";
 import { TabletItemDetailModal } from "../home/modal/TabletItemDetailModal";
 import { ERP_API_BASE_URL, useGetItemsQuery } from "../../redux/api";
 import DirhamIcon from "../icon/DirhamIcon";
+import { TabletDishFallback } from "../FallBacks/TabletDishFallback";
+import { TabletDishSkeleton } from "../FallBacks/TabletDishSkeleton";
 
 
 export default function TabletPopularDishes() {
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
-  const { data: items } = useGetItemsQuery();
+  const { data: items, isError, isLoading, refetch } = useGetItemsQuery();
   const searchParams = useSearchParams();
   const searchValue = searchParams.get("search") ?? "";
   const normalizedSearchValue = searchValue.trim().toLowerCase();
@@ -114,7 +116,11 @@ export default function TabletPopularDishes() {
         className="sr-only"
       />
 
-      {groupedDishes.length === 0 ? (
+      {isLoading ? (
+        <TabletDishSkeleton />
+      ) : isError ? (
+        <TabletDishFallback onRetry={refetch} />
+      ) : groupedDishes.length === 0 ? (
         <div className="rounded-3xl border border-slate-100 bg-slate-50/70 px-6 py-14 text-center">
           <p className="text-sm font-medium text-slate-700">
             No dishes found for{" "}

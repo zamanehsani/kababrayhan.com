@@ -7,12 +7,14 @@ import { ItemDetailModal } from "../home/modal/ItemDetailModal";
 import { Dish } from "@/app/types/type";
 import { ERP_API_BASE_URL, useGetItemsQuery } from "../../redux/api";
 import DirhamIcon from "../icon/DirhamIcon";
+import { MobileDishFallback } from "../FallBacks/MobileDishFallback";
+import { MobileDishSkeleton } from "../FallBacks/MobileDishSkeleton";
 
 
 
 export default function PopularDishes() {
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
-  const { data: items } = useGetItemsQuery();
+  const { data: items, isError, isLoading, refetch } = useGetItemsQuery();
   const searchParams = useSearchParams();
   const searchValue = searchParams.get("search") ?? "";
   const normalizedSearchValue = searchValue.trim().toLowerCase();
@@ -112,7 +114,11 @@ export default function PopularDishes() {
         className="sr-only"
       />
 
-      {groupedDishes.length === 0 ? (
+      {isLoading ? (
+        <MobileDishSkeleton />
+      ) : isError ? (
+        <MobileDishFallback onRetry={refetch} />
+      ) : groupedDishes.length === 0 ? (
         <div className="px-4 py-12 text-center">
           <p className="text-sm font-medium text-slate-700">
             No dishes found for{" "}

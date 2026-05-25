@@ -7,10 +7,12 @@ import { Dish } from "@/app/types/type";
 import { ERP_API_BASE_URL, useGetItemByCodeQuery, useGetItemsQuery } from "../../redux/api";
 import { DesktopItemDetailModal } from "../home/modal/DesktopItemDetailModal";
 import DirhamIcon from "../icon/DirhamIcon";
+import { DesktopDishFallback } from "../FallBacks/DesktopDishFallback";
+import { DesktopDishSkeleton } from "../FallBacks/DesktopDishSkeleton";
 
 export default function DesktopPopularDishes() {
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
-  const { data: items } = useGetItemsQuery();
+  const { data: items, isError, isLoading, refetch } = useGetItemsQuery();
   const searchParams = useSearchParams();
   const searchValue = searchParams.get("search") ?? "";
   const normalizedSearchValue = searchValue.trim().toLowerCase();
@@ -120,7 +122,11 @@ export default function DesktopPopularDishes() {
         className="sr-only"
       />
 
-      {groupedDishes.length === 0 ? (
+      {isLoading ? (
+        <DesktopDishSkeleton />
+      ) : isError ? (
+        <DesktopDishFallback onRetry={refetch} />
+      ) : groupedDishes.length === 0 ? (
         <div className="rounded-3xl border border-slate-100 bg-slate-50/70 px-6 py-16 text-center">
           <p className="text-base font-medium text-slate-700">
             No dishes found for{" "}
