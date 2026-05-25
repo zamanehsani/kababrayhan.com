@@ -3,7 +3,7 @@ import { Heart, Flame } from "lucide-react";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ItemDetailModal } from "../home/modal/ItemDetailModal";
+import { ItemDetailModal } from "../home/modal/ItemDetail/ItemDetailModal";
 import { Dish } from "@/app/types/type";
 import { ERP_API_BASE_URL, useGetItemsQuery } from "../../redux/api";
 import DirhamIcon from "../icon/DirhamIcon";

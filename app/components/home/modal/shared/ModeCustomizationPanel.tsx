@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import Image from "next/image";
 import type { CustomGroup } from "../CustomizationPanel";
 
 interface ModeCustomizationPanelProps {
@@ -71,6 +72,16 @@ export function ModeCustomizationPanel({
                     >
                       {isSelected && <Check size={11} strokeWidth={3} />}
                     </div>
+                    {option.img && (
+                      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-slate-100 bg-slate-50">
+                        <Image
+                          src={option.img}
+                          alt={option.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
                     <span className="text-sm font-medium tracking-wide text-slate-700">
                       {option.name}
                     </span>

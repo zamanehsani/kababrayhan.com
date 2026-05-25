@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Dish } from "@/app/types/type";
 import { ERP_API_BASE_URL, useGetItemByCodeQuery, useGetItemsQuery } from "../../redux/api";
-import { DesktopItemDetailModal } from "../home/modal/DesktopItemDetailModal";
+import { DesktopItemDetailModal } from "../home/modal/ItemDetail/DesktopItemDetailModal";
 import DirhamIcon from "../icon/DirhamIcon";
 import { DesktopDishFallback } from "../FallBacks/DesktopDishFallback";
 import { DesktopDishSkeleton } from "../FallBacks/DesktopDishSkeleton";
@@ -17,7 +17,7 @@ export default function DesktopPopularDishes() {
   const searchValue = searchParams.get("search") ?? "";
   const normalizedSearchValue = searchValue.trim().toLowerCase();
 
-  const {data: itembycode}= useGetItemByCodeQuery("RYH-DRK-014");
+  const {data: itembycode}= useGetItemByCodeQuery("snacks-garlic-bites");
 
   console.log("Item by code data:", itembycode);
   const slugify = (value: string) =>

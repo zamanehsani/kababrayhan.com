@@ -3,9 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Dish } from "@/app/types/type";
 import { addDishToCart } from "@/app/lib/cart";
-import { TabletCustomizationSheet } from "./tablet/TabletCustomizationSheet";
-import { useItemCustomizationState } from "./shared/useItemCustomizationState";
-import DirhamIcon from "../../icon/DirhamIcon";
+import { TabletCustomizationSheet } from "../tablet/TabletCustomizationSheet";
+import { useItemCustomizationState } from "../shared/useItemCustomizationState";
+import DirhamIcon from "../../../icon/DirhamIcon";
 
 export function TabletItemDetailModal({
   dish,

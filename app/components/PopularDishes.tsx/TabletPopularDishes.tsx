@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Dish } from "@/app/types/type";
-import { TabletItemDetailModal } from "../home/modal/TabletItemDetailModal";
+import { TabletItemDetailModal } from "../home/modal/ItemDetail/TabletItemDetailModal";
 import { ERP_API_BASE_URL, useGetItemsQuery } from "../../redux/api";
 import DirhamIcon from "../icon/DirhamIcon";
 import { TabletDishFallback } from "../FallBacks/TabletDishFallback";

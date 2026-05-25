@@ -10,9 +10,9 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Dish } from "@/app/types/type";
 import { addDishToCart } from "@/app/lib/cart";
-import { ItemCustomizationSheet } from "./ItemCustomizationSheet";
-import { useItemCustomizationState } from "./shared/useItemCustomizationState";
-import DirhamIcon from "../../icon/DirhamIcon";
+import { ItemCustomizationSheet } from "../ItemCustomizationSheet";
+import { useItemCustomizationState } from "../shared/useItemCustomizationState";
+import DirhamIcon from "../../../icon/DirhamIcon";
 
 export function ItemDetailModal({
   dish,
