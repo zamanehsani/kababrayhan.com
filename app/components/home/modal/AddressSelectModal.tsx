@@ -25,6 +25,9 @@ export type AddressSelectModalProps = {
   onSelect: (address: SelectedAddress) => void;
   onClose: () => void;
   redirectTo?: string | null;
+  addressType?: "Shipping" | "Billing";
+  skipCustomerCreation?: boolean;
+  customTitle?: string; // e.g. "Home", "Office" — used as label in ERPNext address name
 };
 
 const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
@@ -32,6 +35,9 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
   onSelect,
   onClose,
   redirectTo = "/checkout",
+  addressType = "Shipping",
+  skipCustomerCreation = false,
+  customTitle,
 }) => {
   const router = useRouter();
   const [addressText, setAddressText] = useState("");
@@ -267,48 +273,53 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                   const phone = localStorage.getItem("uae_phone");
                   if (!phone) throw new Error("No phone found.");
 
-                  // 1. Create/Ensure Customer exists
-                  // IMPORTANT: Make sure 'Individual' is a valid 'Customer Group' in your ERPNext
-                  // that is NOT a Group (Folder).
-                  try {
-                    await createCustomer({
-                      customer_name: phone,
-                      mobile_no: phone,
-                      customer_type: "Individual",
-                      customer_group: "Individual", // FIX: Changed from "All Customer Groups"
-                      territory: "United Arab Emirates",
-                      email_id: "example@example.com",
-                    }).unwrap();
-                  } catch (e) {
-                    // If error is "Already Exists", we continue.
-                    // If error is "Validation", we might need to check our ERPNext settings.
-                    console.info("Customer create skipped", e);
-                    console.log("Customer might already exist, proceeding...");
+                  // 1. Create customer only if not skipped (skip for delivery address modal)
+                  if (!skipCustomerCreation) {
+                    try {
+                      await createCustomer({
+                        customer_name: phone,
+                        mobile_no: phone,
+                        customer_type: "Individual",
+                        customer_group: "Individual",
+                        territory: "United Arab Emirates",
+                        email_id: "example@example.com",
+                      }).unwrap();
+                    } catch (e) {
+                      // Customer already exists — safe to continue
+                      console.info("Customer already exists, proceeding...", e);
+                    }
                   }
 
-                  // 2. Create Address
+                  // 2. Create Address with the correct type
                   const addressLine = addressText || "User's Street Address";
+                  const erpAddressTitle = customTitle
+                    ? `${phone}-${customTitle.trim().toLowerCase().replace(/\s+/g, "-")}`
+                    : (addressType === "Billing" ? `${phone}-delivery` : phone);
 
                   const addressResponse = await createAddress({
-                    address_title: phone,
-                    address_type: "Shipping",
+                    address_title: erpAddressTitle,
+                    address_type: addressType,
                     address_line1: addressLine,
                     city: "Dubai",
-                    country: "United Arab Emirates", // Highly recommended to include
+                    country: "United Arab Emirates",
                     links: [
                       {
                         link_doctype: "Customer",
-                        link_name: phone, // This ONLY works if your Customer Naming is set to "Customer Name"
+                        link_name: phone,
                       },
                     ],
                   }).unwrap();
-                  saveDeliveryAddress(
-                    addressResponse.data.address_line1,
-                    addressResponse.data.name
-                  );
+
+                  // 3. Save to localStorage — Billing type is handled by the parent via onSelect
+                  if (addressType !== "Billing") {
+                    saveDeliveryAddress(
+                      addressResponse.data.address_line1,
+                      addressResponse.data.name
+                    );
+                  }
 
                   onSelect({
-                    id: Date.now().toString(),
+                    id: addressResponse.data.name,
                     name: addressResponse.data.address_line1,
                     lat: selectedLatLng!.lat,
                     lng: selectedLatLng!.lng,
@@ -321,7 +332,6 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                     }, 200);
                   }
                 } catch (e: any) {
-                  // This will now capture the specific ERPNext error message
                   setError(
                     e?.data?.message || e?.message || "Failed to save address."
                   );

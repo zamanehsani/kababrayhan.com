@@ -106,6 +106,13 @@ export const initializeCustomerPortalSession = () => {
 };
 
 export const saveEnteredPhone = (phone: string) => {
+  // If the phone changed, the old delivery address belongs to a different customer — clear it
+  const currentPhone = readStorageState().phone;
+  if (currentPhone && currentPhone !== phone) {
+    globalThis.localStorage?.removeItem("uae_delivery_address");
+    globalThis.localStorage?.removeItem("uae_delivery_address_id");
+    globalThis.localStorage?.removeItem("uae_delivery_addresses");
+  }
   writeStorageState({ phone, phoneStatus: "entered" });
   store.dispatch(setPhoneEntered(phone));
   dispatchCustomerPortalUpdated();
@@ -123,12 +130,18 @@ export const saveVerifiedPhone = (phone?: string) => {
 
 export const saveDeliveryAddress = (address: string, addressId?: string) => {
   writeStorageState({ address, addressId });
+  // Also write delivery-specific keys so checkout's Delivery To card picks them up
+  if (address) globalThis.localStorage?.setItem("uae_delivery_address", address);
+  if (addressId) globalThis.localStorage?.setItem("uae_delivery_address_id", addressId);
   store.dispatch(setAddress({ address, addressId }));
   dispatchCustomerPortalUpdated();
 };
 
 export const clearCustomerPortalSession = () => {
   writeStorageState({ phone: "", phoneStatus: "none", address: "", addressId: "" });
+  globalThis.localStorage?.removeItem("uae_delivery_address");
+  globalThis.localStorage?.removeItem("uae_delivery_address_id");
+  globalThis.localStorage?.removeItem("uae_delivery_addresses");
   store.dispatch(clearSession());
   dispatchCustomerPortalUpdated();
 };

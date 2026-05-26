@@ -21,7 +21,7 @@ import {
 import CheckoutStepper from "../components/Checkout/CheckoutStepper";
 import CheckoutHeader from "../components/Checkout/CheckoutHeader";
 import OrderSummary from "../components/Checkout/OrderSummary";
-import CheckoutForm from "../components/Checkout/CheckoutForm";
+import CheckoutForm, { type DeliveryAddressItem } from "../components/Checkout/CheckoutForm";
 import ZiinaPaymentSection from "../components/Checkout/ZiinaPaymentSection";
 import MobileHeader from "../components/Header/MobileHeader";
 import TabletHeader from "../components/Header/TabletHeader";
@@ -127,6 +127,7 @@ const CheckoutPage = () => {
   const [form, setForm] = useState({
     phone: "",
     address: "",
+    deliveryAddresses: [{ title: "Home", address: "", addressId: "" }] as DeliveryAddressItem[],
   });
 
   const [createSalesOrder] = useCreateSalesOrderMutation();
@@ -140,19 +141,39 @@ const CheckoutPage = () => {
     const savedPhone = globalThis.localStorage.getItem("uae_phone") || "";
     const savedAddress = globalThis.localStorage.getItem("uae_address") || "";
 
+    const rawDelivery = globalThis.localStorage.getItem("uae_delivery_addresses");
+    let savedDeliveryAddresses: DeliveryAddressItem[];
+    if (rawDelivery) {
+      try {
+        savedDeliveryAddresses = JSON.parse(rawDelivery);
+      } catch {
+        savedDeliveryAddresses = [{
+          title: "Home",
+          address: globalThis.localStorage.getItem("uae_delivery_address") || globalThis.localStorage.getItem("uae_address") || "",
+          addressId: globalThis.localStorage.getItem("uae_delivery_address_id") || globalThis.localStorage.getItem("uae_address_id") || "",
+        }];
+      }
+    } else {
+      savedDeliveryAddresses = [{
+        title: "Home",
+        address: globalThis.localStorage.getItem("uae_delivery_address") || globalThis.localStorage.getItem("uae_address") || "",
+        addressId: globalThis.localStorage.getItem("uae_delivery_address_id") || globalThis.localStorage.getItem("uae_address_id") || "",
+      }];
+    }
+
     requestAnimationFrame(() => {
       setCustomer(storedCustomer);
       setCart(cartRaw ? JSON.parse(cartRaw) : []);
-      setForm({ phone: savedPhone, address: savedAddress });
+      setForm({ phone: savedPhone, address: savedAddress, deliveryAddresses: savedDeliveryAddresses });
     });
   }, []);
 
   useEffect(() => {
-    if (form.address && form.phone && !salesOrder && !isInitializing && cart.length > 0) {
+    if (form.deliveryAddresses[0]?.address && form.phone && !salesOrder && !isInitializing && cart.length > 0) {
       handleAutoProceed();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.address, form.phone, cart]);
+  }, [form.deliveryAddresses, form.phone, cart]);
 
   async function handleAutoProceed() {
     setIsInitializing(true);
@@ -167,7 +188,9 @@ const CheckoutPage = () => {
     try {
       const customerName = customer?.name || form.phone;
       const deliveryDate = new Date().toISOString().split("T")[0];
-      const savedAddressId = globalThis.localStorage.getItem("uae_address_id") || "";
+      const primaryDeliveryAddressId = form.deliveryAddresses[0]?.addressId ||
+        globalThis.localStorage.getItem("uae_delivery_address_id") ||
+        globalThis.localStorage.getItem("uae_address_id") || "";
 
       const items = cart
         .map((cartEntry: any) => {
@@ -237,7 +260,8 @@ const CheckoutPage = () => {
         price_list_currency: "AED",
         conversion_rate: 1,
         plc_conversion_rate: 1,
-        customer_address: savedAddressId || undefined,
+        customer_address: primaryDeliveryAddressId || undefined,
+        shipping_address_name: primaryDeliveryAddressId || undefined,
         taxes_and_charges: "Food Tax 5%",
         taxes: [
           {

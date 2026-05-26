@@ -129,6 +129,7 @@ export interface CreateSalesOrderRequest {
   conversion_rate?: number;
   plc_conversion_rate?: number;
   customer_address?: string;
+  shipping_address_name?: string;
   taxes_and_charges?: string;
   taxes?: CreateSalesOrderTaxLine[];
   items: CreateSalesOrderItem[];
