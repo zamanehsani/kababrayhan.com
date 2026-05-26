@@ -172,7 +172,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                   navigator.geolocation.getCurrentPosition(
                     (position) => {
                       const { latitude, longitude } = position.coords;
-                      mapInstanceRef.current?.setView([latitude, longitude], 15);
+                      mapInstanceRef.current?.setView([latitude, longitude], 20);
                       
                       // Also set the marker and fetch address
                       setSelectedLatLng({ lat: latitude, lng: longitude });
