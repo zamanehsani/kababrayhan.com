@@ -167,12 +167,43 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
         <div className="absolute top-6 inset-x-6 z-1001 pointer-events-none flex justify-between items-start">
           <div className="pointer-events-auto flex flex-col gap-2">
             <button
-              onClick={() =>
-                mapInstanceRef.current?.setView([25.2048, 55.2708], 13)
-              }
+              onClick={() => {
+                if (navigator.geolocation) {
+                  navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                      const { latitude, longitude } = position.coords;
+                      mapInstanceRef.current?.setView([latitude, longitude], 15);
+                      
+                      // Also set the marker and fetch address
+                      setSelectedLatLng({ lat: latitude, lng: longitude });
+                      
+                      const L = (globalThis as typeof globalThis & { L?: any }).L;
+                      if (L) {
+                        if (markerRef.current) {
+                          markerRef.current.setLatLng([latitude, longitude]);
+                        } else {
+                          markerRef.current = L.marker([latitude, longitude], {
+                            bounceOnAdd: true,
+                          }).addTo(mapInstanceRef.current);
+                        }
+                      }
+                      
+                      fetchAddress(latitude, longitude);
+                    },
+                    (error) => {
+                      console.error("Geolocation error:", error);
+                      // Fallback to Dubai if geolocation fails
+                      mapInstanceRef.current?.setView([25.2048, 55.2708], 13);
+                    }
+                  );
+                } else {
+                  // Fallback to Dubai if geolocation not supported
+                  mapInstanceRef.current?.setView([25.2048, 55.2708], 13);
+                }
+              }}
               className="bg-white/90 backdrop-blur shadow-xl border border-gray-100 px-4 py-2 rounded-2xl font-normal text-gray-800 flex items-center gap-2 hover:bg-white transition-all active:scale-95"
             >
-              <span className="text-red-500 text-base">📍</span> Recenter Dubai
+              <span className="text-red-500 text-base">📍</span> Current Location
             </button>
           </div>
 
