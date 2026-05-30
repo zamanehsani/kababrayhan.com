@@ -2,33 +2,26 @@
 
 import { JSX, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Beef,
-  ChevronRight,
+  ChefHat,
+  Cookie,
   CupSoda,
-  Droplet,
+  Flame,
   GlassWater,
-  IceCream,
   LayoutGrid,
-  ListChecks,
-  Package,
-  Pizza,
-  User,
-  Users,
+  UtensilsCrossed,
+  Wheat,
 } from "lucide-react";
 import { useGetItemsQuery } from "../../redux/api";
 
 const categoryIconMap: Record<string, JSX.Element> = {
   All: <LayoutGrid size={20} />,
-  Burgers: <Beef size={20} />,
-  Pizzas: <Pizza size={20} />,
+  Appetizers: <UtensilsCrossed size={20} />,
+  "Main Course": <ChefHat size={20} />,
+  "Ready to Grill": <Flame size={20} />,
+  Rice: <Wheat size={20} />,
+  Snacks: <Cookie size={20} />,
   Beverages: <CupSoda size={20} />,
-  Desserts: <IceCream size={20} />,
-  Dips: <Droplet size={20} />,
   Drinks: <GlassWater size={20} />,
-  "For Friends": <Users size={20} />,
-  "For You": <User size={20} />,
-  Products: <Package size={20} />,
-  Default: <ListChecks size={20} />,
 };
 
 export default function TabletCategoryTabs() {
@@ -57,12 +50,24 @@ export default function TabletCategoryTabs() {
       }
     });
 
-    const sortedGroups = Array.from(groups).sort();
+    // Define the specific order for categories
+    const categoryOrder = [
+      "Appetizers",
+      "Main Course",
+      "Ready to Grill",
+      "Rice",
+      "Snacks",
+      "Beverages",
+      "Drinks",
+    ];
+
+    const orderedGroups = categoryOrder.filter((cat) => groups.has(cat));
+
     return [
       { name: "All", icon: categoryIconMap.All },
-      ...sortedGroups.map((group) => ({
+      ...orderedGroups.map((group) => ({
         name: group,
-        icon: categoryIconMap[group] ?? categoryIconMap.Default,
+        icon: categoryIconMap[group] ?? categoryIconMap.All,
       })),
     ];
   }, [items]);

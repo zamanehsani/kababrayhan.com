@@ -2,33 +2,26 @@
 
 import { JSX, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Beef,
-  ChevronRight,
+  ChefHat,
+  Cookie,
   CupSoda,
-  Droplet,
+  Flame,
   GlassWater,
-  IceCream,
   LayoutGrid,
-  ListChecks,
-  Package,
-  Pizza,
-  User,
-  Users,
+  UtensilsCrossed,
+  Wheat,
 } from "lucide-react";
 import { useGetItemsQuery } from "../../redux/api";
 
 const categoryIconMap: Record<string, JSX.Element> = {
   All: <LayoutGrid size={22} />,
-  Burgers: <Beef size={22} />,
-  Pizzas: <Pizza size={22} />,
+  Appetizers: <UtensilsCrossed size={22} />,
+  "Main Course": <ChefHat size={22} />,
+  "Ready to Grill": <Flame size={22} />,
+  Rice: <Wheat size={22} />,
+  Snacks: <Cookie size={22} />,
   Beverages: <CupSoda size={22} />,
-  Desserts: <IceCream size={22} />,
-  Dips: <Droplet size={22} />,
   Drinks: <GlassWater size={22} />,
-  "For Friends": <Users size={22} />,
-  "For You": <User size={22} />,
-  Products: <Package size={22} />,
-  Default: <ListChecks size={22} />,
 };
 
 export default function DesktopCategoryTabs() {
@@ -56,12 +49,24 @@ export default function DesktopCategoryTabs() {
       }
     });
 
-    const sortedGroups = Array.from(groups).sort();
+    // Define the specific order for categories
+    const categoryOrder = [
+      "Appetizers",
+      "Main Course",
+      "Ready to Grill",
+      "Rice",
+      "Snacks",
+      "Beverages",
+      "Drinks",
+    ];
+
+    const orderedGroups = categoryOrder.filter((cat) => groups.has(cat));
+
     return [
       { name: "All", icon: categoryIconMap.All },
-      ...sortedGroups.map((group) => ({
+      ...orderedGroups.map((group) => ({
         name: group,
-        icon: categoryIconMap[group] ?? categoryIconMap.Default,
+        icon: categoryIconMap[group] ?? categoryIconMap.All,
       })),
     ];
   }, [items]);
@@ -139,7 +144,7 @@ export default function DesktopCategoryTabs() {
           <h3 className="text-2xl font-semibold tracking-wide text-slate-800">
             Explore Categories
           </h3>
-          <p className="text-sm font-medium text-slate-400 tracking-wide">
+          <p className="text-sm font-normal text-slate-400 tracking-wide">
             Filter your favorite items directly
           </p>
         </div>
