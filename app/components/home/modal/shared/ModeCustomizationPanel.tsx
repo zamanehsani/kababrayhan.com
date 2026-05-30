@@ -22,22 +22,9 @@ export function ModeCustomizationPanel({
       {customizations.map((group) => (
         <div
           key={group.id}
-          className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
+          className="rounded-2xl shadow-sm"
         >
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-xs font-medium uppercase tracking-wide text-slate-600">
-              {group.title}
-            </h3>
-            {group.required ? (
-              <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-600">
-                Required
-              </span>
-            ) : (
-              <span className="text-[10px] font-normal text-slate-400">
-                Optional
-              </span>
-            )}
-          </div>
+          
 
           <div className="flex flex-col gap-2">
             {group.options.map((option) => {

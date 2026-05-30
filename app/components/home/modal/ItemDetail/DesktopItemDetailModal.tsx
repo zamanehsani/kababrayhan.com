@@ -137,7 +137,7 @@ export function DesktopItemDetailModal({
 
       {/* Premium Split-Pane Frame */}
       <dialog
-        className={`relative z-10 grid ${hasCustomizationOptions ? 'h-160' : 'h-144'} w-full max-w-5xl grid-cols-12 overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white p-0 shadow-2xl`}
+        className={`relative z-10 grid ${hasCustomizationOptions ? 'h-160' : 'h-140'} w-full max-w-5xl grid-cols-12 overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white p-0 shadow-2xl`}
         open
         aria-labelledby="desktop-item-detail-title"
       >
@@ -170,10 +170,10 @@ export function DesktopItemDetailModal({
 
             {/* Inline Customization Options */}
             {hasCustomizationOptions && (
-              <div className="mt-6 space-y-5">
+              <div className="mt-2">
                 {variationGroups.length > 0 && (
-                  <section className="rounded-2xl border border-orange-100 bg-orange-50/40 p-5">
-                    <h4 className="text-sm font-semibold tracking-wide text-slate-900">
+                  <section className="rounded-2xl">
+                    <h4 className="text-sm font-normal tracking-wide text-slate-900">
                       Choose your option
                     </h4>
                     <p className="mt-1 text-xs text-slate-600">
@@ -192,13 +192,11 @@ export function DesktopItemDetailModal({
                 )}
 
                 {addOnGroups.length > 0 && (
-                  <section className="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4">
+                  <section className="rounded-2xl">
                     <h4 className="text-sm font-semibold tracking-wide text-slate-900">
                       Add-ons
                     </h4>
-                    <p className="mt-1 mb-3 text-xs text-slate-600">
-                      Tap to add extras.
-                    </p>
+                    
                     
                     {/* Compact Add-on Grid */}
                     {addOnGroups.map((group) => (
