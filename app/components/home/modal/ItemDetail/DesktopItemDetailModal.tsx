@@ -137,7 +137,7 @@ export function DesktopItemDetailModal({
 
       {/* Premium Split-Pane Frame */}
       <dialog
-        className={`relative z-10 grid ${hasCustomizationOptions ? 'h-160' : 'h-140'} w-full max-w-5xl grid-cols-12 overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white p-0 shadow-2xl`}
+        className={`relative z-10 grid ${hasCustomizationOptions ? 'h-150' : 'h-140'} w-full max-w-5xl grid-cols-12 overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white p-0 shadow-2xl`}
         open
         aria-labelledby="desktop-item-detail-title"
       >

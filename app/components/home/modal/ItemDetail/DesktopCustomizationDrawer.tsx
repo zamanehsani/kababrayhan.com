@@ -58,7 +58,7 @@ export function DesktopCustomizationDrawer({
         }`}
       >
         {variationGroups.length > 0 && (
-          <section className="flex flex-col rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
+          <section className="flex flex-col rounded-2xl  bg-slate-50/60 p-4">
             <h4 className="text-sm font-medium tracking-wide text-slate-800">
               Choose your option
             </h4>
