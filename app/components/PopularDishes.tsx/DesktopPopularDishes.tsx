@@ -172,7 +172,7 @@ export default function DesktopPopularDishes() {
                 >
                   {/* TOP SECTION: Title and Wishlist */}
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <h4 className="text-[16px] font-semibold leading-snug tracking-wide text-slate-800 line-clamp-2 group-hover:text-slate-900 transition-colors">
+                    <h4 className="text-[16px] font-semibold leading-snug tracking-wide text-slate-800 line-clamp-2 group-hover:text-slate-900 transition-colors pl-2 ">
                       {dish.name}
                     </h4>
                     {/* <button
