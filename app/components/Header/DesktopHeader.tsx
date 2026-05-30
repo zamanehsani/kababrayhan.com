@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useGetCustomerSalesOrdersQuery } from "@/app/redux/api";
 import { CART_UPDATED } from "@/app/lib/cart";
@@ -186,14 +187,16 @@ export default function DesktopHeader() {
     <header className="flex h-20 items-center justify-between border-b border-slate-100 bg-white px-12 shadow-sm select-none transition-all duration-300">
       {/* Left Section: Image Branding */}
       <div className="flex items-center shrink-0">
-        <Image
-          src="/logo.png"
-          alt="Kabab Rayhan"
-          width={150}
-          height={44}
-          className="h-18 w-auto object-contain"
-          priority
-        />
+        <Link href="/home" className="cursor-pointer">
+          <Image
+            src="/logo.png"
+            alt="Kabab Rayhan"
+            width={150}
+            height={44}
+            className="h-18 w-auto object-contain"
+            priority
+          />
+        </Link>
       </div>
 
       {/* Middle Section: Centered Navigation Track & Takeover Search Space */}
