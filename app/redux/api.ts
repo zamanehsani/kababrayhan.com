@@ -455,18 +455,6 @@ export const erpApi = createApi({
         },
       }),
     }),
-
-    // the ziina payment:
-    initializeZiinaPayment: builder.mutation<
-      { message: { redirect_url: string } },
-      { order_id: string; amount: number }
-    >({
-      query: (paymentDetails) => ({
-        url: `${ERP_API_METHOD_URL}pizza_app.api.create_ziina_payment`,
-        method: "POST",
-        body: paymentDetails,
-      }),
-    }),
   }),
 });
 
@@ -491,9 +479,4 @@ export const {
   useVerifyOtpMutation,
   useCreateCustomerNewMutation,
   useGetItemByCodeQuery,
-
-  // ziina
-  useInitializeZiinaPaymentMutation,
-
-  
 } = erpApi;

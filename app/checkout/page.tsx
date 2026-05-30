@@ -22,7 +22,6 @@ import CheckoutStepper from "../components/Checkout/CheckoutStepper";
 import CheckoutHeader from "../components/Checkout/CheckoutHeader";
 import OrderSummary from "../components/Checkout/OrderSummary";
 import CheckoutForm, { type DeliveryAddressItem } from "../components/Checkout/CheckoutForm";
-import ZiinaPaymentSection from "../components/Checkout/ZiinaPaymentSection";
 import MobileHeader from "../components/Header/MobileHeader";
 import TabletHeader from "../components/Header/TabletHeader";
 import DesktopHeader from "../components/Header/DesktopHeader";
@@ -91,7 +90,16 @@ const PaymentForm = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="rounded-2xl bg-stone-50 p-5 ring-1 ring-stone-200">
-        <PaymentElement options={{ layout: "tabs" }} />
+        <PaymentElement 
+          options={{ 
+            layout: "tabs",
+            // Explicitly request wallet payment methods
+            wallets: {
+              applePay: "auto",
+              googlePay: "auto",
+            },
+          }} 
+        />
       </div>
 
       {paymentError && (
@@ -345,6 +353,8 @@ const CheckoutPage = () => {
               borderRadius: "16px",
             },
           },
+          // Optimize for wallet payments (Apple Pay, Google Pay, Link)
+          loader: "auto",
         }}
         key={clientSecret}
       >
@@ -397,22 +407,6 @@ const CheckoutPage = () => {
                 </div>
 
                 <div className="px-8 py-10">{paymentSection}</div>
-              </section>
-            )}
-
-            {(isInitializing || clientSecret || orderError || salesOrder) && (
-              <section className="overflow-hidden rounded-[2.5rem] bg-white shadow-[0_30px_60px_rgba(0,0,0,0.12)] ring-1 ring-stone-100 animate-in fade-in zoom-in-95 duration-700">
-                <div className="border-b border-stone-50 px-8 py-6 bg-stone-50/50">
-                  <h2 className="text-xl font-medium text-stone-900">Ziina (Test)</h2>
-                </div>
-
-                <div className="px-8 py-10">
-                  <ZiinaPaymentSection
-                    total={total}
-                    salesOrderName={salesOrder?.name}
-                    isDisabled={isInitializing}
-                  />
-                </div>
               </section>
             )}
           </div>
