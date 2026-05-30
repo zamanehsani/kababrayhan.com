@@ -15,6 +15,7 @@ export const ADDRESS_KEY = "uae_address";
 export const ADDRESS_ID_KEY = "uae_address_id";
 
 export const CUSTOMER_PORTAL_UPDATED = "customerPortalUpdated";
+export const DELIVERY_ADDRESSES_KEY = "uae_delivery_addresses";
 
 export type CustomerPortalSnapshot = {
   phone: string;
@@ -22,7 +23,15 @@ export type CustomerPortalSnapshot = {
   isVerified: boolean;
   address: string;
   addressId: string;
+  deliveryAddresses: DeliveryAddressItem[];
   hasOrder: boolean;
+};
+
+export type DeliveryAddressItem = {
+  id?: string;
+  title: string;
+  address: string;
+  addressId: string;
 };
 
 const hasWindow = () => "window" in globalThis;
@@ -111,7 +120,7 @@ export const saveEnteredPhone = (phone: string) => {
   if (currentPhone && currentPhone !== phone) {
     globalThis.localStorage?.removeItem("uae_delivery_address");
     globalThis.localStorage?.removeItem("uae_delivery_address_id");
-    globalThis.localStorage?.removeItem("uae_delivery_addresses");
+    globalThis.localStorage?.removeItem(DELIVERY_ADDRESSES_KEY);
   }
   writeStorageState({ phone, phoneStatus: "entered" });
   store.dispatch(setPhoneEntered(phone));
@@ -141,7 +150,7 @@ export const clearCustomerPortalSession = () => {
   writeStorageState({ phone: "", phoneStatus: "none", address: "", addressId: "" });
   globalThis.localStorage?.removeItem("uae_delivery_address");
   globalThis.localStorage?.removeItem("uae_delivery_address_id");
-  globalThis.localStorage?.removeItem("uae_delivery_addresses");
+  globalThis.localStorage?.removeItem(DELIVERY_ADDRESSES_KEY);
   store.dispatch(clearSession());
   dispatchCustomerPortalUpdated();
 };
@@ -163,6 +172,7 @@ export const readCustomerPortalSnapshot = (): CustomerPortalSnapshot => {
       : storageState.phoneStatus;
   const address = session.address || storageState.address;
   const addressId = session.addressId || storageState.addressId;
+  const deliveryAddresses = readDeliveryAddresses();
   const hasOrder = getCart().length > 0;
 
   return {
@@ -171,6 +181,7 @@ export const readCustomerPortalSnapshot = (): CustomerPortalSnapshot => {
     isVerified: phoneStatus === "verified" && Boolean(phone),
     address,
     addressId,
+    deliveryAddresses,
     hasOrder,
   };
 };
@@ -178,4 +189,27 @@ export const readCustomerPortalSnapshot = (): CustomerPortalSnapshot => {
 export const dispatchCustomerPortalUpdated = () => {
   if (!hasWindow()) return;
   globalThis.dispatchEvent(new Event(CUSTOMER_PORTAL_UPDATED));
+};
+
+const readDeliveryAddresses = (): DeliveryAddressItem[] => {
+  if (!hasWindow()) return [];
+
+  const raw = globalThis.localStorage.getItem(DELIVERY_ADDRESSES_KEY);
+  if (!raw) return [];
+
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+export const writeDeliveryAddresses = (addresses: DeliveryAddressItem[]) => {
+  if (!hasWindow()) return;
+  globalThis.localStorage.setItem(
+    DELIVERY_ADDRESSES_KEY,
+    JSON.stringify(addresses)
+  );
+  dispatchCustomerPortalUpdated();
 };

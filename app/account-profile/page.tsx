@@ -23,6 +23,7 @@ import AddressSelectModal, {
 } from "../components/home/modal/AddressSelectModal";
 import {
   CUSTOMER_PORTAL_UPDATED,
+  type DeliveryAddressItem,
   PHONE_KEY,
   PHONE_STATUS_KEY,
   dispatchCustomerPortalUpdated,
@@ -30,6 +31,7 @@ import {
   readCustomerPortalSnapshot,
   saveDeliveryAddress,
   saveVerifiedPhone,
+  writeDeliveryAddresses,
 } from "@/app/lib/customerPortal";
 
 const toWordPreview = (value: string, maxWords: number) => {
@@ -54,6 +56,9 @@ export default function AccountProfilePage() {
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
+  const [activeDeliveryIndex, setActiveDeliveryIndex] = useState<number | null>(
+    null
+  );
   const [phoneForVerify, setPhoneForVerify] = useState("");
   const [previousVerifiedPhone, setPreviousVerifiedPhone] = useState("");
 
@@ -114,17 +119,67 @@ export default function AccountProfilePage() {
   };
 
   const handleAddressSelect = (addressData: SelectedAddress) => {
-    saveDeliveryAddress(addressData.name);
+    if (activeDeliveryIndex === null) return;
+
+    const resolvedAddress = addressData.name || "";
+    const addressId = addressData.id;
+
+    const updatedAddresses = portalState.deliveryAddresses.map((da, i) =>
+      i === activeDeliveryIndex
+        ? { ...da, address: resolvedAddress, addressId }
+        : da
+    );
+
+    writeDeliveryAddresses(updatedAddresses);
+
+    // Keep primary keys in sync if the first address is updated
+    if (activeDeliveryIndex === 0) {
+      saveDeliveryAddress(resolvedAddress, addressId);
+    }
+
     refreshPortalState();
-    setShowAddressModal(false);
+    setActiveDeliveryIndex(null);
+  };
+
+  const handleAddNewAddress = () => {
+    const newAddress: DeliveryAddressItem = {
+      id: String(Date.now()),
+      title: "",
+      address: "",
+      addressId: "",
+    };
+    const updatedAddresses = [...portalState.deliveryAddresses, newAddress];
+    writeDeliveryAddresses(updatedAddresses);
+    refreshPortalState();
+    setActiveDeliveryIndex(updatedAddresses.length - 1);
+  };
+
+  const handleRemoveAddress = (indexToRemove: number) => {
+    const updatedAddresses = portalState.deliveryAddresses.filter(
+      (_, i) => i !== indexToRemove
+    );
+    writeDeliveryAddresses(updatedAddresses);
+    refreshPortalState();
+  };
+
+  const handleTitleChange = (index: number, newTitle: string) => {
+    const updatedAddresses = portalState.deliveryAddresses.map((item, i) =>
+      i === index ? { ...item, title: newTitle } : item
+    );
+    writeDeliveryAddresses(updatedAddresses);
+    refreshPortalState();
   };
 
   const phoneLabel =
     portalState.isVerified && portalState.phone
       ? portalState.phone
       : "Not verified yet";
-  const addressLabel = portalState.address || "No address saved yet";
-  const addressPreview = toWordPreview(addressLabel, 10);
+  const primaryAddress =
+    portalState.deliveryAddresses[0] ?? portalState.address;
+  const addressLabel =
+    typeof primaryAddress === "object"
+      ? primaryAddress.address
+      : primaryAddress;
 
   return (
     <main className="min-h-screen bg-slate-50 pb-32 font-sans text-slate-900">
@@ -165,136 +220,157 @@ export default function AccountProfilePage() {
             </Link>
           </div>
 
-          <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm shadow-slate-100/80">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Verification
-              </p>
-              <p className="mt-1 text-base font-semibold leading-tight text-slate-900">
-                {portalState.isVerified ? "Verified" : "Pending"}
-              </p>
-            </div>
+          <div className="mt-8 flow-root">
+            <div className="-my-6 divide-y divide-slate-200">
+              {/* -- Verified Phone Section -- */}
+              <div className="py-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-start gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-50 text-brand-400">
+                      <Phone size={20} />
+                    </div>
+                    <div className="min-w-0 pt-0.5">
+                      <p className="text-sm font-semibold text-slate-900">
+                        Verified Phone
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-slate-600">
+                        {phoneLabel}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleOpenPhoneUpdate}
+                    className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold uppercase tracking-widest text-white transition-colors hover:bg-slate-800 sm:w-auto"
+                  >
+                    <Pencil size={14} />
+                    {portalState.isVerified ? "Update" : "Verify"}
+                  </button>
+                </div>
+                {portalState.isVerified && (
+                  <div className="mt-4 pl-16 sm:pl-0">
+                    <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
+                      <ShieldCheck size={14} />
+                      <span>Phone is verified</span>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm shadow-slate-100/80">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Phone
-              </p>
-              <p className="mt-1 truncate text-base font-semibold leading-tight text-slate-900">
-                {phoneLabel}
-              </p>
-            </div>
+              {/* -- Delivery Addresses Section (Multi-Address Support) -- */}
+              <div className="py-6">
+                <div className="mb-5 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-orange-600">
+                      <MapPin size={20} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">
+                        Delivery Addresses
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Manage your saved locations
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm shadow-slate-100/80">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Address
-              </p>
-              <p className="mt-1 truncate text-base font-semibold leading-tight text-slate-900">
-                {addressPreview}
-              </p>
+                {/* Address List */}
+                <div className="space-y-4">
+                  {portalState.deliveryAddresses.length > 0 ? (
+                    portalState.deliveryAddresses.map((delivery, index) => (
+                      <div
+                        key={delivery.id ?? String(index)}
+                        className="group rounded-2xl border-2 border-slate-200 bg-white p-4 transition-all hover:border-brand-400/30 hover:shadow-md"
+                      >
+                        {/* Address Title Row */}
+                        <div className="mb-3 flex items-center gap-2">
+                          <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+                            Delivery to (
+                          </span>
+                          <input
+                            type="text"
+                            value={delivery.title}
+                            onChange={(e) =>
+                              handleTitleChange(index, e.target.value)
+                            }
+                            placeholder={index === 0 ? "Home" : "Office, Work…"}
+                            className="text-[11px] font-semibold uppercase tracking-wider text-brand-400 bg-transparent border-b border-dashed border-slate-300 focus:border-brand-400 focus:outline-none w-24 text-center placeholder:text-slate-300"
+                          />
+                          <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+                            )
+                          </span>
+                          {index === 0 && (
+                            <span className="ml-2 rounded-full bg-brand-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                              Default
+                            </span>
+                          )}
+                          {index > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveAddress(index)}
+                              className="ml-auto text-[10px] font-medium uppercase tracking-wide text-slate-400 hover:text-red-500 transition-colors"
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Address Content */}
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className={`text-sm leading-relaxed ${
+                                delivery.address
+                                  ? "text-slate-700"
+                                  : "text-slate-400 italic"
+                              }`}
+                            >
+                              {delivery.address ||
+                                "No address selected yet"}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setActiveDeliveryIndex(index)}
+                            className={`shrink-0 rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
+                              delivery.address
+                                ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                : "bg-brand-400 text-white shadow-lg shadow-red-200 hover:bg-brand-700"
+                            }`}
+                          >
+                            <Pencil size={12} className="inline mr-1.5" />
+                            {delivery.address ? "Update" : "Select"}
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-6 text-center">
+                      <MapPin
+                        size={32}
+                        className="mx-auto mb-3 text-slate-300"
+                      />
+                      <p className="text-sm text-slate-500">
+                        No delivery addresses saved yet
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Add Another Address Button */}
+                  <button
+                    type="button"
+                    onClick={handleAddNewAddress}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-600 transition-all hover:border-brand-400 hover:bg-brand-50 hover:text-brand-400"
+                  >
+                    <span className="text-lg leading-none">+</span>
+                    Add Another Address
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-        <div className="mt-5 grid grid-cols-1 gap-4 lg:mt-6 lg:grid-cols-2">
-          <article className="h-full rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40 sm:p-6">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-50 text-brand-400">
-                  <Phone size={18} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Verified Phone
-                  </p>
-                  <p className="mt-1 truncate text-base font-semibold text-slate-900">
-                    {phoneLabel}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-slate-500">
-                    Keep your phone up to date for OTP and live order updates.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-semibold tracking-wide text-emerald-700">
-                <ShieldCheck size={13} />
-                {portalState.isVerified
-                  ? "Phone verified"
-                  : "Verification required for checkout"}
-              </div>
-
-              <button
-                type="button"
-                onClick={handleOpenPhoneUpdate}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition-colors hover:bg-slate-800 sm:w-auto"
-              >
-                <Pencil size={14} />
-                {portalState.isVerified ? "Update Phone" : "Verify Phone"}
-              </button>
-            </div>
-          </article>
-
-          <article className="h-full rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40 sm:p-6">
-            <div className="flex min-w-0 items-start gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
-                <MapPin size={18} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                  Delivery Address
-                </p>
-                <p className="mt-1 wrap-break-word text-sm font-semibold text-slate-900">
-                  {addressLabel}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  This address is used as your default destination during
-                  checkout.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-between">
-              <button
-                type="button"
-                onClick={() => setShowAddressModal(true)}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-slate-700 transition-colors hover:bg-slate-50 sm:w-auto"
-              >
-                <Pencil size={14} />
-                {portalState.address ? "Update Address" : "Add Address"}
-              </button>
-
-              {!portalState.address && (
-                <button
-                  type="button"
-                  onClick={() => setShowAddressModal(true)}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition-colors hover:bg-slate-800 sm:w-auto"
-                >
-                  Set Delivery Location
-                  <ArrowRight size={14} />
-                </button>
-              )}
-            </div>
-          </article>
-        </div>
-
-        <article className="mt-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/30 sm:p-6">
-          <div className="flex items-start gap-3">
-            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-slate-600">
-              <User size={18} />
-            </span>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold tracking-wide text-slate-900">
-                Profile checklist
-              </p>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                {portalState.isVerified && portalState.address
-                  ? "You are all set. Your profile details are ready for quick checkout."
-                  : "Complete phone verification and save an address for a faster ordering experience."}
-              </p>
-            </div>
-          </div>
-        </article>
       </section>
 
       <BottomNav />
@@ -316,10 +392,10 @@ export default function AccountProfilePage() {
         />
       )}
 
-      {showAddressModal && (
+      {activeDeliveryIndex !== null && (
         <AddressSelectModal
-          open={showAddressModal}
-          onClose={() => setShowAddressModal(false)}
+          open={true}
+          onClose={() => setActiveDeliveryIndex(null)}
           onSelect={handleAddressSelect}
           redirectTo={null}
         />
