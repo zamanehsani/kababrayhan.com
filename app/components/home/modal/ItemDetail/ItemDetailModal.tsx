@@ -137,10 +137,17 @@ export function ItemDetailModal({
 
   return (
     <dialog
-      className="fixed inset-0 z-250 flex h-full w-full max-h-none max-w-none flex-col overflow-y-auto overflow-x-hidden border-0 bg-white p-0 no-scrollbar"
+      className="fixed inset-0 z-250 flex h-full w-full max-h-none max-w-none flex-col overflow-y-auto overflow-x-hidden border-0 p-0 no-scrollbar"
       open
       aria-labelledby="dish-details-title"
     >
+      {/* Dynamic adaptive background - blurred dish image for gradient effect */}
+      <div className="fixed inset-0 scale-110 blur-3xl opacity-70 pointer-events-none -z-20">
+        <Image src={dish.img} alt="" fill className="object-cover" />
+      </div>
+
+      {/* Gradient overlay for smooth color transition and readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/85 to-white/90 -z-10" />
       {/* 1 + 2. HERO IMAGE with overlaid action bar */}
       {isCustomizationOpen ? (
         <>
@@ -173,10 +180,6 @@ export function ItemDetailModal({
         <>
           {/* Full-bleed hero image with overlay action bar */}
           <div className="relative w-full aspect-4/3 overflow-hidden">
-            {/* Background blur */}
-            <div className="absolute inset-0 scale-150 blur-3xl opacity-30 pointer-events-none">
-              <Image src={dish.img} alt="" fill className="object-cover" />
-            </div>
             {/* Main image */}
             <Image
               src={dish.img}
@@ -294,7 +297,7 @@ export function ItemDetailModal({
       )}
 
       {/* 8. BOTTOM QUANTITY AND PURCHASE PANEL */}
-      <div className="mt-auto bg-white px-4 pt-4 pb-8 flex items-center gap-4 border-t border-slate-50">
+      <div className="mt-auto  px-4 pt-4 pb-8 flex items-center gap-4 border-t border-slate-50">
         {/* Counter controls */}
         <div className="flex items-center bg-slate-50 rounded-full p-1 border border-slate-100">
           <button
