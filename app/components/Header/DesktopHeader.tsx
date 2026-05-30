@@ -154,7 +154,7 @@ export default function DesktopHeader() {
           placeholder="Search items, active orders, tickets..."
           value={searchValue}
           onChange={(event) => updateSearchQuery(event.target.value)}
-          className="w-full h-9 pl-10 pr-3.5 rounded-lg border border-slate-200 bg-slate-50/50 text-[13px] font-medium text-slate-700 placeholder-slate-400 outline-none transition-all duration-200 focus:border-slate-200 focus:bg-white focus:ring-4 focus:ring-slate-50 shadow-inner"
+          className="w-full h-11 pl-10 pr-3.5 rounded-lg border border-slate-200 bg-slate-50/50 text-[13px] font-medium text-slate-700 placeholder-slate-400 outline-none transition-all duration-200 focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-50"
         />
       </div>
     );
