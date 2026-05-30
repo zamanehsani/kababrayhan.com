@@ -7,10 +7,11 @@ import MobileHeader from "./components/Header/MobileHeader";
 import TabletHeader from "./components/Header/TabletHeader";
 import DesktopHeader from "./components/Header/DesktopHeader";
 import CartSidebarWidget from "./components/Cart/CartSidebarWidget";
+import Footer from "./components/Footer/Footer";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-white pb-32 font-sans text-slate-900 dark:bg-zinc-950 dark:text-zinc-100">
+    <main className="min-h-screen bg-white font-sans text-slate-900 dark:bg-zinc-950 dark:text-zinc-100">
       {/* 1. Mobile Header: Visible by default, hidden from tablet (md) upwards */}
       <div className="block md:hidden">
         <MobileHeader />
@@ -30,6 +31,9 @@ export default function Home() {
       {/* <PromoBanner /> */}
       <CategoryTabs />
       <PopularDishes />
+
+      {/* Footer */}
+      <Footer />
 
       {/* Floating Navigation */}
       <BottomNav />

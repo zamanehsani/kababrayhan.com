@@ -98,7 +98,7 @@ export default function TabletPopularDishes() {
       Tablet Mode (768px - 1023px) 
       - Fixed padding of px-8 works perfectly within this viewport range
     */
-    <section className="mt-10 px-8">
+    <section className="mt-10 px-8 pb-20">
       {/* Header Layout */}
       <div className="mb-6 flex items-center justify-between">
         <h3 className="text-2xl font-semibold tracking-wide text-slate-900">

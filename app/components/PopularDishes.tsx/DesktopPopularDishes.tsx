@@ -104,7 +104,7 @@ export default function DesktopPopularDishes() {
       - max-w-[1440px] establishes the wide alignment ceiling across the home page
       - mx-auto centers the section block perfectly on screens beyond 1440px
     */
-    <section className="mt-8 max-w-[1440px] mx-auto px-12">
+    <section className="mt-8 max-w-[1440px] mx-auto px-12 pb-20">
       {/* HEADER SECTION */}
       <div className="mb-6 flex items-center justify-between">
         <h3 className="text-2xl font-semibold tracking-wide text-slate-900">
