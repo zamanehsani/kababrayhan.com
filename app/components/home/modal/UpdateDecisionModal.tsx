@@ -4,6 +4,7 @@ type UpdateDecisionModalProps = {
   open: boolean;
   title: string;
   description: string;
+  detail?: string;
   confirmLabel: string;
   skipLabel: string;
   onConfirm: () => void;
@@ -14,6 +15,7 @@ export default function UpdateDecisionModal({
   open,
   title,
   description,
+  detail,
   confirmLabel,
   skipLabel,
   onConfirm,
@@ -29,6 +31,13 @@ export default function UpdateDecisionModal({
           {description}
         </p>
 
+        {detail && (
+          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">Currently saved</p>
+            <p className="text-sm font-semibold text-slate-800 tracking-wide break-all">{detail}</p>
+          </div>
+        )}
+
         <div className="mt-6 flex items-center justify-end gap-3">
           <button
             type="button"
@@ -40,7 +49,7 @@ export default function UpdateDecisionModal({
           <button
             type="button"
             onClick={onConfirm}
-            className="rounded-xl bg-brand-400 px-4 py-2 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-brand-700"
+            className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-slate-700"
           >
             {confirmLabel}
           </button>

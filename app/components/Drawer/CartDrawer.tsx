@@ -25,6 +25,7 @@ export default function CartDrawer() {
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
   const [showDeliveryTakeaway, setShowDeliveryTakeaway] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showPhoneUpdatePrompt, setShowPhoneUpdatePrompt] = useState(false);
@@ -162,6 +163,7 @@ export default function CartDrawer() {
     const snapshot = readCustomerPortalSnapshot();
 
     if (snapshot.address) {
+      setAddress(snapshot.address);
       setShowAddressUpdatePrompt(true);
       return;
     }
@@ -352,19 +354,21 @@ export default function CartDrawer() {
         )}
         <UpdateDecisionModal
           open={showPhoneUpdatePrompt}
-          title="Phone already verified"
-          description="Do you want to update or change the phone number before checkout?"
-          confirmLabel="Yes, Update"
-          skipLabel="No, Continue"
+          title="Phone number verified"
+          description="We found a verified number on your account. Use it to continue, or change it before checkout."
+          detail={phone}
+          confirmLabel="Change Number"
+          skipLabel="Use This Number"
           onConfirm={handlePhoneUpdateConfirm}
           onSkip={handlePhoneUpdateSkip}
         />
         <UpdateDecisionModal
           open={showAddressUpdatePrompt}
-          title="Address already saved"
-          description="Do you want to update or change the delivery address?"
-          confirmLabel="Yes, Update"
-          skipLabel="No, Continue"
+          title="Delivery address saved"
+          description="We found a saved delivery address. Keep it or choose a different one before placing your order."
+          detail={address}
+          confirmLabel="Change Address"
+          skipLabel="Use This Address"
           onConfirm={handleAddressUpdateConfirm}
           onSkip={handleAddressUpdateSkip}
         />
