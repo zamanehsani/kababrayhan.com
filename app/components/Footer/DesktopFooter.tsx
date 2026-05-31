@@ -2,7 +2,13 @@
 
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import Link from "next/link";
-import { FacebookIcon, InstagramIcon, TwitterIcon, YoutubeIcon } from "../icon/SocialIcons";
+import {
+  FacebookIcon,
+  InstagramIcon,
+  TiktokIcon,
+  WhatsappIcon,
+} from "../icon/SocialIcons";
+import Image from "next/image";
 
 export default function DesktopFooter() {
   const currentYear = new Date().getFullYear();
@@ -13,14 +19,25 @@ export default function DesktopFooter() {
         {/* Main Content Grid */}
         <div className="grid grid-cols-4 gap-12 mb-12">
           {/* Brand Section */}
+
           <div className="col-span-1">
-            <h3 className="text-3xl font-semibold tracking-wide text-yellow-400 mb-3">
-              Kabab Al Raihan
-            </h3>
+            {/* Image wrapper with a fixed height, keeping the layout sharp */}
+            <div className="relative h-22 w-58 mb-4">
+              <Image
+                src="/log-white.png" // Change this path to match your logo asset
+                alt="Kabab Al Raihan Logo"
+                fill
+                priority // Ensures the logo loads instantly without layout shifts
+                className="object-contain object-left " // Keeps aspect ratio perfect and left-aligned
+              />
+            </div>
             <p className="text-sm text-slate-400 tracking-wide leading-relaxed">
-              Authentic flavors, delivered fresh to your doorstep. Experience the taste of tradition.
+              Authentic Persian & Iranian grill experience in the heart of
+              Ajman. From our signature Qabuli polou to the legendary Tikka
+              Masti, we bring tradition to your table.
             </p>
           </div>
+         
 
           {/* Contact Info */}
           <div className="col-span-1">
@@ -39,15 +56,21 @@ export default function DesktopFooter() {
 
               <div className="flex items-center gap-3 text-sm">
                 <Phone size={20} className="text-yellow-400 shrink-0" />
-                <a href="tel:+971XXXXXXXXX" className="text-slate-300 hover:text-yellow-400 transition-colors">
-                  +971 XX XXX XXXX
+                <a
+                  href="tel:+971503021317"
+                  className="text-slate-300 hover:text-yellow-400 transition-colors"
+                >
+                  +971 50 302 1317
                 </a>
               </div>
 
               <div className="flex items-center gap-3 text-sm">
                 <Mail size={20} className="text-yellow-400 shrink-0" />
-                <a href="mailto:info@kababalraihan.ae" className="text-slate-300 hover:text-yellow-400 transition-colors break-all">
-                  info@kababalraihan.ae
+                <a
+                  href="mailto:kababrayhan@gmail.com"
+                  className="text-slate-300 hover:text-yellow-400 transition-colors break-all"
+                >
+                  kababrayhan@gmail.com
                 </a>
               </div>
 
@@ -55,7 +78,7 @@ export default function DesktopFooter() {
                 <Clock size={20} className="text-yellow-400 mt-0.5 shrink-0" />
                 <div className="text-slate-300">
                   <p className="font-semibold mb-1">Opening Hours</p>
-                  <p>Daily: 10:00 AM - 11:00 PM</p>
+                  <p>Daily: 11:00 AM - 11:59 PM</p>
                 </div>
               </div>
             </div>
@@ -67,27 +90,36 @@ export default function DesktopFooter() {
               Quick Links
             </h4>
             <div className="space-y-3">
-              <Link href="/home" className="block text-sm text-slate-400 hover:text-yellow-400 transition-colors">
+              <Link
+                href="/home"
+                className="block text-sm text-slate-400 hover:text-yellow-400 transition-colors"
+              >
                 Home
               </Link>
-              <Link href="/my-orders" className="block text-sm text-slate-400 hover:text-yellow-400 transition-colors">
+              <Link
+                href="/my-orders"
+                className="block text-sm text-slate-400 hover:text-yellow-400 transition-colors"
+              >
                 My Orders
               </Link>
-              <Link href="/account-profile" className="block text-sm text-slate-400 hover:text-yellow-400 transition-colors">
+              <Link
+                href="/account-profile"
+                className="block text-sm text-slate-400 hover:text-yellow-400 transition-colors"
+              >
                 Profile
               </Link>
-              <Link href="#" className="block text-sm text-slate-400 hover:text-yellow-400 transition-colors">
+              {/* <Link href="#" className="block text-sm text-slate-400 hover:text-yellow-400 transition-colors">
                 About Us
-              </Link>
-              <Link href="#" className="block text-sm text-slate-400 hover:text-yellow-400 transition-colors">
+              </Link> */}
+              {/* <Link href="#" className="block text-sm text-slate-400 hover:text-yellow-400 transition-colors">
                 Contact
-              </Link>
-              <Link href="#" className="block text-sm text-slate-400 hover:text-yellow-400 transition-colors">
+              </Link> */}
+              {/* <Link href="#" className="block text-sm text-slate-400 hover:text-yellow-400 transition-colors">
                 Terms & Conditions
               </Link>
               <Link href="#" className="block text-sm text-slate-400 hover:text-yellow-400 transition-colors">
                 Privacy Policy
-              </Link>
+              </Link> */}
             </div>
           </div>
 
@@ -101,32 +133,32 @@ export default function DesktopFooter() {
             </p>
             <div className="flex gap-3">
               <a
-                href="#"
+                href="https://www.facebook.com/Kababalrayhan"
                 className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-yellow-400 hover:text-slate-900 transition-all hover:scale-110"
                 aria-label="Facebook"
               >
                 <FacebookIcon size={20} />
               </a>
               <a
-                href="#"
+                href="https://www.instagram.com/kabab_alrayhan/"
                 className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-yellow-400 hover:text-slate-900 transition-all hover:scale-110"
                 aria-label="Instagram"
               >
                 <InstagramIcon size={20} />
               </a>
               <a
-                href="#"
+                href="https://www.tiktok.com/@kabab.alrayhan"
                 className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-yellow-400 hover:text-slate-900 transition-all hover:scale-110"
-                aria-label="YouTube"
+                aria-label="TikTok"
               >
-                <YoutubeIcon size={20} />
+                <TiktokIcon size={24} />
               </a>
               <a
-                href="#"
+                href="https://wa.me/971503021317?text=Hello!%20I%20have%20a%20question%20about%20your%20services."
                 className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-yellow-400 hover:text-slate-900 transition-all hover:scale-110"
-                aria-label="Twitter"
+                aria-label="WhatsApp"
               >
-                <TwitterIcon size={20} />
+                <WhatsappIcon size={20} />
               </a>
             </div>
           </div>
@@ -137,17 +169,6 @@ export default function DesktopFooter() {
           <p className="text-sm text-slate-500 tracking-wide">
             &copy; {currentYear} Kabab Al Raihan. All rights reserved.
           </p>
-          <div className="flex gap-6 text-sm text-slate-500">
-            <Link href="#" className="hover:text-yellow-400 transition-colors">
-              Privacy Policy
-            </Link>
-            <Link href="#" className="hover:text-yellow-400 transition-colors">
-              Terms of Service
-            </Link>
-            <Link href="#" className="hover:text-yellow-400 transition-colors">
-              Cookie Policy
-            </Link>
-          </div>
         </div>
       </div>
     </footer>

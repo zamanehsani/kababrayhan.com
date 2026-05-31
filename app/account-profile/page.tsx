@@ -33,6 +33,7 @@ import {
   saveVerifiedPhone,
   writeDeliveryAddresses,
 } from "@/app/lib/customerPortal";
+import Footer from "../components/Footer/Footer";
 
 const toWordPreview = (value: string, maxWords: number) => {
   const normalized = value.trim().replaceAll(/\s+/g, " ");
@@ -182,7 +183,7 @@ export default function AccountProfilePage() {
       : primaryAddress;
 
   return (
-    <main className="min-h-screen bg-slate-50 pb-32 font-sans text-slate-900">
+    <main className="min-h-screen bg-slate-50 font-sans text-slate-900">
       <div className="block md:hidden">
         <MobileHeader />
       </div>
@@ -400,6 +401,7 @@ export default function AccountProfilePage() {
           redirectTo={null}
         />
       )}
+      <Footer />
     </main>
   );
 }

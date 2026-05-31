@@ -25,6 +25,7 @@ import CheckoutForm, { type DeliveryAddressItem } from "../components/Checkout/C
 import MobileHeader from "../components/Header/MobileHeader";
 import TabletHeader from "../components/Header/TabletHeader";
 import DesktopHeader from "../components/Header/DesktopHeader";
+import Footer from "../components/Footer/Footer";
 
 const stripeKey =
   
@@ -416,6 +417,7 @@ const CheckoutPage = () => {
           </div>
         </div>
       </main>
+       <Footer />
     </div>
   );
 };

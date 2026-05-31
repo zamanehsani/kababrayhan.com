@@ -169,6 +169,8 @@ export default function CartDrawer() {
     setShowAddressModal(true);
   };
 
+
+  console.log("the cart data: ", cart)
   return (
     <div className="fixed inset-0 z-300 flex justify-end">
       {/* Backdrop Blur Layer */}
@@ -238,17 +240,10 @@ export default function CartDrawer() {
                     <h3 className="font-semibold text-base text-slate-900 leading-tight tracking-wide mb-0.5">
                       {entry.item.title}
                     </h3>
-                    {entry.item.description && (
-                      <div
-                        className="text-xs text-slate-400 font-sans line-clamp-1 mb-2 prose-xs-strip"
-                        dangerouslySetInnerHTML={{
-                          __html: entry.item.description,
-                        }}
-                      />
-                    )}
+                    
 
                     {/* Addon Bracket */}
-                    <div className="inline-flex flex-col bg-slate-50 rounded-xl px-2.5 py-1.5 border border-slate-100">
+                    <div className="inline-flex flex-col">
                       <p className="text-xs font-semibold text-slate-700 tracking-wide">
                         {entry.addon.title}
                       </p>
@@ -268,10 +263,10 @@ export default function CartDrawer() {
                         entry.item.discountedPrice * (entry.qty || 1)
                       )}
                     </span>
-                    <span className="flex items-center gap-0.5 text-xs text-slate-400 line-through font-medium">
+                    {/* <span className="flex items-center gap-0.5 text-xs text-slate-400 line-through font-medium">
                       <DirhamIcon size={10} className="text-slate-400" />
                       {Math.round(entry.item.realPrice * (entry.qty || 1))}
-                    </span>
+                    </span> */}
                   </div>
 
                   <div className="flex items-center gap-4">

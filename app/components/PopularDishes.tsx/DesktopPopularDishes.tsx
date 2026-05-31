@@ -17,7 +17,7 @@ export default function DesktopPopularDishes() {
   const searchValue = searchParams.get("search") ?? "";
   const normalizedSearchValue = searchValue.trim().toLowerCase();
 
-  const {data: itembycode}= useGetItemByCodeQuery("snacks-garlic-bites");
+  const {data: itembycode}= useGetItemByCodeQuery("RYH-MIX-001-With Fries");
 
   console.log("Item by code data:", itembycode);
   const slugify = (value: string) =>
