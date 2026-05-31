@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, LogOut, User } from "lucide-react";
+import { Bell,StickyNote, LogOut, User } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -210,17 +210,18 @@ export default function MobileHeader() {
         </div>
 
       {/* Increased padding (p-2.5) for a better thumb tap target */}
-      <button
-        type="button"
-        onClick={handleBellClick}
-        className="relative flex h-11 w-11 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-600 shadow-sm transition-all active:scale-90"
-      >
-        <Bell size={22} />
-        {/* Notification Dot - positioned slightly better for visibility */}
-        {portalState.isVerified && hasOrders && (
-          <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500"></span>
-        )}
-      </button>
+      
+      {portalState?.isVerified && (
+        <button
+          type="button"
+          onClick={() => router.push("/my-orders")}
+          className="mr-2 flex h-11 w-11 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-600 shadow-sm transition-all active:scale-90"
+        >
+          <StickyNote size={22} />
+        </button>
+      )}
+
+      
       </header>
 
       {showPhoneModal && (
