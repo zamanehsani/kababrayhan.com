@@ -35,7 +35,6 @@ export default function MobileFooter() {
             bring tradition to your table.
           </p>
         </div>
-       
 
         {/* Contact Info */}
         <div className="mb-6 space-y-3">
@@ -43,7 +42,7 @@ export default function MobileFooter() {
             <MapPin size={18} className="text-yellow-400 mt-0.5 shrink-0" />
             <div>
               <p className="text-slate-300 leading-relaxed">
-                Dubai, United Arab Emirates
+                Al Rawda 2 - Ajman - United Arab Emirates
               </p>
             </div>
           </div>

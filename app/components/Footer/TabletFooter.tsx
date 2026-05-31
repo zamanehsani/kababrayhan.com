@@ -43,7 +43,7 @@ export default function TabletFooter() {
                 <MapPin size={20} className="text-yellow-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-slate-300 leading-relaxed">
-                    Dubai, United Arab Emirates
+                    Al Rawda 2 - Ajman - United Arab Emirates
                   </p>
                 </div>
               </div>
@@ -76,7 +76,6 @@ export default function TabletFooter() {
               </div>
             </div>
           </div>
-         
 
           {/* Quick Links & Social */}
           <div className="space-y-8">
