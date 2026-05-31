@@ -1,6 +1,6 @@
 "use client";
 import {
-  Bell,
+  StickyNote,
   Search,
   X,
   Home,
@@ -336,7 +336,7 @@ export default function TabletHeader() {
           onClick={() => openVerificationFlowFor("/my-orders")}
           className="relative flex h-12 w-12 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-600 shadow-sm transition-all active:scale-95"
         >
-          <Bell size={22} />
+          <StickyNote size={22} />
           {portalState.isVerified && hasOrders && (
             <span className="absolute right-3.25 top-3.25 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500"></span>
           )}

@@ -1,7 +1,7 @@
 "use client";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Bell,
+  StickyNote,
   Search,
   ChevronDown,
   Home,
@@ -40,7 +40,7 @@ export default function DesktopHeader() {
 
   const desktopNavItems = [
     { id: "home", href: "/home", label: "Home", icon: <Home size={16} /> },
-    { id: "orders", href: "/my-orders", label: "My Orders", icon: <ClipboardList size={16} /> },
+    { id: "orders", href: "/my-orders", label: "My Orders", icon: <StickyNote size={16} /> },
   ];
 
   const { data: salesOrders } = useGetCustomerSalesOrdersQuery(
@@ -197,6 +197,9 @@ export default function DesktopHeader() {
             priority
           />
         </Link>
+        <h1 className="text-lg font-bold text-slate-900 ml-3 leading-tight">Kabab AlRayhan <br /> 
+          <span className="text-sm text-slate-500 font-normal">Restaurant & Bakery</span>
+        </h1>
       </div>
 
       {/* Middle Section: Centered Navigation Track & Takeover Search Space */}
@@ -222,8 +225,9 @@ export default function DesktopHeader() {
         {portalState.isVerified && hasOrders && (
           <>
             {/* Alerts Badge */}
-            <button className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-800 active:scale-95">
-              <Bell size={18} />
+            <button onClick={() => router.push("/my-orders")}
+            className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-800 active:scale-95">
+              <StickyNote size={18} />
               <span className="absolute right-3 top-3 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white animate-pulse"></span>
             </button>
 

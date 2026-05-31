@@ -138,25 +138,7 @@ export default function DesktopCategoryTabs() {
   return (
     <section className="mt-12 max-w-[1440px] mx-auto px-12">
       {/* Header Layout */}
-      <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
-        <div className="flex flex-col gap-1">
-          {/* Changed font-bold to font-semibold to match the soft system appearance */}
-          <h3 className="text-2xl font-semibold tracking-wide text-slate-800">
-            Explore Categories
-          </h3>
-          <p className="text-sm font-normal text-slate-400 tracking-wide">
-            Filter your favorite items directly
-          </p>
-        </div>
-        {/* <button className="flex items-center gap-1.5 text-base font-semibold tracking-wide text-slate-500 hover:text-orange-500 transition-colors group">
-          View Full Menu
-          <ChevronRight
-            size={18}
-            className="transition-transform group-hover:translate-x-1"
-          />
-        </button> */}
-      </div>
-
+      
       {/* Premium Dashboard Grid Layout */}
       <div ref={stickySentinelRef}>
         <div
@@ -167,10 +149,10 @@ export default function DesktopCategoryTabs() {
           <div
             className={`mx-auto max-w-full w-full ${
               isPinned ? "px-2 md:px-12" : ""
-            }`}
+            }` }
           >
             {/* Scroll Container: Centers buttons when few, allows overflow when many */}
-            <div className="flex flex-nowrap gap-6 items-center justify-start md:justify-center overflow-x-auto no-scrollbar scroll-smooth">
+            <div className="flex flex-nowrap py-2 gap-6 items-center justify-start md:justify-center overflow-x-auto no-scrollbar scroll-smooth">
               {categories.map((cat) => (
                 <button
                   key={cat.name}
@@ -216,8 +198,8 @@ export default function DesktopCategoryTabs() {
                     <div
                       className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors ${
                         activeCategory === cat.name
-                          ? "bg-white text-slate-800"
-                          : "bg-white text-slate-400 group-hover:bg-orange-50 group-hover:text-orange-500"
+                          ? " text-slate-800"
+                          : " text-slate-400 group-hover:bg-orange-50 group-hover:text-orange-500"
                       }`}
                     >
                       {cat.icon}

@@ -33,16 +33,16 @@ export default function SearchBar() {
         />
         <input
           type="text"
-          placeholder="Search for restaurants or dishes..."
+          placeholder="Search for dishes and more"
           value={searchValue}
           onChange={(event) => updateSearchQuery(event.target.value)}
           className="w-full rounded-full border border-slate-100 bg-slate-50 py-3 pl-10 pr-4 text-base text-slate-900 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-slate-200"
         />
       </div>
       {/* Ensure button has h-12 and w-12 for a clear 48px tap target */}
-      <button className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-700 shadow-sm transition-all active:scale-95">
+      {/* <button className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-700 shadow-sm transition-all active:scale-95">
         <Settings2 size={20} />
-      </button>
+      </button> */}
     </section>
   );
 }
