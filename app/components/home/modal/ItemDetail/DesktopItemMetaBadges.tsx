@@ -22,7 +22,7 @@ export function DesktopItemMetaBadges({
         <Clock size={15} className="text-slate-400" />
         <span>Ready in {time}</span>
       </div>
-      <div className="h-4 w-px bg-slate-200" />
+      {/* <div className="h-4 w-px bg-slate-200" /> */}
       {/* <div className="flex items-center gap-1.5">
         <Star size={15} className="fill-yellow-400 text-yellow-400" />
         <span className="text-slate-800">{rating} stars</span>

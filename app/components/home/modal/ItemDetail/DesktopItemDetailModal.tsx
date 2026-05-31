@@ -149,23 +149,23 @@ export function DesktopItemDetailModal({
           <X size={18} />
         </button>
 
-        <DesktopItemImagePane src={dish.img} alt={dish.name} />
+        <DesktopItemImagePane src={dish.img} alt={dish.name}  />
 
         {/* Right Column */}
         <div className="col-span-7 flex h-full flex-col bg-white">
           <h2 id="desktop-item-detail-title" className="sr-only">
-            {dish.name} details
+            {dish.name} details 
           </h2>
 
           <DesktopItemHeader restaurant={dish.restaurant} name={dish.name} />
 
           {/* Scrollable content area */}
-          <div className="flex-1 overflow-y-auto px-8 py-6 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
+          <div className="flex-1 overflow-y-auto px-8 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
             <DesktopItemMetaBadges
               cal={dish.cal}
               time={dish.time}
               rating={dish.rating}
-            />
+            /> 
             <DesktopItemDescription html={dish.description} />
 
             {/* Inline Customization Options */}

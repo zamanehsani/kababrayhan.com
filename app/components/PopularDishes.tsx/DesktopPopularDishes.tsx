@@ -106,10 +106,8 @@ export default function DesktopPopularDishes() {
     */
     <section className="mt-8 max-w-[1440px] mx-auto px-12 pb-20">
       {/* HEADER SECTION */}
-      <div className="mb-6 flex items-center justify-between">
-        <h3 className="text-2xl font-semibold tracking-wide text-slate-900">
-          Popular Dishes
-        </h3>
+      <div className=" flex items-center justify-between">
+        
         {/* <button className="text-sm font-semibold tracking-wide text-slate-500 hover:text-slate-800 transition-colors active:opacity-70">
           See all
         </button> */}

@@ -72,7 +72,7 @@ const PhoneModal: React.FC<PhoneModalProps> = ({
         >
           ×
         </button>
-        <h2 className="text-xl font-meduim mb-4 text-center  tracking-wide">Enter your UAE Phone Number</h2>
+        <h2 className="text-xl font-meduim mb-4 text-center  tracking-wide">Enter your Phone Number</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <span className="px-3 py-3 rounded-lg bg-gray-100 border border-gray-200 text-lg select-none">+971</span>

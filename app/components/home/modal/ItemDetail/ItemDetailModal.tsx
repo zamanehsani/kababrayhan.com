@@ -243,9 +243,7 @@ export function ItemDetailModal({
 
           {/* 6. DESCRIPTION SECTION */}
           <div className="px-5 mb-2">
-            <h3 className="text-base font-semibold tracking-wide text-slate-800 mb-2">
-              About this item
-            </h3>
+           
             <div
               className="prose prose-sm font-sans leading-relaxed tracking-wide text-slate-400 max-w-none
           prose-p:text-slate-400 prose-p:my-1

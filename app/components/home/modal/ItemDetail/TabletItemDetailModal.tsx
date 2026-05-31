@@ -170,7 +170,7 @@ export function TabletItemDetailModal({
           ) : (
             <>
               {/* Hero image canvas */}
-              <div className="relative flex aspect-16/10 w-full items-center justify-center border-b border-slate-50 bg-slate-50/50 p-6 pt-14">
+              <div className="relative flex aspect-16/10 w-full items-center overflow-hidden justify-center border-b border-slate-50 bg-slate-50/50 p-6 pt-14">
                 <div className="pointer-events-none absolute inset-0 scale-120 opacity-20 blur-3xl">
                   <Image src={dish.img} alt="" fill className="object-cover" />
                 </div>
@@ -203,7 +203,7 @@ export function TabletItemDetailModal({
                 </div>
 
                 {/* Quick Metrics Badge Row */}
-                <div className="flex items-center gap-4 rounded-2xl border border-slate-100/80 bg-slate-50 px-4 py-2.5 text-xs font-medium tracking-wide text-slate-500">
+                <div className="flex mx-auto items-center gap-4 rounded-2xl border border-slate-100/80 bg-slate-50 px-4 py-2.5 text-xs font-medium tracking-wide text-slate-500">
                   <div className="flex items-center gap-1.5">
                     <Flame size={14} className="text-orange-500" />
                     <span>{dish.cal} kcal</span>
@@ -221,9 +221,6 @@ export function TabletItemDetailModal({
                 </div>
 
                 <div>
-                  <h3 className="mb-1 text-sm font-medium tracking-wide text-slate-800">
-                    About this item
-                  </h3>
                   <div
                     className="prose prose-sm max-w-none font-sans leading-relaxed tracking-wide text-slate-400 prose-p:my-1 prose-p:text-slate-400 prose-strong:font-normal prose-strong:text-slate-700 prose-ul:list-disc prose-ul:pl-4 prose-li:my-0.5"
                     dangerouslySetInnerHTML={{ __html: dish.description }}

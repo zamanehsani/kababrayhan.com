@@ -97,11 +97,9 @@ export default function PopularDishes() {
   })();
 
   return (
-    <section className="mt-8 pb-20">
+    <section className=" pb-20">
       <div className="mb-5 flex items-center justify-between px-4">
-        <h3 className="text-xl font-normal tracking-wide text-slate-900">
-          Popular Dishes
-        </h3>
+      
         {/* <button className="text-sm font-normal text-slate-500 active:opacity-70">
           See all
         </button> */}
