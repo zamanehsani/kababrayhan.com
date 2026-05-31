@@ -184,7 +184,7 @@ export default function DesktopHeader() {
   }
 
   return (
-    <header className="flex h-20 items-center justify-between border-b border-slate-100 bg-white px-12 shadow-sm select-none transition-all duration-300">
+    <header className="flex h-20 items-center justify-between border-b border-slate-100 bg-white px-12 select-none transition-all duration-300">
       {/* Left Section: Image Branding */}
       <div className="flex items-center shrink-0">
         <Link href="/home" className="cursor-pointer">
