@@ -136,14 +136,14 @@ export default function DesktopCategoryTabs() {
   const stickyPositionClass = isPinned ? "fixed inset-x-0 top-0" : "relative";
 
   return (
-    <section className="mt-12 max-w-[1440px] mx-auto px-12">
+    <section className="max-w-[1440px] mx-auto px-8">
       {/* Header Layout */}
       
       {/* Premium Dashboard Grid Layout */}
       <div ref={stickySentinelRef}>
         <div
           ref={stickyBarRef}
-          className={`${stickyPositionClass} z-40 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/70 pb-5 pt-2 left-0 right-0 w-full`}
+          className={`${stickyPositionClass} z-40 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/70 pb-2 pt-2 left-0 right-0 w-full`}
         >
           {/* Centering Wrapper: Controls the maximum layout width */}
           <div

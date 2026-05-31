@@ -195,17 +195,9 @@ export default function TabletCategoryTabs() {
       Tablet Mode UI Constraint (768px - 1023px):
       - Standard layout spacing at mt-10 and px-8 matching your dashboard rhythm
     */
-    <section className="mt-10 px-8">
+    <section className="px-8">
       {/* Header Layout */}
-      <div className="mb-5 flex items-center justify-between">
-        <h3 className="text-2xl font-semibold tracking-wide text-slate-900">
-          Categories
-        </h3>
-        {/* <button className="flex items-center gap-1 text-base font-semibold tracking-wide text-slate-500 hover:text-slate-700 active:opacity-70 transition-colors">
-          See all categories
-          <ChevronRight size={16} />
-        </button> */}
-      </div>
+      
       <div ref={stickySentinelRef}>
         <div
           ref={stickyBarRef}

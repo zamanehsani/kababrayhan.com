@@ -200,17 +200,9 @@ export default function CategoryTabs() {
   };
 
   return (
-    <section className="mt-8">
+    <section className="mt-2">
       {/* Header Section */}
-      <div className="mb-4 flex items-center justify-between px-4">
-        <h3 className="text-xl font-normal tracking-wide text-slate-900">
-          Categories
-        </h3>
-        {/* <button className="flex items-center gap-1 text-sm font-normal text-slate-500 active:opacity-70">
-          See all
-          <ChevronRight size={14} />
-        </button> */}
-      </div>
+     
 
       {/* Sticky-on-threshold category bar */}
       <div ref={stickySentinelRef}>
