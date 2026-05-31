@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+   allowedDevOrigins: [
+    '172.20.10.5', 
+    '172.20.10.5:3000', 
+  ],
   images: {
     remotePatterns: [
       {
@@ -12,6 +16,7 @@ const nextConfig: NextConfig = {
         hostname: "portal.kababrayhan.com",
       },
     ],
+ 
   },
 };
 

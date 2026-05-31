@@ -33,9 +33,9 @@ export default function ThankYouPage() {
       {/* ── Main Single-View Workspace Container ────────── */}
       <section className="flex-grow w-full max-w-5xl mx-auto px-6 flex flex-col justify-center items-center py-10 pb-24 md:pb-12">
         {/* Two Column Grid layout to eliminate scrolling requirement on desktop / tablet viewports */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 w-full items-center">
+        <div className="grid grid-cols-1 gap-8 lg:gap-12 w-full items-center">
           {/* Left Column Area: Hero Status Visuals */}
-          <div className="flex flex-col items-center md:items-start text-center md:text-left">
+          <div className="flex flex-col items-center text-center">
             {/* Minimalist Success Icon Plate */}
             <div className="relative mb-5 flex h-20 w-20 items-center justify-center">
               <span className="absolute inset-0 animate-pulse rounded-full bg-emerald-500/10" />
@@ -59,12 +59,11 @@ export default function ThankYouPage() {
 
             {/* Clean Balanced Typography Hierarchy */}
             <h1 className="text-3xl font-medium tracking-wide text-slate-900 lg:text-4xl">
-              Thank you for <br />
-              your order
+              You're all set!
             </h1>
 
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-slate-500 font-medium">
-              Your order has been verified successfully. Our kitchen is
+              Your order has been successfully. Our kitchen is
               preparing your items and will have them ready shortly.
             </p>
 
@@ -92,7 +91,7 @@ export default function ThankYouPage() {
           </div>
 
           {/* Right Column Area: Structured Document Info Cards Info Tracking */}
-          <div className="flex flex-col gap-3 justify-center">
+          {/* <div className="flex flex-col gap-3 justify-center">
             <div className="flex items-start gap-4 rounded-2xl border border-slate-100 bg-white p-4 lg:p-5 shadow-sm transition-all hover:border-slate-200">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-600 border border-slate-100">
                 <ReceiptText size={18} strokeWidth={2} />
@@ -122,7 +121,7 @@ export default function ThankYouPage() {
                 </p>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Mobile Fallback Button Block Layout (Renders underneath content blocks only on small screens) */}
