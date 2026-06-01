@@ -7,8 +7,8 @@ import { useRouter } from "next/navigation";
 import {
   useGetCustomerAvatarQuery,
   useGetCustomerSalesOrdersQuery,
-  useLogoutMutation,
 } from "@/app/redux/api";
+import { useLogoutMutation } from "@/app/redux/authApi";
 import { CART_UPDATED } from "@/app/lib/cart";
 import {
   clearCustomerPortalSession,

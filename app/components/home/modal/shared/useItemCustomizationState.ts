@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import {
   useGetItemByCodeQuery,
   useGetItemsQuery,
-} from "@/app/redux/publicApi";
+} from "@/app/redux/api";
 import type { Item } from "@/app/redux/apiType";
 import type { CustomGroup, CustomOption } from "../CustomizationPanel";
 import { buildCustomizationSections } from "../customizationOptions";
@@ -104,7 +104,7 @@ export function useItemCustomizationState(
     if (!isVariantSelectionRequired || variantItems.length === 0) return null;
 
     const options = variantItems
-      .map((variant, index) => {
+      .map((variant) => {
         const variantCode =
           typeof variant.item_code === "string" ? variant.item_code.trim() : "";
         const fallbackCode =

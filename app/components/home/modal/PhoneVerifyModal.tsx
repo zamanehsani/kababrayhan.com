@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { useVerifyOtpMutation, useSendOtpMutation } from "../../../redux/api";
+import { useSendOtpMutation } from "../../../redux/api";
+import { useVerifyOtpMutation } from "../../../redux/authApi";
 import {
   saveVerifiedPhone,
 } from "@/app/lib/customerPortal";
@@ -43,7 +44,7 @@ const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, phon
     const code = digits.join("");
     if (/^\d{4}$/.test(code)) {
       try {
-        const mobile = phone.replace("+", "").replace(/^0+/, "");
+        const mobile = phone.startsWith("+") ? phone : `+${phone}`;
         const result = await verifyOtp({ mobile, otp: code }).unwrap();
         if (result.status === "success") {
           saveVerifiedPhone(phone);
@@ -66,7 +67,7 @@ const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, phon
     if (resendTimer > 0 || isResending) return;
     setError("");
     try {
-      const mobile = phone.replace("+", "").replace(/^0+/, "");
+      const mobile = phone.startsWith("+") ? phone : `+${phone}`;
       const result = await sendOtp({ mobile }).unwrap();
       if (result.status === "success") {
         setResent(true);

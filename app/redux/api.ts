@@ -17,6 +17,9 @@ import type {
   CreateSalesOrderRequest,
   Customer,
   CustomerDetails,
+  FullItemResponse,
+  Item,
+  ItemDetails,
   KitchenOrderTicket,
   PaymentIntentResponse,
   SalesOrder,
@@ -29,13 +32,7 @@ import type {
   UpdateCustomerRequest,
   UploadCustomerAvatarRequest,
   UploadedFile,
-  VerifyOtpRequest,
-  VerifyOtpResponse,
 } from "./apiType";
-import {
-  clearSession,
-  setAuthenticatedIdentity,
-} from "./sessionSlice";
 
 // Add SendOtp types
 export type { SendOtpRequest, SendOtpResponse } from "./apiType";
@@ -58,23 +55,9 @@ export const erpApi = createApi({
   reducerPath: "erpApi",
   baseQuery: fetchBaseQuery({
     baseUrl: `${ERP_API_BASE_URL}/api/resource/`,
-    credentials: "include",
-    prepareHeaders: async (headers) => {
+    prepareHeaders: (headers) => {
+      headers.set("Authorization", ERP_API_AUTHORIZATION);
       headers.set("X-Frappe-Site-Name", "kababrayhan.com");
-
-      if (typeof window === "undefined") {
-        try {
-          const { cookies } = await import("next/headers");
-          const cookieStore = await cookies();
-          const sidCookieValue = cookieStore.get("sid")?.value;
-
-          if (sidCookieValue) {
-            headers.set("Cookie", `sid=${sidCookieValue}`);
-          }
-        } catch {
-          // Ignore cookie forwarding errors outside Next.js request context.
-        }
-      }
 
       return headers;
     },
@@ -94,31 +77,78 @@ export const erpApi = createApi({
       transformResponse: (response: { message: SendOtpResponse }) =>
         response.message,
     }),
-    verifyOtp: builder.mutation<VerifyOtpResponse, VerifyOtpRequest>({
-      query: (body) => {
-        return {
-          url: `${ERP_API_METHOD_URL}pizza_app.api.verify_otp`,
-          method: "POST",
-          body,
-        };
-      },
-      transformResponse: (response: { message: VerifyOtpResponse }) =>
-        response.message,
-      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
-        try {
-          const { data } = await queryFulfilled;
+    getItems: builder.query<Item[], void>({
+      query: () => ({
+        url: "Item",
+        params: {
+          limit_page_length: 1000,
+          filters: JSON.stringify([["Item", "disabled", "=", 0]]),
+          fields: JSON.stringify([
+            "name",
+            "item_name",
+            "item_code",
+            "has_variants",
+            "variant_of",
+            "attributes",
+            "item_group",
+            "standard_rate",
+            "image",
+            "description",
+            "max_discount",
+            "custom_calories",
+            "custom_prep_time",
+            "disabled",
+          ]),
+        },
+      }),
+      transformResponse: (response: { data: Item[] }) => response.data,
+    }),
+    getItemByCode: builder.query<ItemDetails, string>({
+      query: (itemCode) => ({
+        url: `Item/${encodeURIComponent(itemCode)}`,
+      }),
+      transformResponse: (response: FullItemResponse) => {
+        const itemData = response.data ?? {};
+        let rawAddOns: Array<{ add_on?: unknown; price?: unknown }> = [];
 
-          if (data.status === "success") {
-            dispatch(
-              setAuthenticatedIdentity({
-                user: data.user,
-                customer: data.customer,
-              })
-            );
-          }
-        } catch {
-          // Leave auth state unchanged on failed verification.
+        if (Array.isArray(itemData.custom_allowed_addons)) {
+          rawAddOns = itemData.custom_allowed_addons as Array<{
+            add_on?: unknown;
+            price?: unknown;
+          }>;
+        } else if (Array.isArray(itemData.allowed_add_ons)) {
+          rawAddOns = itemData.allowed_add_ons as Array<{
+            add_on?: unknown;
+            price?: unknown;
+          }>;
         }
+
+        const custom_allowed_addons = rawAddOns
+          .map((row) => {
+            const addOnName =
+              typeof row.add_on === "string"
+                ? row.add_on.trim()
+                : "";
+
+            const parsedPrice =
+              typeof row.price === "number" ? row.price : Number(row.price ?? 0);
+
+            if (!addOnName) return null;
+
+            return {
+              add_on: addOnName,
+              price: Number.isFinite(parsedPrice) ? parsedPrice : 0,
+            };
+          })
+          .filter(
+            (row): row is { add_on: string; price: number } => Boolean(row)
+          );
+
+        return {
+          ...itemData,
+          custom_allowed_addons,
+          allowed_add_ons: custom_allowed_addons,
+        };
       },
     }),
     // create the customer
@@ -434,23 +464,6 @@ export const erpApi = createApi({
         },
       }),
     }),
-    logout: builder.mutation<void, void>({
-      query: () => ({
-        url: `${ERP_API_METHOD_URL}pizza_app.api.customer_logout`,
-        method: "POST",
-        credentials: "include",
-      }),
-      transformResponse: () => undefined,
-      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
-        try {
-          await queryFulfilled;
-          dispatch(clearSession());
-          dispatch(erpApi.util.resetApiState());
-        } catch {
-          // Keep current auth state if logout request fails.
-        }
-      },
-    }),
   }),
 });
 
@@ -471,8 +484,8 @@ export const {
   useGetKitchenOrderTicketQuery,
   useCreateSalesOrderMutation,
   useCreatePaymentIntentMutation,
-  useLogoutMutation,
+  useGetItemsQuery,
   useSendOtpMutation,
-  useVerifyOtpMutation,
+  useGetItemByCodeQuery,
   useCreateCustomerNewMutation,
 } = erpApi;

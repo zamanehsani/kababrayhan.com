@@ -8,7 +8,7 @@ import {
   ERP_API_BASE_URL,
   useGetItemByCodeQuery,
   useGetItemsQuery,
-} from "../../redux/publicApi";
+} from "../../redux/api";
 import { DesktopItemDetailModal } from "../home/modal/ItemDetail/DesktopItemDetailModal";
 import DirhamIcon from "../icon/DirhamIcon";
 import { DesktopDishFallback } from "../FallBacks/DesktopDishFallback";
