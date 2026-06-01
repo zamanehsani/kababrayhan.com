@@ -91,8 +91,24 @@ export default function PopularDishes() {
       groups.get(groupName)?.push(dish);
     });
 
+    const categoryOrder = [
+      "Appetizers",
+      "Main Course",
+      "Rice",
+      "Snacks",
+      "Drinks",
+      "platters",
+      "Sides",
+    ];
+
     return Array.from(groups.entries())
-      .sort((a, b) => a[0].localeCompare(b[0]))
+      .sort((a, b) => {
+        const indexA = categoryOrder.indexOf(a[0]);
+        const indexB = categoryOrder.indexOf(b[0]);
+        const orderA = indexA === -1 ? 999 : indexA;
+        const orderB = indexB === -1 ? 999 : indexB;
+        return orderA - orderB;
+      })
       .map(([name, items]) => ({ name, items }));
   })();
 
