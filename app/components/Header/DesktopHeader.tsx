@@ -321,7 +321,7 @@ export default function DesktopHeader() {
             onClick={handlePortalClick}
             className="h-11 rounded-xl border border-slate-200 bg-white px-5 text-xs font-semibold uppercase tracking-widest text-slate-700 transition-all hover:bg-slate-50 active:scale-95"
           >
-            Portal
+            Account
           </button>
         )}
 
