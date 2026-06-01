@@ -6,6 +6,18 @@ import { clearSession, setAuthenticatedIdentity } from "./sessionSlice";
 
 const ERP_API_METHOD_URL = `${ERP_API_BASE_URL}/api/method/`;
 
+const unwrapVerifyOtpResponse = (
+  response: VerifyOtpResponse | { message: VerifyOtpResponse }
+): VerifyOtpResponse => {
+  const maybeWrapped = response as { message?: unknown };
+
+  if (typeof maybeWrapped.message === "object" && maybeWrapped.message !== null) {
+    return maybeWrapped.message as VerifyOtpResponse;
+  }
+
+  return response as VerifyOtpResponse;
+};
+
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: fetchBaseQuery({
@@ -40,7 +52,7 @@ export const authApi = createApi({
       }),
       transformResponse: (
         response: VerifyOtpResponse | { message: VerifyOtpResponse }
-      ) => ("message" in response ? response.message : response),
+      ): VerifyOtpResponse => unwrapVerifyOtpResponse(response),
       async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
