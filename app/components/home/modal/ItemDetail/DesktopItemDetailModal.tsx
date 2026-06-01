@@ -87,7 +87,7 @@ export function DesktopItemDetailModal({
     if (!isVariantSelectionRequired || canAddToCart) return "";
     if (isVariantDataLoading) return "Loading options...";
     if (variantOptionsCount === 0) return "No options are available for this item.";
-    return "Please choose an option before adding to cart.";
+    return "Select an option";
   }, [
     canAddToCart,
     isVariantDataLoading,
@@ -160,26 +160,26 @@ export function DesktopItemDetailModal({
           <DesktopItemHeader restaurant={dish.restaurant} name={dish.name} />
 
           {/* Scrollable content area */}
-          <div className="flex-1 overflow-y-auto px-8 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
-            <DesktopItemMetaBadges
-              cal={dish.cal}
-              time={dish.time}
-              rating={dish.rating}
-            /> 
-            <DesktopItemDescription html={dish.description} />
+          <div className="flex flex-1 min-h-0 flex-col overflow-y-auto px-8 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
+            <div>
+              <DesktopItemMetaBadges
+                cal={dish.cal}
+                time={dish.time}
+                rating={dish.rating}
+              /> 
+              <DesktopItemDescription html={dish.description} />
+            </div>
 
             {/* Inline Customization Options */}
             {hasCustomizationOptions && (
-              <div className="mt-2">
+              <div className="mt-auto pt-4">
                 {variationGroups.length > 0 && (
                   <section className="rounded-2xl">
-                    <h4 className="text-sm font-normal tracking-wide text-slate-900">
-                      Choose your option
-                    </h4>
+
                     <p className="mt-1 text-xs text-slate-600">
                       Select one to continue.
                     </p>
-                    <div className="mt-4">
+                    <div className="mt-4 mb-2">
                       <ModeCustomizationPanel
                         className="flex flex-col gap-3"
                         customizations={variationGroups}
@@ -200,7 +200,7 @@ export function DesktopItemDetailModal({
                     
                     {/* Compact Add-on Grid */}
                     {addOnGroups.map((group) => (
-                      <div key={group.id} className="grid grid-cols-4 gap-2">
+                      <div key={group.id} className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
                         {group.options.map((option) => {
                           const isSelected = (resolvedSelections[group.id] || []).includes(option.id);
                           
