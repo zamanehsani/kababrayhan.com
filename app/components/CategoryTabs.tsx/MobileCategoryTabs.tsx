@@ -11,7 +11,7 @@ import {
   UtensilsCrossed,
   Wheat,
 } from "lucide-react";
-import { useGetItemsQuery } from "../../redux/api";
+import { useGetItemsQuery } from "@/app/redux/publicApi";
 
 const categoryIconMap: Record<string, JSX.Element> = {
   All: <LayoutGrid size={18} />,

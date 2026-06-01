@@ -14,6 +14,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   useGetCustomerAvatarQuery,
   useGetCustomerSalesOrdersQuery,
+  useLogoutMutation,
 } from "@/app/redux/api";
 import { CART_UPDATED } from "@/app/lib/cart";
 import {
@@ -68,6 +69,7 @@ export default function TabletHeader() {
       skip: !portalState.isVerified || !portalState.phone,
     }
   );
+  const [logout] = useLogoutMutation();
 
   const refreshPortalState = useCallback(() => {
     setPortalState(readCustomerPortalSnapshot());
@@ -181,7 +183,13 @@ export default function TabletHeader() {
       setShowPhoneModal(true);
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    try {
+      await logout().unwrap();
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+
     clearCustomerPortalSession();
     setIsProfileOpen(false);
     refreshPortalState();

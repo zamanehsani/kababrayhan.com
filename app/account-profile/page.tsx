@@ -3,13 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowRight,
   ChevronLeft,
   MapPin,
   Pencil,
   Phone,
   ShieldCheck,
-  User,
 } from "lucide-react";
 import MobileHeader from "../components/Header/MobileHeader";
 import TabletHeader from "../components/Header/TabletHeader";
@@ -27,27 +25,43 @@ import {
   PHONE_KEY,
   PHONE_STATUS_KEY,
   dispatchCustomerPortalUpdated,
+  getCustomerName,
   initializeCustomerPortalSession,
   readCustomerPortalSnapshot,
   saveDeliveryAddress,
   saveVerifiedPhone,
   writeDeliveryAddresses,
 } from "@/app/lib/customerPortal";
+import { useSetCustomerInfoMutation, useGetCustomerAddressesQuery } from "@/app/redux/api";
 import Footer from "../components/Footer/Footer";
 
-const toWordPreview = (value: string, maxWords: number) => {
-  const normalized = value.trim().replaceAll(/\s+/g, " ");
+const toDisplayAddressTitle = (
+  rawTitle: string,
+  addressType: string,
+  index: number
+) => {
+  const segments = rawTitle
+    .split("-")
+    .map((segment) => segment.trim())
+    .filter(Boolean);
 
-  if (!normalized) {
-    return "";
+  const filteredSegments = segments.filter((segment) => {
+    const normalized = segment.toLowerCase();
+    return (
+      !segment.startsWith("+") &&
+      normalized !== addressType.toLowerCase() &&
+      normalized !== "billing" &&
+      normalized !== "shipping"
+    );
+  });
+
+  const candidate = filteredSegments.join(" ").trim();
+
+  if (candidate) {
+    return candidate.replace(/\b\w/g, (char) => char.toUpperCase());
   }
 
-  const words = normalized.split(" ");
-  if (words.length <= maxWords) {
-    return normalized;
-  }
-
-  return `${words.slice(0, maxWords).join(" ")}...`;
+  return index === 0 ? "Home" : `Address ${index + 1}`;
 };
 
 export default function AccountProfilePage() {
@@ -56,16 +70,74 @@ export default function AccountProfilePage() {
   );
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [showAddressModal, setShowAddressModal] = useState(false);
   const [activeDeliveryIndex, setActiveDeliveryIndex] = useState<number | null>(
     null
   );
   const [phoneForVerify, setPhoneForVerify] = useState("");
   const [previousVerifiedPhone, setPreviousVerifiedPhone] = useState("");
+  const [setCustomerInfo] = useSetCustomerInfoMutation();
+
+  // Fetch addresses from ERPNext backend (shows addresses already saved in the system)
+  const customerName = getCustomerName();
+  const { data: backendAddresses, isLoading: isLoadingAddresses } = useGetCustomerAddressesQuery(
+    customerName,
+    { skip: !customerName || !portalState.isVerified }
+  );
 
   const refreshPortalState = useCallback(() => {
     setPortalState(readCustomerPortalSnapshot());
   }, []);
+
+  useEffect(() => {
+    if (!backendAddresses) {
+      return;
+    }
+
+    const syncedAddresses: DeliveryAddressItem[] = backendAddresses.map(
+      (address, index) => ({
+        id: address.name,
+        title: toDisplayAddressTitle(
+          address.address_title,
+          address.address_type,
+          index
+        ),
+        address: [address.address_line1, address.address_line2]
+          .filter(Boolean)
+          .join(", "),
+        addressId: address.name,
+      })
+    );
+
+    const currentSnapshot = JSON.stringify(
+      portalState.deliveryAddresses.map((item) => ({
+        title: item.title,
+        address: item.address,
+        addressId: item.addressId,
+      }))
+    );
+    const nextSnapshot = JSON.stringify(
+      syncedAddresses.map((item) => ({
+        title: item.title,
+        address: item.address,
+        addressId: item.addressId,
+      }))
+    );
+
+    if (currentSnapshot === nextSnapshot) {
+      return;
+    }
+
+    writeDeliveryAddresses(syncedAddresses);
+
+    if (syncedAddresses[0]) {
+      saveDeliveryAddress(
+        syncedAddresses[0].address,
+        syncedAddresses[0].addressId
+      );
+    } else {
+      saveDeliveryAddress("", "");
+    }
+  }, [backendAddresses, portalState.deliveryAddresses, refreshPortalState]);
 
   useEffect(() => {
     globalThis.addEventListener(CUSTOMER_PORTAL_UPDATED, refreshPortalState);
@@ -102,6 +174,15 @@ export default function AccountProfilePage() {
 
     const status = globalThis.localStorage.getItem(PHONE_STATUS_KEY);
     if (status === "verified") {
+      const newPhone = globalThis.localStorage.getItem(PHONE_KEY) || "";
+      const customerName = getCustomerName();
+      // If the user changed their phone, update mobile_no on the existing
+      // ERPNext Customer record instead of letting a new one be created.
+      if (customerName && newPhone && customerName !== newPhone) {
+        setCustomerInfo({ customerName, fieldname: "mobile_no", value: newPhone }).catch(
+          (err) => console.warn("Failed to update customer mobile_no:", err)
+        );
+      }
       refreshPortalState();
       return;
     }
@@ -175,12 +256,6 @@ export default function AccountProfilePage() {
     portalState.isVerified && portalState.phone
       ? portalState.phone
       : "Not verified yet";
-  const primaryAddress =
-    portalState.deliveryAddresses[0] ?? portalState.address;
-  const addressLabel =
-    typeof primaryAddress === "object"
-      ? primaryAddress.address
-      : primaryAddress;
 
   return (
     <main className="min-h-screen bg-slate-50 font-sans text-slate-900">
@@ -278,7 +353,14 @@ export default function AccountProfilePage() {
 
                 {/* Address List */}
                 <div className="space-y-4">
-                  {portalState.deliveryAddresses.length > 0 ? (
+                  {isLoadingAddresses ? (
+                    <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center">
+                      <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-brand-400" />
+                      <p className="mt-2 text-sm text-slate-500">
+                        Loading saved addresses...
+                      </p>
+                    </div>
+                  ) : portalState.deliveryAddresses.length > 0 ? (
                     portalState.deliveryAddresses.map((delivery, index) => (
                       <div
                         key={delivery.id ?? String(index)}

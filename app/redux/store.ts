@@ -12,12 +12,13 @@ import {
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import { erpApi } from "./api";
+import { publicApi } from "./publicApi";
 import { sessionReducer } from "./sessionSlice";
 
 const sessionPersistConfig = {
   key: "session",
   storage,
-  whitelist: ["phone", "phoneStatus", "address", "addressId"],
+  whitelist: ["phone", "phoneStatus", "address", "addressId", "user", "customer"],
 };
 
 const persistedSessionReducer = persistReducer(sessionPersistConfig, sessionReducer);
@@ -25,6 +26,7 @@ const persistedSessionReducer = persistReducer(sessionPersistConfig, sessionRedu
 export const store = configureStore({
   reducer: {
     [erpApi.reducerPath]: erpApi.reducer,
+    [publicApi.reducerPath]: publicApi.reducer,
     session: persistedSessionReducer,
   },
   middleware: (getDefaultMiddleware) =>
@@ -32,7 +34,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(erpApi.middleware),
+    }).concat(erpApi.middleware, publicApi.middleware),
 });
 
 export const persistor = persistStore(store);

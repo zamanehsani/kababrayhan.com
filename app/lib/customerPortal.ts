@@ -16,6 +16,23 @@ export const ADDRESS_ID_KEY = "uae_address_id";
 
 export const CUSTOMER_PORTAL_UPDATED = "customerPortalUpdated";
 export const DELIVERY_ADDRESSES_KEY = "uae_delivery_addresses";
+// The original ERPNext Customer document name (= first verified phone).
+// This never changes even when the user updates their phone number.
+export const CUSTOMER_NAME_KEY = "uae_customer_name";
+
+/**
+ * Returns the stable ERPNext Customer document name.
+ * Falls back to the current stored phone when the key hasn't been set yet
+ * (i.e. sessions created before this feature was introduced).
+ */
+export const getCustomerName = (): string => {
+  if (!hasWindow()) return "";
+  return (
+    globalThis.localStorage.getItem(CUSTOMER_NAME_KEY) ||
+    globalThis.localStorage.getItem(PHONE_KEY) ||
+    ""
+  );
+};
 
 export type CustomerPortalSnapshot = {
   phone: string;
@@ -112,12 +129,69 @@ export const initializeCustomerPortalSession = () => {
       addressId: storageState.addressId,
     })
   );
+
+  // Validate session in background (non-blocking)
+  if (storageState.phoneStatus === "verified" && storageState.phone) {
+    validateCustomerSession().catch((err) => 
+      console.warn("Session validation failed:", err)
+    );
+  }
+};
+
+/**
+ * Validates that the stored customer still exists in ERPNext backend.
+ * Clears session if customer was deleted or is invalid.
+ */
+export const validateCustomerSession = async (): Promise<boolean> => {
+  if (!hasWindow()) return false;
+
+  const customerName = getCustomerName();
+  if (!customerName) return false;
+
+  try {
+    // Check if customer exists by attempting to fetch their data
+    const ERP_API_BASE_URL = process.env.NEXT_PUBLIC_ERP_API_BASE_URL || "https://portal.kababrayhan.com";
+    const ERP_API_TOKEN = process.env.NEXT_PUBLIC_ERP_API_TOKEN || "";
+    
+    const response = await fetch(
+      `${ERP_API_BASE_URL}/api/resource/Customer/${encodeURIComponent(customerName)}`,
+      {
+        headers: {
+          "Authorization": `token ${ERP_API_TOKEN}`,
+          "X-Frappe-Site-Name": "kababrayhan.com",
+        },
+      }
+    );
+
+    if (response.ok) {
+      // Customer exists, session is valid
+      return true;
+    } else if (response.status === 404) {
+      // Customer was deleted, clear session
+      console.warn("Customer not found in backend, clearing session");
+      clearCustomerPortalSession();
+      return false;
+    } else {
+      // Other error, don't clear session (might be temporary network issue)
+      console.warn("Unable to validate session, status:", response.status);
+      return false;
+    }
+  } catch (error) {
+    // Network error, don't clear session
+    console.warn("Session validation network error:", error);
+    return false;
+  }
 };
 
 export const saveEnteredPhone = (phone: string) => {
-  // If the phone changed, the old delivery address belongs to a different customer — clear it
   const currentPhone = readStorageState().phone;
-  if (currentPhone && currentPhone !== phone) {
+  // Only clear saved addresses when the phone changes AND no established customer
+  // exists yet. When an existing customer updates their phone number we keep
+  // their addresses because they are still linked to the same ERPNext Customer.
+  const hasEstablishedCustomer = hasWindow()
+    ? Boolean(globalThis.localStorage?.getItem(CUSTOMER_NAME_KEY))
+    : false;
+  if (currentPhone && currentPhone !== phone && !hasEstablishedCustomer) {
     globalThis.localStorage?.removeItem("uae_delivery_address");
     globalThis.localStorage?.removeItem("uae_delivery_address_id");
     globalThis.localStorage?.removeItem(DELIVERY_ADDRESSES_KEY);
@@ -130,6 +204,11 @@ export const saveEnteredPhone = (phone: string) => {
 export const saveVerifiedPhone = (phone?: string) => {
   if (typeof phone === "string") {
     writeStorageState({ phone });
+    // On first-time verification, pin this phone as the permanent ERPNext
+    // Customer document name so future phone changes don't lose the link.
+    if (hasWindow() && !globalThis.localStorage?.getItem(CUSTOMER_NAME_KEY)) {
+      globalThis.localStorage?.setItem(CUSTOMER_NAME_KEY, phone);
+    }
   }
 
   writeStorageState({ phoneStatus: "verified" });
@@ -151,6 +230,7 @@ export const clearCustomerPortalSession = () => {
   globalThis.localStorage?.removeItem("uae_delivery_address");
   globalThis.localStorage?.removeItem("uae_delivery_address_id");
   globalThis.localStorage?.removeItem(DELIVERY_ADDRESSES_KEY);
+  globalThis.localStorage?.removeItem(CUSTOMER_NAME_KEY);
   store.dispatch(clearSession());
   dispatchCustomerPortalUpdated();
 };

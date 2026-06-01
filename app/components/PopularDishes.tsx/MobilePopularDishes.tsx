@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ItemDetailModal } from "../home/modal/ItemDetail/ItemDetailModal";
 import { Dish } from "@/app/types/type";
-import { ERP_API_BASE_URL, useGetItemsQuery } from "../../redux/api";
+import { ERP_API_BASE_URL, useGetItemsQuery } from "../../redux/publicApi";
 import DirhamIcon from "../icon/DirhamIcon";
 import { MobileDishFallback } from "../FallBacks/MobileDishFallback";
 import { MobileDishSkeleton } from "../FallBacks/MobileDishSkeleton";

@@ -13,6 +13,7 @@ import {
 } from "../redux/api";
 import type { CreateSalesOrderRequest } from "../redux/apiType";
 import { readStoredCustomer } from "@/app/components/customerStorage";
+import { getCustomerName } from "@/app/lib/customerPortal";
 import {
   clearPendingCheckout,
   clearPendingSalesOrder,
@@ -195,7 +196,9 @@ const CheckoutPage = () => {
     }
 
     try {
-      const customerName = customer?.name || form.phone;
+      // Use the stable ERPNext Customer document name (= original verified phone).
+      // getCustomerName() falls back to form.phone for legacy sessions.
+      const customerName = customer?.name || getCustomerName() || form.phone;
       const deliveryDate = new Date().toISOString().split("T")[0];
       const primaryDeliveryAddressId = form.deliveryAddresses[0]?.addressId ||
         globalThis.localStorage.getItem("uae_delivery_address_id") ||

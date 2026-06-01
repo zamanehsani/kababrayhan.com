@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
-import { useGetItemByCodeQuery, useGetItemsQuery } from "@/app/redux/api";
+import {
+  useGetItemByCodeQuery,
+  useGetItemsQuery,
+} from "@/app/redux/publicApi";
 import type { Item } from "@/app/redux/apiType";
 import type { CustomGroup, CustomOption } from "../CustomizationPanel";
 import { buildCustomizationSections } from "../customizationOptions";

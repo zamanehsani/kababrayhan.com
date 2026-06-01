@@ -11,7 +11,7 @@ import {
   UtensilsCrossed,
   Wheat,
 } from "lucide-react";
-import { useGetItemsQuery } from "../../redux/api";
+import { useGetItemsQuery } from "@/app/redux/publicApi";
 
 const categoryIconMap: Record<string, JSX.Element> = {
   All: <LayoutGrid size={20} />,
@@ -203,7 +203,7 @@ export default function TabletCategoryTabs() {
           ref={stickyBarRef}
           className={`${
             isPinned ? "fixed top-0" : "relative"
-          } z-40 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/70 pb-4 pt-4 left-0 right-0 w-full`}
+          } z-40 bg-white/95 backdrop-blur supports-backdrop-filter:bg-white/70 pb-4 pt-4 left-0 right-0 w-full`}
         >
           {/* Centering Wrapper: Controls the maximum layout width matching your desktop design */}
           <div className={`mx-auto max-w-7xl w-full ${isPinned ? "px-8" : ""}`}>

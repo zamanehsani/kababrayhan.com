@@ -7,6 +7,8 @@ export interface SessionState {
   phoneStatus: PhoneStatus;
   address: string;
   addressId: string;
+  user: string | null;
+  customer: string | null;
 }
 
 const initialState: SessionState = {
@@ -14,6 +16,8 @@ const initialState: SessionState = {
   phoneStatus: "none",
   address: "",
   addressId: "",
+  user: null,
+  customer: null,
 };
 
 const sessionSlice = createSlice({
@@ -26,6 +30,15 @@ const sessionSlice = createSlice({
       state.phoneStatus = payload.phoneStatus ?? state.phoneStatus;
       state.address = payload.address ?? state.address;
       state.addressId = payload.addressId ?? state.addressId;
+      state.user = payload.user ?? state.user;
+      state.customer = payload.customer ?? state.customer;
+    },
+    setAuthenticatedIdentity: (
+      state,
+      action: PayloadAction<{ user: string; customer: string | null }>
+    ) => {
+      state.user = action.payload.user;
+      state.customer = action.payload.customer;
     },
     setPhoneEntered: (state, action: PayloadAction<string>) => {
       state.phone = action.payload;
@@ -53,12 +66,15 @@ const sessionSlice = createSlice({
       state.phoneStatus = "none";
       state.address = "";
       state.addressId = "";
+      state.user = null;
+      state.customer = null;
     },
   },
 });
 
 export const {
   hydrateSession,
+  setAuthenticatedIdentity,
   setPhoneEntered,
   setPhoneVerified,
   setAddress,

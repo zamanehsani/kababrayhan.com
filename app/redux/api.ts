@@ -5,6 +5,7 @@ export type { Customer, Item, OrderCartItem, SalesOrder } from "./apiType";
 // src/redux/api.ts
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type {
+  Address,
   AttachFileRequest,
   Contact,
   CreateContactRequest,
@@ -16,8 +17,6 @@ import type {
   CreateSalesOrderRequest,
   Customer,
   CustomerDetails,
-  Item,
-  ItemDetails,
   KitchenOrderTicket,
   PaymentIntentResponse,
   SalesOrder,
@@ -30,16 +29,24 @@ import type {
   UpdateCustomerRequest,
   UploadCustomerAvatarRequest,
   UploadedFile,
-  FullItemResponse,
+  VerifyOtpRequest,
+  VerifyOtpResponse,
 } from "./apiType";
+import {
+  clearSession,
+  setAuthenticatedIdentity,
+} from "./sessionSlice";
 
 // Add SendOtp types
 export type { SendOtpRequest, SendOtpResponse } from "./apiType";
 
 export const ERP_API_METHOD_URL = `${ERP_API_BASE_URL}/api/method/`;
-const ERP_API_AUTHORIZATION = "token eeae0e4d6d43b84:eb40ba11a8d0946";
 
-const toErpAbsoluteUrl = (value: string) => {
+// Read token from environment variable (more secure than hardcoding)
+// TODO: Replace with proper session-based auth (see AUTHENTICATION_IMPROVEMENT_PLAN.md)
+const ERP_API_AUTHORIZATION = `token ${process.env.NEXT_PUBLIC_ERP_API_TOKEN || ""}`;
+
+export const toErpAbsoluteUrl = (value: string) => {
   if (/^https?:\/\//i.test(value)) {
     return value;
   }
@@ -51,9 +58,24 @@ export const erpApi = createApi({
   reducerPath: "erpApi",
   baseQuery: fetchBaseQuery({
     baseUrl: `${ERP_API_BASE_URL}/api/resource/`,
-    prepareHeaders: (headers) => {
-      headers.set("Authorization", ERP_API_AUTHORIZATION);
+    credentials: "include",
+    prepareHeaders: async (headers) => {
       headers.set("X-Frappe-Site-Name", "kababrayhan.com");
+
+      if (typeof window === "undefined") {
+        try {
+          const { cookies } = await import("next/headers");
+          const cookieStore = await cookies();
+          const sidCookieValue = cookieStore.get("sid")?.value;
+
+          if (sidCookieValue) {
+            headers.set("Cookie", `sid=${sidCookieValue}`);
+          }
+        } catch {
+          // Ignore cookie forwarding errors outside Next.js request context.
+        }
+      }
+
       return headers;
     },
   }),
@@ -69,103 +91,36 @@ export const erpApi = createApi({
           },
         };
       },
-      transformResponse: (response: any) => response.message,
+      transformResponse: (response: { message: SendOtpResponse }) =>
+        response.message,
     }),
-    verifyOtp: builder.mutation<
-      SendOtpResponse,
-      { mobile: string; otp: string }
-    >({
+    verifyOtp: builder.mutation<VerifyOtpResponse, VerifyOtpRequest>({
       query: (body) => {
         return {
           url: `${ERP_API_METHOD_URL}pizza_app.api.verify_otp`,
           method: "POST",
           body,
-          headers: {
-            Authorization: ERP_API_AUTHORIZATION,
-          },
         };
       },
-      transformResponse: (response: any) => response.message,
-    }),
-    getItems: builder.query<Item[], void>({
-      query: () => ({
-        url: "Item",
-        params: {
-          // This tells ERPNext exactly which columns to send back
-          limit_page_length: 1000,
-          filters: JSON.stringify([["Item", "disabled", "=", 0]]),
-          fields: JSON.stringify([
-            "name",
-            "item_name",
-            "item_code",
-            "has_variants",
-            "variant_of",
-            "attributes",
-            "item_group",
-            "standard_rate",
-            "image",
-            "description",
-            "max_discount",
-            "custom_calories",
-            "custom_prep_time",
-            "disabled",
-          ]),
-        },
-      }),
-      transformResponse: (response: { data: Item[] }) => response.data,
-    }),
+      transformResponse: (response: { message: VerifyOtpResponse }) =>
+        response.message,
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
 
-    getItemByCode: builder.query<ItemDetails, string>({
-      query: (itemCode) => ({
-        // Targeting /api/resource/Item/ITEM_CODE returns the entire structural payload
-        url: `Item/${encodeURIComponent(itemCode)}`,
-      }),
-      transformResponse: (response: FullItemResponse) => {
-        const itemData = response.data ?? {};
-        let rawAddOns: Array<{ add_on?: unknown; price?: unknown }> = [];
-
-        if (Array.isArray(itemData.custom_allowed_addons)) {
-          rawAddOns = itemData.custom_allowed_addons as Array<{
-            add_on?: unknown;
-            price?: unknown;
-          }>;
-        } else if (Array.isArray(itemData.allowed_add_ons)) {
-          rawAddOns = itemData.allowed_add_ons as Array<{
-            add_on?: unknown;
-            price?: unknown;
-          }>;
+          if (data.status === "success") {
+            dispatch(
+              setAuthenticatedIdentity({
+                user: data.user,
+                customer: data.customer,
+              })
+            );
+          }
+        } catch {
+          // Leave auth state unchanged on failed verification.
         }
-
-        const custom_allowed_addons = rawAddOns
-          .map((row) => {
-            const addOnName =
-              typeof row.add_on === "string"
-                ? row.add_on.trim()
-                : "";
-
-            const parsedPrice =
-              typeof row.price === "number" ? row.price : Number(row.price ?? 0);
-
-            if (!addOnName) return null;
-
-            return {
-              add_on: addOnName,
-              price: Number.isFinite(parsedPrice) ? parsedPrice : 0,
-            };
-          })
-          .filter(
-            (row): row is { add_on: string; price: number } => Boolean(row)
-          );
-
-        return {
-          ...itemData,
-          custom_allowed_addons,
-          // Keep this alias for existing UI code paths that still read allowed_add_ons.
-          allowed_add_ons: custom_allowed_addons,
-        };
       },
     }),
-
     // create the customer
     createCustomer: builder.mutation<Customer, CreateCustomerRequest>({
       query: (body) => ({
@@ -207,6 +162,30 @@ export const erpApi = createApi({
           ? toErpAbsoluteUrl(latestFile.file_url)
           : null;
       },
+    }),
+    // Fetch all addresses linked to a customer from ERPNext
+    getCustomerAddresses: builder.query<Address[], string>({
+      query: (customerName) => ({
+        url: "Address",
+        params: {
+          filters: JSON.stringify([
+            ["Dynamic Link", "link_doctype", "=", "Customer"],
+            ["Dynamic Link", "link_name", "=", customerName],
+          ]),
+          fields: JSON.stringify([
+            "name",
+            "address_title",
+            "address_type",
+            "address_line1",
+            "address_line2",
+            "city",
+            "country",
+            "phone",
+            "is_primary_address",
+          ]),
+        },
+      }),
+      transformResponse: (response: { data: Address[] }) => response.data,
     }),
     updateCustomer: builder.mutation<CustomerDetails, UpdateCustomerRequest>({
       query: ({ customerName, ...body }) => ({
@@ -455,6 +434,23 @@ export const erpApi = createApi({
         },
       }),
     }),
+    logout: builder.mutation<void, void>({
+      query: () => ({
+        url: `${ERP_API_METHOD_URL}pizza_app.api.customer_logout`,
+        method: "POST",
+        credentials: "include",
+      }),
+      transformResponse: () => undefined,
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          dispatch(clearSession());
+          dispatch(erpApi.util.resetApiState());
+        } catch {
+          // Keep current auth state if logout request fails.
+        }
+      },
+    }),
   }),
 });
 
@@ -463,6 +459,7 @@ export const {
   useCreateAddressMutation,
   useGetCustomerQuery,
   useGetCustomerAvatarQuery,
+  useGetCustomerAddressesQuery,
   useGetContactQuery,
   useUpdateCustomerMutation,
   useCreateContactMutation,
@@ -474,9 +471,8 @@ export const {
   useGetKitchenOrderTicketQuery,
   useCreateSalesOrderMutation,
   useCreatePaymentIntentMutation,
-  useGetItemsQuery,
+  useLogoutMutation,
   useSendOtpMutation,
   useVerifyOtpMutation,
   useCreateCustomerNewMutation,
-  useGetItemByCodeQuery,
 } = erpApi;

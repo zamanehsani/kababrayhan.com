@@ -13,7 +13,10 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useGetCustomerSalesOrdersQuery } from "@/app/redux/api";
+import {
+  useGetCustomerSalesOrdersQuery,
+  useLogoutMutation,
+} from "@/app/redux/api";
 import { CART_UPDATED } from "@/app/lib/cart";
 import {
   clearCustomerPortalSession,
@@ -49,6 +52,7 @@ export default function DesktopHeader() {
       skip: !portalState.isVerified || !portalState.phone,
     }
   );
+  const [logout] = useLogoutMutation();
 
   const refreshPortalState = useCallback(() => {
     setPortalState(readCustomerPortalSnapshot());
@@ -134,7 +138,13 @@ export default function DesktopHeader() {
     refreshPortalState();
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    try {
+      await logout().unwrap();
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+
     clearCustomerPortalSession();
     setIsProfileOpen(false);
     refreshPortalState();

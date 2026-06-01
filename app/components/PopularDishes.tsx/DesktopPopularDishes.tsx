@@ -4,7 +4,11 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Dish } from "@/app/types/type";
-import { ERP_API_BASE_URL, useGetItemByCodeQuery, useGetItemsQuery } from "../../redux/api";
+import {
+  ERP_API_BASE_URL,
+  useGetItemByCodeQuery,
+  useGetItemsQuery,
+} from "../../redux/publicApi";
 import { DesktopItemDetailModal } from "../home/modal/ItemDetail/DesktopItemDetailModal";
 import DirhamIcon from "../icon/DirhamIcon";
 import { DesktopDishFallback } from "../FallBacks/DesktopDishFallback";

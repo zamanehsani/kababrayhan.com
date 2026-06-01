@@ -8,9 +8,11 @@ import { useRouter } from "next/navigation";
 import {
   useCreateCustomerNewMutation,
   useCreateAddressMutation,
+  useSetCustomerInfoMutation,
 } from "../../../redux/api";
 import {
   saveDeliveryAddress,
+  getCustomerName,
 } from "@/app/lib/customerPortal";
 
 export type SelectedAddress = {
@@ -50,6 +52,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
   const [error, setError] = useState("");
   const [createCustomer] = useCreateCustomerNewMutation();
   const [createAddress] = useCreateAddressMutation();
+  const [setCustomerInfo] = useSetCustomerInfoMutation();
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
@@ -273,20 +276,41 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                   const phone = localStorage.getItem("uae_phone");
                   if (!phone) throw new Error("No phone found.");
 
-                  // 1. Create customer only if not skipped (skip for delivery address modal)
+                  // The stable ERPNext Customer document name is the original
+                  // phone used when the customer was first created. Subsequent
+                  // phone changes only update mobile_no — they never create a
+                  // new customer record.
+                  const customerName = getCustomerName() || phone;
+                  const phoneChanged = customerName !== phone;
+
+                  // 1. Customer creation / phone-number update
                   if (!skipCustomerCreation) {
-                    try {
-                      await createCustomer({
-                        customer_name: phone,
-                        mobile_no: phone,
-                        customer_type: "Individual",
-                        customer_group: "Individual",
-                        territory: "United Arab Emirates",
-                        email_id: "example@example.com",
-                      }).unwrap();
-                    } catch (e) {
-                      // Customer already exists — safe to continue
-                      console.info("Customer already exists, proceeding...", e);
+                    if (phoneChanged) {
+                      // Existing customer updating their phone — patch mobile_no
+                      try {
+                        await setCustomerInfo({
+                          customerName,
+                          fieldname: "mobile_no",
+                          value: phone,
+                        }).unwrap();
+                      } catch (e) {
+                        console.warn("Could not update customer mobile_no, continuing...", e);
+                      }
+                    } else {
+                      // New session — create the customer (safe to ignore if already exists)
+                      try {
+                        await createCustomer({
+                          customer_name: customerName,
+                          mobile_no: phone,
+                          customer_type: "Individual",
+                          customer_group: "Individual",
+                          territory: "United Arab Emirates",
+                          email_id: "example@example.com",
+                        }).unwrap();
+                      } catch (e) {
+                        // Customer already exists — safe to continue
+                        console.info("Customer already exists, proceeding...", e);
+                      }
                     }
                   }
 
@@ -305,7 +329,8 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                     links: [
                       {
                         link_doctype: "Customer",
-                        link_name: phone,
+                        // Always link to the original ERPNext customer record
+                        link_name: customerName,
                       },
                     ],
                   }).unwrap();

@@ -34,6 +34,19 @@ export interface CreateAddressResponse {
   };
 }
 
+// --- Address Fetching Types ---
+export interface Address {
+  name: string;
+  address_title: string;
+  address_type: "Billing" | "Shipping" | string;
+  address_line1: string;
+  address_line2?: string;
+  city: string;
+  country: string;
+  phone?: string;
+  is_primary_address?: number;
+}
+
 // --- OTP Verification Types ---
 export interface VerifyOtpRequest {
   mobile: string;
@@ -41,7 +54,10 @@ export interface VerifyOtpRequest {
 }
 
 export interface VerifyOtpResponse {
-  status: string; // 'success' expected
+  status: string;
+  message: string;
+  user: string;
+  customer: string | null;
 }
 // --- OTP Types ---
 export interface SendOtpRequest {
