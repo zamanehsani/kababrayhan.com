@@ -53,18 +53,21 @@ export default function DesktopCategoryTabs() {
     const categoryOrder = [
       "Appetizers",
       "Main Course",
-      "Ready to Grill",
       "Rice",
       "Snacks",
-      "Beverages",
       "Drinks",
+      "platters",
+      "Sides",
     ];
 
     const orderedGroups = categoryOrder.filter((cat) => groups.has(cat));
+    const newGroups = Array.from(groups)
+      .filter((cat) => !categoryOrder.includes(cat))
+      .sort();
 
     return [
       { name: "All", icon: categoryIconMap.All },
-      ...orderedGroups.map((group) => ({
+      ...[...orderedGroups, ...newGroups].map((group) => ({
         name: group,
         icon: categoryIconMap[group] ?? categoryIconMap.All,
       })),
