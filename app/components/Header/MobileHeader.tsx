@@ -142,8 +142,12 @@ export default function MobileHeader() {
   };
 
   const handleSignOut = async () => {
+    const mobile = (portalState.phone || localStorage.getItem(PHONE_KEY) || "").trim();
+
     try {
-      await logout().unwrap();
+      if (mobile) {
+        await logout({ mobile }).unwrap();
+      }
     } catch (error) {
       console.error("Logout failed", error);
     }

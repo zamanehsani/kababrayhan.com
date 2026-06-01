@@ -70,10 +70,11 @@ export const authApi = createApi({
         }
       },
     }),
-    logout: builder.mutation<void, void>({
-      query: () => ({
+    logout: builder.mutation<void, { mobile: string }>({
+      query: (body) => ({
         url: "pizza_app.api.customer_logout",
         method: "POST",
+        body,
       }),
       transformResponse: () => undefined,
       async onQueryStarted(_arg, { dispatch, queryFulfilled }) {

@@ -5,7 +5,6 @@ import {
   Search,
   ChevronDown,
   Home,
-  ClipboardList,
   User,
   LogOut,
   X,
@@ -24,6 +23,7 @@ import {
 } from "@/app/lib/customerPortal";
 import PhoneModal from "../home/modal/PhoneModal";
 import PhoneVerifyModal from "../home/modal/PhoneVerifyModal";
+ 
 
 export default function DesktopHeader() {
   const router = useRouter();
@@ -137,8 +137,18 @@ export default function DesktopHeader() {
   };
 
   const handleSignOut = async () => {
+    const mobile = (
+      portalState.phone ||
+      phoneForVerify ||
+      localStorage.getItem(PHONE_KEY) ||
+      ""
+    ).trim();
+
     try {
-      await logout().unwrap();
+      if (mobile) {
+        await logout({ mobile }).unwrap();
+          router.push("/home");
+      }
     } catch (error) {
       console.error("Logout failed", error);
     }
