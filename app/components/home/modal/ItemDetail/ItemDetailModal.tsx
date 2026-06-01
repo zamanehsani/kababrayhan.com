@@ -1,6 +1,8 @@
+
 import {
   ChevronLeft,
   Clock,
+  Check,
   Flame,
   Minus,
   Plus,
@@ -10,7 +12,6 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Dish } from "@/app/types/type";
 import { addDishToCart } from "@/app/lib/cart";
-import { ItemCustomizationSheet } from "../ItemCustomizationSheet";
 import { useItemCustomizationState } from "../shared/useItemCustomizationState";
 import DirhamIcon from "../../../icon/DirhamIcon";
 
@@ -22,15 +23,10 @@ export function ItemDetailModal({
   onClose: () => void;
 }>) {
   const [quantity, setQuantity] = useState(1);
-  const [isCustomizationOpen, setIsCustomizationOpen] = useState(
-    Boolean(dish.hasVariants)
-  );
   const itemCode = useMemo(() => String(dish.id ?? ""), [dish.id]);
   const {
     variationGroups,
-    addOnGroups,
     resolvedSelections,
-    selectedCount,
     selectedAddOns,
     selectedAddOnPrice,
     selectedVariantItem,
@@ -39,11 +35,9 @@ export function ItemDetailModal({
     variantOptionsCount,
     canAddToCart,
     handleSingleSelect,
-    handleMultiToggle,
   } = useItemCustomizationState(itemCode, Boolean(dish.hasVariants));
 
-  const hasCustomizationOptions =
-    variationGroups.length > 0 || addOnGroups.length > 0;
+  const hasVariationOptions = variationGroups.length > 0;
 
   const basePrice = useMemo(() => {
     const parsed = Number(selectedVariantItem?.standard_rate ?? dish.price);
@@ -56,6 +50,41 @@ export function ItemDetailModal({
   );
 
   const totalPrice = useMemo(() => unitPrice * quantity, [unitPrice, quantity]);
+
+  const renderVariationGroup = (group: (typeof variationGroups)[number]) => (
+    <div key={group.id} className="grid grid-cols-3 gap-1.5 sm:grid-cols-4">
+      {group.options.map((option) => {
+        const isSelected = (resolvedSelections[group.id] || []).includes(
+          option.id
+        );
+
+        return (
+          <button
+            key={option.id}
+            type="button"
+            onClick={() => handleSingleSelect(group.id, option.id)}
+            className={`flex aspect-square flex-col items-center justify-center rounded-xl border px-2 text-center transition-colors ${
+              isSelected
+                ? "border-yellow-400 bg-yellow-50 text-slate-900"
+                : "border-slate-200 bg-white text-slate-700"
+            }`}
+          >
+            <span className="text-[11px] font-medium leading-tight">
+              {option.name}
+            </span>
+            <span className="mt-1.5 flex items-center gap-1 text-[10px] font-semibold">
+              {option.price > 0 && (
+                <span className="text-emerald-600">
+                  AED {option.price.toFixed(2)}
+                </span>
+              )}
+              {isSelected && <Check size={14} className="text-yellow-500" />}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
 
   const dishForCart = useMemo<Dish>(() => {
     if (!selectedVariantItem) {
@@ -147,150 +176,81 @@ export function ItemDetailModal({
       </div>
 
       {/* Gradient overlay for smooth color transition and readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/85 to-white/90 -z-10" />
-      {/* 1 + 2. HERO IMAGE with overlaid action bar */}
-      {isCustomizationOpen ? (
-        <>
-          {/* Action bar for customization view */}
-          <div className="flex items-center justify-between px-4 pt-3">
-            <button
-              onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-800 shadow-sm active:scale-95"
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <h2
-              id="dish-details-title"
-              className="text-2xl font-semibold text-slate-800"
-            >
-              Item details
-            </h2>
-            <div className="h-10 w-10" />
-          </div>
-          <ItemCustomizationSheet
-            variationGroups={variationGroups}
-            addOnGroups={addOnGroups}
-            selections={resolvedSelections}
-            onSingleSelect={handleSingleSelect}
-            onMultiToggle={handleMultiToggle}
-            onBack={() => setIsCustomizationOpen(false)}
-          />
-        </>
-      ) : (
-        <>
-          {/* Full-bleed hero image with overlay action bar */}
-          <div className="relative w-full aspect-4/3 overflow-hidden">
-            {/* Main image */}
-            <Image
-              src={dish.img}
-              alt={dish.name}
-              fill
-              className="object-contain"
-              priority
-            />
-            {/* Overlaid action bar */}
-            <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-3">
-              <button
-                onClick={onClose}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm text-slate-800 shadow-sm active:scale-95"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <h2
-                id="dish-details-title"
-                className="hidden md:block text-lg font-semibold text-slate-800 bg-white/70 backdrop-blur-sm px-4 py-1.5 rounded-full shadow-sm"
-              >
-                Item details
-              </h2>
-              <div className="h-10 w-10" />
-            </div>
-          </div>
+      <div className="absolute inset-0 bg-linear-to-b from-white/90 via-white/85 to-white/90 -z-10" />
+      {/* Full-bleed hero image with overlay action bar */}
+      <div className="relative w-full aspect-4/3 overflow-hidden">
+        {/* Main image */}
+        <Image
+          src={dish.img}
+          alt={dish.name}
+          fill
+          className="object-contain"
+          priority
+        />
+        {/* Overlaid action bar */}
+        <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-3">
+          <button
+            onClick={onClose}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm text-slate-800 shadow-sm active:scale-95"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <h2
+            id="dish-details-title"
+            className="hidden md:block text-lg font-semibold text-slate-800 bg-white/70 backdrop-blur-sm px-4 py-1.5 rounded-full shadow-sm"
+          >
+            Item details
+          </h2>
+          <div className="h-10 w-10" />
+        </div>
+      </div>
 
-          {/* CAROUSEL DOTS INDICATOR */}
-          {/* <div className="flex justify-center gap-1.5 mb-4">
-            <span className="h-1.5 w-3 rounded-full bg-yellow-400"></span>
-            <span className="h-1.5 w-1.5 rounded-full bg-slate-200"></span>
-          </div> */}
+      {/* 4. DISH NAME AND PRICE TITLE */}
+      <div className="flex items-start justify-between px-5 mb-4">
+        <h1 className="text-xl font-medium text-slate-800 tracking-wide max-w-[70%]">
+          {dish.name}
+        </h1>
+        <span className="flex items-center text-xl font-semibold text-emerald-600">
+          <DirhamIcon size={16} className="mr-0.5 text-emerald-600" />
+          {unitPrice.toFixed(2)}
+        </span>
+      </div>
 
-          {/* 4. DISH NAME AND PRICE TITLE */}
-          <div className="flex items-start justify-between px-5 mb-4">
-            <h1 className="text-xl font-medium text-slate-800 tracking-wide max-w-[70%]">
-              {dish.name}
-            </h1>
-            <span className="flex items-center text-xl font-semibold text-emerald-600">
-              <DirhamIcon size={16} className="mr-0.5 text-emerald-600" />
-              {unitPrice.toFixed(2)}
-            </span>
-          </div>
+      {/* 5. QUICK METRICS (Calories, Time, Rating) */}
+      <div className="flex items-center justify-between px-5 py-3 border-y border-slate-100 mb-2 text-slate-600 text-xs font-semibold">
+        <div className="flex items-center gap-1">
+          <Flame size={14} className="text-orange-500" />
+          <span>{dish.cal} calories</span>
+        </div>
+        <div className="h-4 w-px bg-slate-200"></div>
+        <div className="flex items-center gap-1">
+          <Clock size={14} className="text-slate-400" />
+          <span>Ready in {dish.time}</span>
+        </div>
+        <div className="h-4 w-px bg-slate-200"></div>
+        <div className="flex items-center gap-1">
+          <Star size={14} className="text-yellow-400 fill-yellow-400" />
+          <span>{dish.rating} stars</span>
+        </div>
+      </div>
 
-          {/* 5. QUICK METRICS (Calories, Time, Rating) */}
-          <div className="flex items-center justify-between px-5 py-3 border-y border-slate-100 mb-2 text-slate-600 text-xs font-semibold">
-            <div className="flex items-center gap-1">
-              <Flame size={14} className="text-orange-500" />
-              <span>{dish.cal} calories</span>
-            </div>
-            <div className="h-4 w-px bg-slate-200"></div>
-            <div className="flex items-center gap-1">
-              <Clock size={14} className="text-slate-400" />
-              <span>Ready in {dish.time}</span>
-            </div>
-            <div className="h-4 w-px bg-slate-200"></div>
-            <div className="flex items-center gap-1">
-              <Star size={14} className="text-yellow-400 fill-yellow-400" />
-              <span>{dish.rating} stars</span>
-            </div>
-          </div>
-
-          {/* 6. DESCRIPTION SECTION */}
-          <div className="px-5 mb-2">
-           
-            <div
-              className="prose prose-sm font-sans leading-relaxed tracking-wide text-slate-400 max-w-none
+      {/* 6. DESCRIPTION SECTION */}
+      <div className="px-5 mb-2">
+        <div
+          className="prose prose-sm font-sans leading-relaxed tracking-wide text-slate-400 max-w-none
           prose-p:text-slate-400 prose-p:my-1
           prose-strong:text-slate-700 prose-strong:font-normal
           prose-ul:list-disc prose-ul:pl-4 prose-li:my-0.5"
-              dangerouslySetInnerHTML={{ __html: dish.description }}
-            />
-          </div>
-        </>
-      )}
+          dangerouslySetInnerHTML={{ __html: dish.description }}
+        />
+      </div>
 
-      {/* 7. Modification LINK */}
-      {hasCustomizationOptions && (
-        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100/80 mb-auto">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold tracking-wide text-slate-800">
-              Modification
-            </span>
-            {selectedCount > 0 && (
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">
-                {selectedCount} chosen
-              </span>
-            )}
+      {hasVariationOptions && (
+        <div className="px-5 pb-2">
+          <p className="text-sm font-medium text-slate-800">Select one to continue.</p>
+          <div className="mt-3 flex flex-col gap-2">
+            {variationGroups.map(renderVariationGroup)}
           </div>
-          <button
-            type="button"
-            onClick={() => setIsCustomizationOpen((current) => !current)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold tracking-wide text-slate-700 transition-colors hover:bg-white"
-            aria-expanded={isCustomizationOpen}
-            aria-label={
-              isCustomizationOpen
-                ? "Back to item details"
-                : "Open modification options"
-            }
-          >
-            {isCustomizationOpen ? (
-              <>
-                <ChevronLeft size={13} className="shrink-0" />
-                <span>Back to item</span>
-              </>
-            ) : (
-              <>
-                <span>Modify options</span>
-                <span className="text-[10px]">▼</span>
-              </>
-            )}
-          </button>
         </div>
       )}
 
