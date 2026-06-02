@@ -1,6 +1,5 @@
 "use client";
 import {
-  StickyNote,
   Search,
   X,
   Home,
@@ -317,7 +316,7 @@ export default function TabletHeader() {
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold tracking-wide transition-all ${
                   (item.id === "home" && isHomeRoute) ||
                   (item.id === "orders" && pathname.startsWith("/my-orders"))
-                    ? "bg-yellow-400 text-slate-900 shadow-sm"
+                    ? "bg-brand-400 text-slate-900 shadow-sm"
                     : "text-slate-500 hover:text-slate-800"
                 }`}
               >
@@ -348,7 +347,7 @@ export default function TabletHeader() {
           onClick={() => openVerificationFlowFor("/my-orders")}
           className="relative flex h-12 w-12 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-600 shadow-sm transition-all active:scale-95"
         >
-          <StickyNote size={22} />
+          <ClipboardList size={22} />
           {portalState.isVerified && hasOrders && (
             <span className="absolute right-3.25 top-3.25 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500"></span>
           )}

@@ -223,7 +223,7 @@ export default function TabletCategoryTabs() {
                   onClick={() => handleTabClick(cat.name)}
                   className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-2 transition-all duration-200 active:scale-95 ${
                     activeCategory === cat.name
-                      ? "bg-yellow-400 text-slate-900 shadow-lg shadow-yellow-200/40"
+                      ? "bg-brand-400 text-slate-900 shadow-lg shadow-yellow-200/40"
                       : "border border-slate-200 bg-white text-slate-600 active:bg-slate-50"
                   }`}
                 >

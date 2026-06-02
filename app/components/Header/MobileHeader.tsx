@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell,StickyNote, LogOut, User } from "lucide-react";
+import {StickyNote, LogOut, User, Bell, ClipboardList } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -229,7 +229,7 @@ export default function MobileHeader() {
           onClick={() => router.push("/my-orders")}
           className="mr-2 flex h-11 w-11 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-600 shadow-sm transition-all active:scale-90"
         >
-          <StickyNote size={22} />
+          <ClipboardList size={22} />
         </button>
       )}
 

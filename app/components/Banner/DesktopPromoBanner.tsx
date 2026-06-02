@@ -9,7 +9,7 @@ export default function DesktopPromoBanner() {
       - mx-auto centers everything smoothly when the screen exceeds the max width.
     */
     <section className="mt-10 max-w-[1440px] mx-auto px-12">
-      <div className="relative rounded-[32px] bg-yellow-400 p-12 text-white shadow-xl shadow-orange-100/30 min-h-[280px] flex items-center">
+      <div className="relative rounded-[32px] bg-brand-400 p-12 text-white shadow-xl shadow-orange-100/30 min-h-[280px] flex items-center">
         
         {/* Left text grid layout column */}
         <div className="relative z-10 max-w-[55%] flex flex-col justify-center">

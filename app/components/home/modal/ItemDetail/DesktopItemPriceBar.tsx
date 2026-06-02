@@ -45,7 +45,7 @@ export function DesktopItemPriceBar({
           </span>
           <button
             onClick={onIncrement}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-400 text-slate-800 shadow-sm transition-all hover:bg-yellow-500 active:scale-90"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-400 text-slate-800 shadow-sm transition-all hover:bg-brand-500 active:scale-90"
           >
             <Plus size={14} />
           </button>
@@ -57,7 +57,7 @@ export function DesktopItemPriceBar({
           disabled={!canAddToCart}
           className={`h-12 rounded-full px-8 text-sm font-medium tracking-wide shadow-md transition-all ${
             canAddToCart
-              ? "bg-yellow-400 text-slate-800 shadow-yellow-200/40 hover:bg-yellow-500 active:scale-[0.98]"
+              ? "bg-brand-400 text-slate-800 shadow-yellow-200/40 hover:bg-brand-500 active:scale-[0.98]"
               : "cursor-not-allowed bg-slate-200 text-slate-500 shadow-slate-100"
           }`}
         >

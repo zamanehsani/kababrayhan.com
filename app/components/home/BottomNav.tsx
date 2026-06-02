@@ -171,7 +171,7 @@ export default function BottomNav() {
               aria-label={item.id}
               className={`flex h-11 w-11 items-center justify-center rounded-full transition-all duration-300 ${
                 item.active
-                  ? "scale-105 bg-yellow-400 text-slate-900 shadow-sm"
+                  ? "scale-105 bg-brand-400 text-slate-900 shadow-sm"
                   : "bg-white text-slate-500 shadow-sm hover:bg-slate-50 active:scale-95"
               }`}
             >

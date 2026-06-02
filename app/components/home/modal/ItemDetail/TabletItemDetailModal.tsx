@@ -1,4 +1,4 @@
-import { Check, ChevronLeft, X, Clock, Flame, Minus, Plus, Star } from "lucide-react";
+import { Check, X, Clock, Flame, Minus, Plus, Star } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Dish } from "@/app/types/type";
@@ -51,7 +51,7 @@ export function TabletItemDetailModal({
             onClick={() => handleSingleSelect(group.id, option.id)}
             className={`flex aspect-square flex-col items-center justify-center rounded-xl border px-2 text-center transition-colors ${
               isSelected
-                ? "border-yellow-400 bg-yellow-50 text-slate-900"
+                ? "border-brand-400 bg-yellow-50 text-slate-900"
                 : "border-slate-200 bg-white text-slate-700"
             }`}
           >
@@ -60,7 +60,7 @@ export function TabletItemDetailModal({
               {option.price > 0 && (
                 <span className="text-emerald-600">AED {option.price.toFixed(2)}</span>
               )}
-              {isSelected && <Check size={14} className="text-yellow-500" />}
+              {isSelected && <Check size={14} className="text-brand-500" />}
             </span>
           </button>
         );
@@ -215,7 +215,7 @@ export function TabletItemDetailModal({
               </div>
               <div className="h-3 w-px bg-slate-200"></div>
               <div className="flex items-center gap-1.5">
-                <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                <Star size={14} className="text-brand-400 fill-brand-400" />
                 <span>{dish.rating} stars</span>
               </div>
             </div>
@@ -251,7 +251,7 @@ export function TabletItemDetailModal({
             </span>
             <button
               onClick={() => setQuantity(quantity + 1)}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-400 text-slate-800 shadow-sm transition-all active:scale-90"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-400 text-slate-800 shadow-sm transition-all active:scale-90"
             >
               <Plus size={14} />
             </button>
@@ -263,7 +263,7 @@ export function TabletItemDetailModal({
             disabled={!canAddToCart}
             className={`h-12 flex-1 rounded-full text-sm font-medium tracking-wide shadow-md transition-all ${
               canAddToCart
-                ? "bg-yellow-400 text-slate-800 shadow-yellow-200/40 active:scale-[0.98]"
+                ? "bg-brand-400 text-slate-800 shadow-yellow-200/40 active:scale-[0.98]"
                 : "cursor-not-allowed bg-slate-200 text-slate-500 shadow-slate-100"
             }`}
           >

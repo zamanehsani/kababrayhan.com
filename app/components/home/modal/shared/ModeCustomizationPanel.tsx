@@ -40,7 +40,7 @@ export function ModeCustomizationPanel({
                   /* Changed layout to flex-col, items-center, and text-center for the box style */
                   className={`relative flex flex-col items-center gap-2 rounded-xl border p-2 text-center transition-all duration-150 min-h-[120px] h-full w-full ${
                     isSelected
-                      ? "border-yellow-400 bg-yellow-50/20 ring-1 ring-yellow-400"
+                      ? "border-brand-400 bg-yellow-50/20 ring-1 ring-brand-400"
                       : "border-slate-100 bg-white hover:border-slate-200"
                   }`}
                 >
@@ -50,7 +50,7 @@ export function ModeCustomizationPanel({
                       group.type === "single" ? "rounded-full" : "rounded-md"
                     } ${
                       isSelected
-                        ? "border-yellow-400 bg-yellow-400 text-slate-900"
+                        ? "border-brand-400 bg-brand-400 text-slate-900"
                         : "border-slate-300 bg-white"
                     }`}
                   >

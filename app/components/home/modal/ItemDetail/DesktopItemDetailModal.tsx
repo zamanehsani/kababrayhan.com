@@ -211,7 +211,7 @@ export function DesktopItemDetailModal({
                               onClick={() => handleMultiToggle(group.id, option.id)}
                               className={`group relative aspect-square overflow-hidden rounded-xl border-2 transition-all ${
                                 isSelected
-                                  ? "border-yellow-400 ring-2 ring-yellow-400/30 scale-95"
+                                  ? "border-brand-400 ring-2 ring-brand-400/30 scale-95"
                                   : "border-slate-200 hover:border-emerald-400"
                               }`}
                             >
@@ -226,8 +226,8 @@ export function DesktopItemDetailModal({
                               
                               {/* Selected Overlay */}
                               {isSelected && (
-                                <div className="absolute inset-0 bg-yellow-400/20 flex items-center justify-center">
-                                  <div className="h-6 w-6 rounded-full bg-yellow-400 flex items-center justify-center">
+                                <div className="absolute inset-0 bg-brand-400/20 flex items-center justify-center">
+                                  <div className="h-6 w-6 rounded-full bg-brand-400 flex items-center justify-center">
                                     <Check size={14} strokeWidth={3} className="text-slate-900" />
                                   </div>
                                 </div>

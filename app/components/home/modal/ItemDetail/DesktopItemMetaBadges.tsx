@@ -24,7 +24,7 @@ export function DesktopItemMetaBadges({
       </div>
       {/* <div className="h-4 w-px bg-slate-200" /> */}
       {/* <div className="flex items-center gap-1.5">
-        <Star size={15} className="fill-yellow-400 text-yellow-400" />
+        <Star size={15} className="fill-brand-400 text-brand-400" />
         <span className="text-slate-800">{rating} stars</span>
       </div> */}
     </div>

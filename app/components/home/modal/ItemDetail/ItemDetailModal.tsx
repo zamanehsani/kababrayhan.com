@@ -65,7 +65,7 @@ export function ItemDetailModal({
             onClick={() => handleSingleSelect(group.id, option.id)}
             className={`flex aspect-square flex-col items-center justify-center rounded-xl border px-2 text-center transition-colors ${
               isSelected
-                ? "border-yellow-400 bg-yellow-50 text-slate-900"
+                ? "border-brand-400 bg-yellow-50 text-slate-900"
                 : "border-slate-200 bg-white text-slate-700"
             }`}
           >
@@ -78,7 +78,7 @@ export function ItemDetailModal({
                   AED {option.price.toFixed(2)}
                 </span>
               )}
-              {isSelected && <Check size={14} className="text-yellow-500" />}
+              {isSelected && <Check size={14} className="text-brand-500" />}
             </span>
           </button>
         );
@@ -229,7 +229,7 @@ export function ItemDetailModal({
         </div>
         <div className="h-4 w-px bg-slate-200"></div>
         <div className="flex items-center gap-1">
-          <Star size={14} className="text-yellow-400 fill-yellow-400" />
+          <Star size={14} className="text-brand-400 fill-brand-400" />
           <span>{dish.rating} stars</span>
         </div>
       </div>
@@ -269,7 +269,7 @@ export function ItemDetailModal({
           </span>
           <button
             onClick={() => setQuantity(quantity + 1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-400 text-slate-800 shadow-sm active:scale-90"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-400 text-slate-800 shadow-sm active:scale-90"
           >
             <Plus size={16} />
           </button>
@@ -282,7 +282,7 @@ export function ItemDetailModal({
           disabled={!canAddToCart}
           className={`flex-1 h-12 rounded-full font-semibold text-sm tracking-wide shadow-md transition-transform ${
             canAddToCart
-              ? "bg-yellow-400 text-slate-800 shadow-yellow-200/50 active:scale-[0.98]"
+              ? "bg-brand-400 text-slate-800 shadow-yellow-200/50 active:scale-[0.98]"
               : "bg-slate-200 text-slate-500 shadow-slate-100 cursor-not-allowed"
           }`}
         >

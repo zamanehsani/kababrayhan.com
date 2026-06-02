@@ -70,7 +70,7 @@ export function CustomizationPanel({
                   }
                   className={`flex items-center justify-between w-full p-3 rounded-xl border text-left transition-all duration-150 ${
                     isSelected
-                      ? "border-yellow-400 bg-yellow-50/20 ring-1 ring-yellow-400"
+                      ? "border-brand-400 bg-yellow-50/20 ring-1 ring-brand-400"
                       : "border-slate-100 bg-white hover:border-slate-200"
                   }`}
                 >
@@ -80,7 +80,7 @@ export function CustomizationPanel({
                         group.type === "single" ? "rounded-full" : "rounded-md"
                       } ${
                         isSelected
-                          ? "bg-yellow-400 border-yellow-400 text-slate-900"
+                          ? "bg-brand-400 border-brand-400 text-slate-900"
                           : "border-slate-300 bg-white"
                       }`}
                     >

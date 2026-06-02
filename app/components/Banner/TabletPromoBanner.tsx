@@ -7,7 +7,7 @@ export default function TabletPromoBanner() {
       - Keeps the unified mt-10 and px-8 padding of your tablet layout system
     */
     <section className="mt-10 px-8">
-      <div className="relative overflow-visible rounded-[32px] bg-yellow-400 p-10 text-white shadow-xl shadow-orange-100/30 min-h-[240px] flex items-center justify-between">
+      <div className="relative overflow-visible rounded-[32px] bg-brand-400 p-10 text-white shadow-xl shadow-orange-100/30 min-h-[240px] flex items-center justify-between">
         
         {/* Left Side: Content Wrapper */}
         <div className="relative z-10 max-w-[55%] flex flex-col justify-center">

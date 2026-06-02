@@ -3,7 +3,7 @@ import Image from "next/image";
 export default function PromoBanner() {
   return (
     <section className="mt-6 px-4">
-      <div className="relative  rounded-3xl bg-yellow-400 p-6 text-white shadow-lg shadow-orange-100/40">
+      <div className="relative  rounded-3xl bg-brand-400 p-6 text-white shadow-lg shadow-orange-100/40">
         <div className="relative z-10 max-w-[65%]">
           {/* Using medium/semibold instead of bold for a cleaner look */}
           <span className="text-xs font-sans  tracking-wide text-white-900">
