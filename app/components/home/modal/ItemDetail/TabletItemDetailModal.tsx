@@ -105,7 +105,7 @@ export function TabletItemDetailModal({
     if (!isVariantSelectionRequired || canAddToCart) return "";
     if (isVariantDataLoading) return "Loading options...";
     if (variantOptionsCount === 0) return "No options are available for this item.";
-    return "Please choose an option before adding to cart.";
+    return "Choose an option";
   }, [
     canAddToCart,
     isVariantDataLoading,
