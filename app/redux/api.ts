@@ -52,6 +52,7 @@ export const toErpAbsoluteUrl = (value: string) => {
 
 export const erpApi = createApi({
   reducerPath: "erpApi",
+  tagTypes: ["CustomerAddresses"],
   baseQuery: fetchBaseQuery({
     baseUrl: `${ERP_API_BASE_URL}/api/resource/`,
     prepareHeaders: (headers) => {
@@ -231,6 +232,10 @@ export const erpApi = createApi({
         },
       }),
       transformResponse: (response: { data: Address[] }) => response.data,
+      providesTags: (_result, _error, customerName) => [
+        { type: "CustomerAddresses", id: customerName },
+        { type: "CustomerAddresses", id: "LIST" },
+      ],
     }),
     updateCustomer: builder.mutation<CustomerDetails, UpdateCustomerRequest>({
       query: ({ customerName, ...body }) => ({
@@ -465,6 +470,16 @@ export const erpApi = createApi({
           Authorization: ERP_API_AUTHORIZATION,
         },
       }),
+      invalidatesTags: (_result, _error, body) => {
+        const linkedCustomer = body.links?.find(
+          (link) => link.link_doctype === "Customer"
+        )?.link_name;
+
+        return [
+          { type: "CustomerAddresses", id: linkedCustomer || "LIST" },
+          { type: "CustomerAddresses", id: "LIST" },
+        ];
+      },
     }),
     deleteAddress: builder.mutation<{ message?: unknown } | null, string>({
       queryFn: async (addressName, _api, _extraOptions, fetchWithBQ) => {
@@ -482,6 +497,9 @@ export const erpApi = createApi({
 
         return { data: (result.data as { message?: unknown } | null) ?? null };
       },
+      invalidatesTags: () => [
+        { type: "CustomerAddresses", id: "LIST" },
+      ],
     }),
     disableAddress: builder.mutation<{ message?: unknown } | null, string>({
       queryFn: async (addressName, _api, _extraOptions, fetchWithBQ) => {
@@ -502,6 +520,9 @@ export const erpApi = createApi({
 
         return { data: (result.data as { message?: unknown } | null) ?? null };
       },
+      invalidatesTags: () => [
+        { type: "CustomerAddresses", id: "LIST" },
+      ],
     }),
   }),
 });
