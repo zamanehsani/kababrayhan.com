@@ -32,7 +32,12 @@ import {
   saveVerifiedPhone,
   writeDeliveryAddresses,
 } from "@/app/lib/customerPortal";
-import { useSetCustomerInfoMutation, useGetCustomerAddressesQuery } from "@/app/redux/api";
+import {
+  useDeleteAddressMutation,
+  useGetCustomerAddressesQuery,
+  useDisableAddressMutation,
+  useSetCustomerInfoMutation,
+} from "@/app/redux/api";
 import Footer from "../components/Footer/Footer";
 
 const toDisplayAddressTitle = (
@@ -76,6 +81,8 @@ export default function AccountProfilePage() {
   const [phoneForVerify, setPhoneForVerify] = useState("");
   const [previousVerifiedPhone, setPreviousVerifiedPhone] = useState("");
   const [setCustomerInfo] = useSetCustomerInfoMutation();
+  const [deleteAddress] = useDeleteAddressMutation();
+  const [disableAddress] = useDisableAddressMutation();
 
   // Fetch addresses from ERPNext backend (shows addresses already saved in the system)
   const customerName = getCustomerName();
@@ -94,7 +101,7 @@ export default function AccountProfilePage() {
     }
 
     const syncedAddresses: DeliveryAddressItem[] = backendAddresses.map(
-      (address, index) => ({
+      (address: (typeof backendAddresses)[number], index: number) => ({
         id: address.name,
         title: toDisplayAddressTitle(
           address.address_title,
@@ -180,7 +187,7 @@ export default function AccountProfilePage() {
       // ERPNext Customer record instead of letting a new one be created.
       if (customerName && newPhone && customerName !== newPhone) {
         setCustomerInfo({ customerName, fieldname: "mobile_no", value: newPhone }).catch(
-          (err) => console.warn("Failed to update customer mobile_no:", err)
+          (err: unknown) => console.warn("Failed to update customer mobile_no:", err)
         );
       }
       refreshPortalState();
@@ -236,11 +243,54 @@ export default function AccountProfilePage() {
     setActiveDeliveryIndex(updatedAddresses.length - 1);
   };
 
-  const handleRemoveAddress = (indexToRemove: number) => {
+  const handleRemoveAddress = async (indexToRemove: number) => {
+    const addressToRemove = portalState.deliveryAddresses[indexToRemove];
+    if (!addressToRemove) return;
+
+    if (addressToRemove.addressId) {
+      try {
+        await deleteAddress(addressToRemove.addressId).unwrap();
+      } catch (err: unknown) {
+        const errorData =
+          typeof err === "object" && err !== null && "data" in err
+            ? (err as { data?: { _server_messages?: unknown; exception?: unknown } })
+                .data
+            : undefined;
+
+        const serverMessages = String(
+          errorData?._server_messages || errorData?.exception || ""
+        );
+
+        if (serverMessages.includes("LinkExistsError")) {
+          try {
+            await disableAddress(addressToRemove.addressId).unwrap();
+          } catch (disableErr) {
+            console.warn("Failed to disable linked backend address:", disableErr);
+            return;
+          }
+        } else {
+          console.warn("Failed to delete backend address:", err);
+          return;
+        }
+      }
+    }
+
     const updatedAddresses = portalState.deliveryAddresses.filter(
       (_, i) => i !== indexToRemove
     );
     writeDeliveryAddresses(updatedAddresses);
+
+    if (indexToRemove === 0) {
+      if (updatedAddresses[0]) {
+        saveDeliveryAddress(
+          updatedAddresses[0].address,
+          updatedAddresses[0].addressId
+        );
+      } else {
+        saveDeliveryAddress("", "");
+      }
+    }
+
     refreshPortalState();
   };
 

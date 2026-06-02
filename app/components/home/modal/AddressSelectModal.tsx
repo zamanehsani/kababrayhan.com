@@ -6,13 +6,15 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
-  useCreateCustomerNewMutation,
+  useCreateCustomerMutation,
   useCreateAddressMutation,
   useSetCustomerInfoMutation,
+  ERP_API_BASE_URL,
 } from "../../../redux/api";
 import {
   saveDeliveryAddress,
   getCustomerName,
+  saveCustomerName,
 } from "@/app/lib/customerPortal";
 
 export type SelectedAddress = {
@@ -50,7 +52,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [createCustomer] = useCreateCustomerNewMutation();
+  const [createCustomer] = useCreateCustomerMutation();
   const [createAddress] = useCreateAddressMutation();
   const [setCustomerInfo] = useSetCustomerInfoMutation();
   const mapRef = useRef<HTMLDivElement>(null);
@@ -74,6 +76,36 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const lookupCustomersByMobile = async (mobileNo: string) => {
+    const filters = encodeURIComponent(
+      JSON.stringify([["mobile_no", "=", mobileNo]])
+    );
+    const fields = encodeURIComponent(
+      JSON.stringify(["name", "customer_name", "mobile_no"])
+    );
+    const token = process.env.NEXT_PUBLIC_ERP_API_TOKEN || "";
+
+    const response = await fetch(
+      `${ERP_API_BASE_URL}/api/resource/Customer?filters=${filters}&fields=${fields}&limit_page_length=20`,
+      {
+        headers: {
+          Authorization: `token ${token}`,
+          "X-Frappe-Site-Name": "kababrayhan.com",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to lookup customer: ${response.status}`);
+    }
+
+    const payload = (await response.json()) as {
+      data?: Array<{ name: string; customer_name?: string; mobile_no?: string }>;
+    };
+
+    return payload.data ?? [];
   };
 
   useEffect(() => {
@@ -280,7 +312,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                   // phone used when the customer was first created. Subsequent
                   // phone changes only update mobile_no — they never create a
                   // new customer record.
-                  const customerName = getCustomerName() || phone;
+                  let customerName = getCustomerName() || phone;
                   const phoneChanged = customerName !== phone;
 
                   // 1. Customer creation / phone-number update
@@ -297,9 +329,15 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                         console.warn("Could not update customer mobile_no, continuing...", e);
                       }
                     } else {
-                      // New session — create the customer (safe to ignore if already exists)
-                      try {
-                        await createCustomer({
+                      const existingCustomers = await lookupCustomersByMobile(phone);
+
+                      if (existingCustomers.length > 0) {
+                        customerName = existingCustomers[0].name;
+                        saveCustomerName(customerName);
+                      } else {
+                        // New session — create the customer once, then persist the
+                        // real ERPNext document name so later flows reuse it.
+                        const createdCustomer = await createCustomer({
                           customer_name: customerName,
                           mobile_no: phone,
                           customer_type: "Individual",
@@ -307,9 +345,9 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                           territory: "United Arab Emirates",
                           email_id: "example@example.com",
                         }).unwrap();
-                      } catch (e) {
-                        // Customer already exists — safe to continue
-                        console.info("Customer already exists, proceeding...", e);
+
+                        customerName = createdCustomer.name;
+                        saveCustomerName(customerName);
                       }
                     }
                   }

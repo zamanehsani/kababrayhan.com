@@ -10,7 +10,6 @@ import type {
   Contact,
   CreateContactRequest,
   CreateCustomerRequest,
-  CreateCustomerResponse,
   CreateAddressRequest,
   CreateAddressResponse,
   CreatePaymentIntentRequest,
@@ -171,6 +170,22 @@ export const erpApi = createApi({
         url: `Customer/${encodeURIComponent(customerName)}`,
       }),
       transformResponse: (response: { data: CustomerDetails }) => response.data,
+    }),
+    getCustomersByMobile: builder.query<
+      Array<{ name: string; customer_name?: string; mobile_no?: string }>,
+      string
+    >({
+      query: (mobileNo) => ({
+        url: "Customer",
+        params: {
+          filters: JSON.stringify([["mobile_no", "=", mobileNo]]),
+          fields: JSON.stringify(["name", "customer_name", "mobile_no"]),
+          limit_page_length: 20,
+        },
+      }),
+      transformResponse: (response: {
+        data: Array<{ name: string; customer_name?: string; mobile_no?: string }>;
+      }) => response.data,
     }),
     getCustomerAvatar: builder.query<string | null, string>({
       query: (customerName) => ({
@@ -438,19 +453,6 @@ export const erpApi = createApi({
       },
     }),
 
-    createCustomerNew: builder.mutation<
-      CreateCustomerResponse,
-      CreateCustomerRequest
-    >({
-      query: (body) => ({
-        url: `${ERP_API_BASE_URL}/api/resource/Customer`,
-        method: "POST",
-        body,
-        headers: {
-          Authorization: ERP_API_AUTHORIZATION,
-        },
-      }),
-    }),
     createAddress: builder.mutation<
       CreateAddressResponse,
       CreateAddressRequest
@@ -464,13 +466,53 @@ export const erpApi = createApi({
         },
       }),
     }),
+    deleteAddress: builder.mutation<{ message?: unknown } | null, string>({
+      queryFn: async (addressName, _api, _extraOptions, fetchWithBQ) => {
+        const result = await fetchWithBQ({
+          url: `Address/${encodeURIComponent(addressName)}`,
+          method: "DELETE",
+          headers: {
+            Authorization: ERP_API_AUTHORIZATION,
+          },
+        });
+
+        if (result.error) {
+          return { error: result.error };
+        }
+
+        return { data: (result.data as { message?: unknown } | null) ?? null };
+      },
+    }),
+    disableAddress: builder.mutation<{ message?: unknown } | null, string>({
+      queryFn: async (addressName, _api, _extraOptions, fetchWithBQ) => {
+        const result = await fetchWithBQ({
+          url: `Address/${encodeURIComponent(addressName)}`,
+          method: "PUT",
+          headers: {
+            Authorization: ERP_API_AUTHORIZATION,
+          },
+          body: {
+            disabled: 1,
+          },
+        });
+
+        if (result.error) {
+          return { error: result.error };
+        }
+
+        return { data: (result.data as { message?: unknown } | null) ?? null };
+      },
+    }),
   }),
 });
 
 export const {
   useCreateCustomerMutation,
   useCreateAddressMutation,
+  useDeleteAddressMutation,
+  useDisableAddressMutation,
   useGetCustomerQuery,
+  useGetCustomersByMobileQuery,
   useGetCustomerAvatarQuery,
   useGetCustomerAddressesQuery,
   useGetContactQuery,
@@ -487,5 +529,4 @@ export const {
   useGetItemsQuery,
   useSendOtpMutation,
   useGetItemByCodeQuery,
-  useCreateCustomerNewMutation,
 } = erpApi;

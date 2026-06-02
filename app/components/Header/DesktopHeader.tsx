@@ -7,6 +7,7 @@ import {
   Home,
   User,
   LogOut,
+  ClipboardList,
   X,
 } from "lucide-react";
 import Image from "next/image";
@@ -245,7 +246,7 @@ export default function DesktopHeader() {
             {/* Alerts Badge */}
             <button onClick={() => router.push("/my-orders")}
             className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-800 active:scale-95">
-              <StickyNote size={18} />
+              <ClipboardList size={18} />
               <span className="absolute right-3 top-3 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white animate-pulse"></span>
             </button>
 

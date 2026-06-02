@@ -1,6 +1,6 @@
 "use client";
 
-import {StickyNote, LogOut, User, Bell, ClipboardList } from "lucide-react";
+import { LogOut, User,  ClipboardList } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";

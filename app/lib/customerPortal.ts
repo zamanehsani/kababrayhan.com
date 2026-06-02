@@ -216,6 +216,18 @@ export const saveVerifiedPhone = (phone?: string) => {
   dispatchCustomerPortalUpdated();
 };
 
+export const saveCustomerName = (customerName: string) => {
+  if (!hasWindow()) return;
+
+  if (customerName) {
+    globalThis.localStorage?.setItem(CUSTOMER_NAME_KEY, customerName);
+  } else {
+    globalThis.localStorage?.removeItem(CUSTOMER_NAME_KEY);
+  }
+
+  dispatchCustomerPortalUpdated();
+};
+
 export const saveDeliveryAddress = (address: string, addressId?: string) => {
   writeStorageState({ address, addressId });
   // Also write delivery-specific keys so checkout's Delivery To card picks them up

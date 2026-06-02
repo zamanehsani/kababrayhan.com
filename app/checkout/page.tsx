@@ -13,12 +13,17 @@ import {
 import {
   useCreateSalesOrderMutation,
   useCreatePaymentIntentMutation,
+  useGetCustomerAddressesQuery,
   type Customer,
   type SalesOrder,
 } from "../redux/api";
 import type { CreateSalesOrderRequest } from "../redux/apiType";
 import { readStoredCustomer } from "@/app/components/customerStorage";
-import { getCustomerName } from "@/app/lib/customerPortal";
+import {
+  getCustomerName,
+  saveDeliveryAddress,
+  writeDeliveryAddresses,
+} from "@/app/lib/customerPortal";
 import {
   clearPendingCheckout,
   clearPendingSalesOrder,
@@ -35,6 +40,35 @@ import TabletHeader from "../components/Header/TabletHeader";
 import DesktopHeader from "../components/Header/DesktopHeader";
 import Footer from "../components/Footer/Footer";
 import CustomerNote from "../components/Checkout/CustomerNote";
+
+const toDisplayAddressTitle = (
+  rawTitle: string,
+  addressType: string,
+  index: number
+) => {
+  const segments = rawTitle
+    .split("-")
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+
+  const filteredSegments = segments.filter((segment) => {
+    const normalized = segment.toLowerCase();
+    return (
+      !segment.startsWith("+") &&
+      normalized !== addressType.toLowerCase() &&
+      normalized !== "billing" &&
+      normalized !== "shipping"
+    );
+  });
+
+  const candidate = filteredSegments.join(" ").trim();
+
+  if (candidate) {
+    return candidate.replace(/\b\w/g, (char) => char.toUpperCase());
+  }
+
+  return index === 0 ? "Home" : `Address ${index + 1}`;
+};
 
 const stripeKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 let stripePromise: ReturnType<typeof loadStripe> | null = null;
@@ -151,6 +185,11 @@ const CheckoutPage = () => {
 
   const [createSalesOrder] = useCreateSalesOrderMutation();
   const [createPaymentIntent] = useCreatePaymentIntentMutation();
+  const customerName = customer?.name || getCustomerName() || form.phone;
+  const { data: backendAddresses } = useGetCustomerAddressesQuery(
+    customerName,
+    { skip: !customerName }
+  );
 
   useEffect(() => {
     if (!("window" in globalThis)) return;
@@ -208,6 +247,67 @@ const CheckoutPage = () => {
       });
     });
   }, []);
+
+  useEffect(() => {
+    if (!backendAddresses) {
+      return;
+    }
+
+    const syncedAddresses: DeliveryAddressItem[] = backendAddresses.map(
+      (address, index) => ({
+        id: address.name,
+        title: toDisplayAddressTitle(
+          address.address_title,
+          address.address_type,
+          index
+        ),
+        address: [address.address_line1, address.address_line2]
+          .filter(Boolean)
+          .join(", "),
+        addressId: address.name,
+      })
+    );
+
+    const currentSnapshot = JSON.stringify(
+      form.deliveryAddresses.map((item) => ({
+        title: item.title,
+        address: item.address,
+        addressId: item.addressId,
+      }))
+    );
+    const nextSnapshot = JSON.stringify(
+      syncedAddresses.map((item) => ({
+        title: item.title,
+        address: item.address,
+        addressId: item.addressId,
+      }))
+    );
+
+    if (currentSnapshot === nextSnapshot) {
+      return;
+    }
+
+    const frameId = requestAnimationFrame(() => {
+      setForm((prev) => ({
+        ...prev,
+        deliveryAddresses: syncedAddresses,
+        address: syncedAddresses[0]?.address || prev.address,
+      }));
+
+      writeDeliveryAddresses(syncedAddresses);
+
+      if (syncedAddresses[0]) {
+        saveDeliveryAddress(
+          syncedAddresses[0].address,
+          syncedAddresses[0].addressId
+        );
+      } else {
+        saveDeliveryAddress("", "");
+      }
+    });
+
+    return () => cancelAnimationFrame(frameId);
+  }, [backendAddresses, form.deliveryAddresses, setForm]);
 
   async function handleAutoProceed() {
     setIsInitializing(true);
