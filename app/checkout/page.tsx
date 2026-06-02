@@ -3,7 +3,12 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
-import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
 
 import {
   useCreateSalesOrderMutation,
@@ -22,15 +27,16 @@ import {
 import CheckoutStepper from "../components/Checkout/CheckoutStepper";
 import CheckoutHeader from "../components/Checkout/CheckoutHeader";
 import OrderSummary from "../components/Checkout/OrderSummary";
-import CheckoutForm, { type DeliveryAddressItem } from "../components/Checkout/CheckoutForm";
+import CheckoutForm, {
+  type DeliveryAddressItem,
+} from "../components/Checkout/CheckoutForm";
 import MobileHeader from "../components/Header/MobileHeader";
 import TabletHeader from "../components/Header/TabletHeader";
 import DesktopHeader from "../components/Header/DesktopHeader";
 import Footer from "../components/Footer/Footer";
+import CustomerNote from "../components/Checkout/CustomerNote";
 
-const stripeKey =
-  
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+const stripeKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 let stripePromise: ReturnType<typeof loadStripe> | null = null;
 
 if (stripeKey) {
@@ -92,15 +98,15 @@ const PaymentForm = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="rounded-2xl bg-stone-50 p-5 ring-1 ring-stone-200">
-        <PaymentElement 
-          options={{ 
+        <PaymentElement
+          options={{
             layout: "tabs",
             // Explicitly request wallet payment methods
             wallets: {
               applePay: "auto",
               googlePay: "auto",
             },
-          }} 
+          }}
         />
       </div>
 
@@ -133,11 +139,14 @@ const CheckoutPage = () => {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [orderError, setOrderError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [customerNote, setCustomerNote] = useState<string>("");
 
   const [form, setForm] = useState({
     phone: "",
     address: "",
-    deliveryAddresses: [{ title: "Home", address: "", addressId: "" }] as DeliveryAddressItem[],
+    deliveryAddresses: [
+      { title: "Home", address: "", addressId: "" },
+    ] as DeliveryAddressItem[],
   });
 
   const [createSalesOrder] = useCreateSalesOrderMutation();
@@ -151,35 +160,63 @@ const CheckoutPage = () => {
     const savedPhone = globalThis.localStorage.getItem("uae_phone") || "";
     const savedAddress = globalThis.localStorage.getItem("uae_address") || "";
 
-    const rawDelivery = globalThis.localStorage.getItem("uae_delivery_addresses");
+    const rawDelivery = globalThis.localStorage.getItem(
+      "uae_delivery_addresses"
+    );
     let savedDeliveryAddresses: DeliveryAddressItem[];
     if (rawDelivery) {
       try {
         savedDeliveryAddresses = JSON.parse(rawDelivery);
       } catch {
-        savedDeliveryAddresses = [{
-          title: "Home",
-          address: globalThis.localStorage.getItem("uae_delivery_address") || globalThis.localStorage.getItem("uae_address") || "",
-          addressId: globalThis.localStorage.getItem("uae_delivery_address_id") || globalThis.localStorage.getItem("uae_address_id") || "",
-        }];
+        savedDeliveryAddresses = [
+          {
+            title: "Home",
+            address:
+              globalThis.localStorage.getItem("uae_delivery_address") ||
+              globalThis.localStorage.getItem("uae_address") ||
+              "",
+            addressId:
+              globalThis.localStorage.getItem("uae_delivery_address_id") ||
+              globalThis.localStorage.getItem("uae_address_id") ||
+              "",
+          },
+        ];
       }
     } else {
-      savedDeliveryAddresses = [{
-        title: "Home",
-        address: globalThis.localStorage.getItem("uae_delivery_address") || globalThis.localStorage.getItem("uae_address") || "",
-        addressId: globalThis.localStorage.getItem("uae_delivery_address_id") || globalThis.localStorage.getItem("uae_address_id") || "",
-      }];
+      savedDeliveryAddresses = [
+        {
+          title: "Home",
+          address:
+            globalThis.localStorage.getItem("uae_delivery_address") ||
+            globalThis.localStorage.getItem("uae_address") ||
+            "",
+          addressId:
+            globalThis.localStorage.getItem("uae_delivery_address_id") ||
+            globalThis.localStorage.getItem("uae_address_id") ||
+            "",
+        },
+      ];
     }
 
     requestAnimationFrame(() => {
       setCustomer(storedCustomer);
       setCart(cartRaw ? JSON.parse(cartRaw) : []);
-      setForm({ phone: savedPhone, address: savedAddress, deliveryAddresses: savedDeliveryAddresses });
+      setForm({
+        phone: savedPhone,
+        address: savedAddress,
+        deliveryAddresses: savedDeliveryAddresses,
+      });
     });
   }, []);
 
   useEffect(() => {
-    if (form.deliveryAddresses[0]?.address && form.phone && !salesOrder && !isInitializing && cart.length > 0) {
+    if (
+      form.deliveryAddresses[0]?.address &&
+      form.phone &&
+      !salesOrder &&
+      !isInitializing &&
+      cart.length > 0
+    ) {
       handleAutoProceed();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -190,7 +227,9 @@ const CheckoutPage = () => {
     setOrderError(null);
 
     if (!cart || cart.length === 0) {
-      setOrderError("No valid items in cart. Please add items before checkout.");
+      setOrderError(
+        "No valid items in cart. Please add items before checkout."
+      );
       setIsInitializing(false);
       return;
     }
@@ -200,17 +239,23 @@ const CheckoutPage = () => {
       // getCustomerName() falls back to form.phone for legacy sessions.
       const customerName = customer?.name || getCustomerName() || form.phone;
       const deliveryDate = new Date().toISOString().split("T")[0];
-      const primaryDeliveryAddressId = form.deliveryAddresses[0]?.addressId ||
+      const primaryDeliveryAddressId =
+        form.deliveryAddresses[0]?.addressId ||
         globalThis.localStorage.getItem("uae_delivery_address_id") ||
-        globalThis.localStorage.getItem("uae_address_id") || "";
+        globalThis.localStorage.getItem("uae_address_id") ||
+        "";
 
       const items = cart
         .map((cartEntry: any) => {
           const item_code = cartEntry.item?.baseItemCode || cartEntry.item?.id;
           const item_name =
-            cartEntry.item?.title || cartEntry.item?.item_name || cartEntry.name;
+            cartEntry.item?.title ||
+            cartEntry.item?.item_name ||
+            cartEntry.name;
           const qty = Number(cartEntry.qty || 1);
-          const rate = Number(cartEntry.item?.discountedPrice || cartEntry.price || 0);
+          const rate = Number(
+            cartEntry.item?.discountedPrice || cartEntry.price || 0
+          );
 
           const selectedAddOns = Array.isArray(cartEntry.addon?.selectedAddOns)
             ? cartEntry.addon.selectedAddOns
@@ -229,7 +274,10 @@ const CheckoutPage = () => {
           } else if (typeof cartEntry.addon?.title === "string") {
             const normalizedTitle = cartEntry.addon.title.trim();
 
-            if (normalizedTitle && normalizedTitle.toLowerCase() !== "standard portion") {
+            if (
+              normalizedTitle &&
+              normalizedTitle.toLowerCase() !== "standard portion"
+            ) {
               custom_selected_addons = normalizedTitle
                 .split(",")
                 .map((name: string) => name.trim())
@@ -256,7 +304,9 @@ const CheckoutPage = () => {
         .filter((item): item is NonNullable<typeof item> => item !== null);
 
       if (!items.length) {
-        setOrderError("No valid items in cart. Please add items before checkout.");
+        setOrderError(
+          "No valid items in cart. Please add items before checkout."
+        );
         setIsInitializing(false);
         return;
       }
@@ -407,7 +457,9 @@ const CheckoutPage = () => {
             {(isInitializing || clientSecret || orderError) && (
               <section className="overflow-hidden rounded-[2.5rem] bg-white shadow-[0_30px_60px_rgba(0,0,0,0.12)] ring-1 ring-stone-100 animate-in fade-in zoom-in-95 duration-700">
                 <div className="border-b border-stone-50 px-8 py-6 bg-stone-50/50">
-                  <h2 className="text-xl font-medium tracking-wide text-stone-900">Payment</h2>
+                  <h2 className="text-xl font-medium tracking-wide text-stone-900">
+                    Payment
+                  </h2>
                 </div>
 
                 <div className="px-8 py-10">{paymentSection}</div>
@@ -416,11 +468,18 @@ const CheckoutPage = () => {
           </div>
 
           <div className="sticky top-24">
-            <OrderSummary cart={cart} total={total} />
+            <div className="">
+              <OrderSummary cart={cart} total={total} />
+
+              <CustomerNote
+                note={customerNote}
+                onNoteChange={setCustomerNote}
+              />
+            </div>
           </div>
         </div>
       </main>
-       <Footer />
+      <Footer />
     </div>
   );
 };
