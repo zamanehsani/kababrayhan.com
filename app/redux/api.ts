@@ -217,6 +217,7 @@ export const erpApi = createApi({
           filters: JSON.stringify([
             ["Dynamic Link", "link_doctype", "=", "Customer"],
             ["Dynamic Link", "link_name", "=", customerName],
+            ["disabled", "=", 0],
           ]),
           fields: JSON.stringify([
             "name",

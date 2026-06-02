@@ -14,6 +14,8 @@ import {
   useCreateSalesOrderMutation,
   useCreatePaymentIntentMutation,
   useGetCustomerAddressesQuery,
+  useDeleteAddressMutation,
+  useDisableAddressMutation,
   type Customer,
   type SalesOrder,
 } from "../redux/api";
@@ -185,6 +187,8 @@ const CheckoutPage = () => {
 
   const [createSalesOrder] = useCreateSalesOrderMutation();
   const [createPaymentIntent] = useCreatePaymentIntentMutation();
+  const [deleteAddress] = useDeleteAddressMutation();
+const [disableAddress] = useDisableAddressMutation();
   const customerName = customer?.name || getCustomerName() || form.phone;
   const { data: backendAddresses } = useGetCustomerAddressesQuery(
     customerName,
