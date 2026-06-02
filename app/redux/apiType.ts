@@ -147,6 +147,7 @@ export interface CreateSalesOrderRequest {
   customer_address?: string;
   shipping_address_name?: string;
   taxes_and_charges?: string;
+  custom_customer_note?: string;
   taxes?: CreateSalesOrderTaxLine[];
   items: CreateSalesOrderItem[];
 }

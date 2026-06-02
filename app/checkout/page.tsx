@@ -209,19 +209,6 @@ const CheckoutPage = () => {
     });
   }, []);
 
-  useEffect(() => {
-    if (
-      form.deliveryAddresses[0]?.address &&
-      form.phone &&
-      !salesOrder &&
-      !isInitializing &&
-      cart.length > 0
-    ) {
-      handleAutoProceed();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.deliveryAddresses, form.phone, cart]);
-
   async function handleAutoProceed() {
     setIsInitializing(true);
     setOrderError(null);
@@ -324,6 +311,7 @@ const CheckoutPage = () => {
         plc_conversion_rate: 1,
         customer_address: primaryDeliveryAddressId || undefined,
         shipping_address_name: primaryDeliveryAddressId || undefined,
+        custom_customer_note: customerNote,
         taxes_and_charges: "Food Tax 5%",
         taxes: [
           {
@@ -474,6 +462,7 @@ const CheckoutPage = () => {
               <CustomerNote
                 note={customerNote}
                 onNoteChange={setCustomerNote}
+                onSave={handleAutoProceed}
               />
             </div>
           </div>
