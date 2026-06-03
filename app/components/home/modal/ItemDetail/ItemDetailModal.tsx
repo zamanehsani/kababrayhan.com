@@ -1,4 +1,3 @@
-
 import {
   ChevronLeft,
   Clock,
@@ -74,8 +73,9 @@ export function ItemDetailModal({
             </span>
             <span className="mt-1.5 flex items-center gap-1 text-[10px] font-semibold">
               {option.price > 0 && (
-                <span className="text-red-600">
-                  AED {option.price.toFixed(2)}
+                <span className="flex items-center text-red-600">
+                  <DirhamIcon size={10} className="mr-0.5 text-red-600" />
+                  {option.price.toFixed(2)}
                 </span>
               )}
               {isSelected && <Check size={14} className="text-red-500" />}
@@ -96,9 +96,9 @@ export function ItemDetailModal({
 
     const resolvedId =
       (typeof selectedVariantItem.item_code === "string" &&
-      selectedVariantItem.item_code.trim()) ||
+        selectedVariantItem.item_code.trim()) ||
       (typeof selectedVariantItem.name === "string" &&
-      selectedVariantItem.name.trim()) ||
+        selectedVariantItem.name.trim()) ||
       String(dish.id);
 
     return {
@@ -125,7 +125,8 @@ export function ItemDetailModal({
   const variantGateMessage = useMemo(() => {
     if (!isVariantSelectionRequired || canAddToCart) return "";
     if (isVariantDataLoading) return "Loading options...";
-    if (variantOptionsCount === 0) return "No options are available for this item.";
+    if (variantOptionsCount === 0)
+      return "No options are available for this item.";
     return "Choose an option";
   }, [
     canAddToCart,
@@ -247,7 +248,9 @@ export function ItemDetailModal({
 
       {hasVariationOptions && (
         <div className="px-5 pb-2">
-          <p className="text-sm font-medium text-slate-800">Select one to continue.</p>
+          <p className="text-sm font-medium text-slate-800">
+            Select one to continue.
+          </p>
           <div className="mt-3 flex flex-col gap-2">
             {variationGroups.map(renderVariationGroup)}
           </div>
@@ -286,9 +289,15 @@ export function ItemDetailModal({
               : "bg-slate-200 text-slate-500 shadow-slate-100 cursor-not-allowed"
           }`}
         >
-          {canAddToCart
-            ? `Add to Cart • AED ${totalPrice.toFixed(2)}`
-            : variantGateMessage || "Choose required options"}
+          {canAddToCart ? (
+            <span className="flex items-center justify-center gap-0.5">
+              Add to Cart •
+              <DirhamIcon size={14} className="text-white" />
+              {totalPrice.toFixed(2)}
+            </span>
+          ) : (
+            variantGateMessage || "Choose required options"
+          )}
         </button>
       </div>
     </dialog>

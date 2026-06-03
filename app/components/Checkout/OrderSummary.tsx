@@ -90,7 +90,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total }) => {
           <span className="text-base font-medium text-white uppercase tracking-widest">Total</span>
           <div className="text-right">
             <span className="flex items-center gap-0.5 text-2xl font-medium text-red-500 leading-none">
-              <DirhamIcon size={16} className="text-red-500" />
+              <DirhamIcon size={18} className="text-red-500" />
               {total.toFixed(2)}
             </span>
             <span className="mt-1 block text-[11px] font-medium text-stone-500 uppercase tracking-tighter">

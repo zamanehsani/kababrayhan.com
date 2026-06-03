@@ -44,6 +44,7 @@ import DesktopHeader from "../components/Header/DesktopHeader";
 import Footer from "../components/Footer/Footer";
 import CustomerNote from "../components/Checkout/CustomerNote";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
+import DirhamIcon from "../components/icon/DirhamIcon";
 
 const toDisplayAddressTitle = (
   rawTitle: string,
@@ -163,7 +164,15 @@ const PaymentForm = ({
             : "bg-red-600 text-white shadow-red-200 hover:bg-red-700 active:scale-95"
         }`}
       >
-        {isProcessing ? "Processing..." : `Pay AED ${total.toFixed(2)}`}
+        {isProcessing ? (
+          "Processing..."
+        ) : (
+          <span className="flex items-center justify-center gap-0.5 normal-case">
+            <span className="uppercase tracking-[0.2em] mr-1">Pay</span>
+            <DirhamIcon size={14} className="text-white" />
+            {total.toFixed(2)}
+          </span>
+        )}
       </button>
     </form>
   );
@@ -195,11 +204,11 @@ const CheckoutPage = () => {
   const [createPaymentIntent] = useCreatePaymentIntentMutation();
   const [updateSalesOrder] = useUpdateSalesOrderMutation();
   const [deleteAddress] = useDeleteAddressMutation();
-const [disableAddress] = useDisableAddressMutation();
+  const [disableAddress] = useDisableAddressMutation();
   const hasInitializedPaymentRef = useRef(false);
-  const noteSaveTimerRef = useRef<ReturnType<typeof globalThis.setTimeout> | null>(
-    null
-  );
+  const noteSaveTimerRef = useRef<ReturnType<
+    typeof globalThis.setTimeout
+  > | null>(null);
   const customerName = customer?.name || getCustomerName() || form.phone;
   const { data: backendAddresses } = useGetCustomerAddressesQuery(
     customerName,
@@ -222,9 +231,13 @@ const [disableAddress] = useDisableAddressMutation();
     }
 
     // Session recovery: check for existing pending sales order
-    const pendingSalesOrder = globalThis.localStorage.getItem("pending_sales_order");
-    const savedClientSecret = globalThis.sessionStorage.getItem("checkout_client_secret");
-    
+    const pendingSalesOrder = globalThis.localStorage.getItem(
+      "pending_sales_order"
+    );
+    const savedClientSecret = globalThis.sessionStorage.getItem(
+      "checkout_client_secret"
+    );
+
     if (pendingSalesOrder && savedClientSecret) {
       // Resume interrupted checkout
       setClientSecret(savedClientSecret);
@@ -307,7 +320,9 @@ const [disableAddress] = useDisableAddressMutation();
     const storedDeliveryAddresses = storedDeliveryAddressesRaw
       ? (() => {
           try {
-            return JSON.parse(storedDeliveryAddressesRaw) as DeliveryAddressItem[];
+            return JSON.parse(
+              storedDeliveryAddressesRaw
+            ) as DeliveryAddressItem[];
           } catch {
             return form.deliveryAddresses;
           }
@@ -387,7 +402,14 @@ const [disableAddress] = useDisableAddressMutation();
 
     hasInitializedPaymentRef.current = true;
     void handleAutoProceed();
-  }, [customerName, cart.length, salesOrder, clientSecret, isInitializing, form.deliveryAddresses]);
+  }, [
+    customerName,
+    cart.length,
+    salesOrder,
+    clientSecret,
+    isInitializing,
+    form.deliveryAddresses,
+  ]);
 
   useEffect(() => {
     if (!salesOrder?.name || !customerNote.trim()) {
@@ -548,15 +570,19 @@ const [disableAddress] = useDisableAddressMutation();
       setClientSecret(intentResult.client_secret);
       // Cache client secret for session recovery
       if (globalThis.sessionStorage) {
-        globalThis.sessionStorage.setItem("checkout_client_secret", intentResult.client_secret);
+        globalThis.sessionStorage.setItem(
+          "checkout_client_secret",
+          intentResult.client_secret
+        );
       }
       setStep(3);
       setRetryCount(0); // Reset retry count on success
     } catch (err: any) {
       console.error("Setup Error:", err);
-      const errorMessage = err?.data?.message || "Failed to initialize order. Please try again.";
+      const errorMessage =
+        err?.data?.message || "Failed to initialize order. Please try again.";
       setOrderError(errorMessage);
-      
+
       // Allow retry with exponential backoff
       if (retryCount < 3) {
         setRetryCount((prev) => prev + 1);
@@ -609,13 +635,25 @@ const [disableAddress] = useDisableAddressMutation();
     paymentSection = (
       <div className="text-center py-6 space-y-4">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-50 mb-2">
-          <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          <svg
+            className="w-8 h-8 text-red-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
           </svg>
         </div>
         <p className="text-red-600 font-semibold mb-2">{orderError}</p>
         {retryCount < 3 && (
-          <p className="text-xs text-slate-500 mb-4">Retry attempt {retryCount + 1} of 3</p>
+          <p className="text-xs text-slate-500 mb-4">
+            Retry attempt {retryCount + 1} of 3
+          </p>
         )}
         <div className="flex flex-col gap-2">
           <button
@@ -627,10 +665,10 @@ const [disableAddress] = useDisableAddressMutation();
             disabled={isInitializing}
             className="px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-slate-300 text-white rounded-xl text-sm font-bold uppercase tracking-wide transition-all active:scale-95 disabled:cursor-not-allowed"
           >
-            {isInitializing ? 'Retrying...' : 'Retry Payment Setup'}
+            {isInitializing ? "Retrying..." : "Retry Payment Setup"}
           </button>
           <button
-            onClick={() => router.push('/home')}
+            onClick={() => router.push("/home")}
             className="px-6 py-3 bg-white border-2 border-slate-200 text-slate-700 rounded-xl text-sm font-semibold uppercase tracking-wide hover:bg-slate-50 transition-all active:scale-95"
           >
             Return to Menu
@@ -736,7 +774,7 @@ const [disableAddress] = useDisableAddressMutation();
           </div>
         </div>
       </main>
-      
+
       {/* Address Warning Dialog */}
       {showAddressWarning && (
         <ConfirmDialog
@@ -745,8 +783,13 @@ const [disableAddress] = useDisableAddressMutation();
           onConfirm={() => {
             setShowAddressWarning(false);
             // Auto-scroll to address section or open address modal
-            const addressSection = document.querySelector('[data-address-section]');
-            addressSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const addressSection = document.querySelector(
+              "[data-address-section]"
+            );
+            addressSection?.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
           }}
           title="Delivery Address Required"
           message="Please select a delivery address before proceeding to payment. We need to know where to deliver your delicious order!"
@@ -755,7 +798,7 @@ const [disableAddress] = useDisableAddressMutation();
           variant="warning"
         />
       )}
-      
+
       {/* Back Confirmation Dialog */}
       {showBackConfirm && (
         <ConfirmDialog
@@ -778,7 +821,7 @@ const [disableAddress] = useDisableAddressMutation();
           variant="warning"
         />
       )}
-      
+
       <Footer />
     </div>
   );

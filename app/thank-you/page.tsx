@@ -128,7 +128,7 @@ export default function ThankYouPage() {
         <div className="flex md:hidden mt-6 w-full flex-col gap-2 flex-shrink-0">
           <Link
             href="/my-orders"
-            className="flex items-center justify-center gap-2 rounded-xl bg-slate-900 h-11 px-6 text-xs font-semibold text-white shadow-md shadow-slate-900/10"
+            className="flex items-center justify-center gap-2 rounded-xl bg-red-600 h-11 px-6 text-xs font-semibold text-white shadow-md shadow-slate-900/10"
           >
             <span>Track My Order</span>
             <ChevronRight size={14} />
