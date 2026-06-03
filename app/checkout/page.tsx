@@ -207,7 +207,7 @@ const [disableAddress] = useDisableAddressMutation();
   );
 
   useEffect(() => {
-    if (!"window" in globalThis) return;
+    if (!("window" in globalThis)) return;
 
     const storedCustomer = readStoredCustomer();
     const cartRaw = globalThis.localStorage.getItem("cart");
