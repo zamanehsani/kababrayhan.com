@@ -272,8 +272,21 @@ const [disableAddress] = useDisableAddressMutation();
       })
     );
 
+    const storedDeliveryAddressesRaw = globalThis.localStorage.getItem(
+      "uae_delivery_addresses"
+    );
+    const storedDeliveryAddresses = storedDeliveryAddressesRaw
+      ? (() => {
+          try {
+            return JSON.parse(storedDeliveryAddressesRaw) as DeliveryAddressItem[];
+          } catch {
+            return form.deliveryAddresses;
+          }
+        })()
+      : form.deliveryAddresses;
+
     const currentSnapshot = JSON.stringify(
-      form.deliveryAddresses.map((item) => ({
+      storedDeliveryAddresses.map((item) => ({
         title: item.title,
         address: item.address,
         addressId: item.addressId,
@@ -311,7 +324,7 @@ const [disableAddress] = useDisableAddressMutation();
     });
 
     return () => cancelAnimationFrame(frameId);
-  }, [backendAddresses, form.deliveryAddresses, setForm]);
+  }, [backendAddresses]);
 
   async function handleAutoProceed() {
     setIsInitializing(true);

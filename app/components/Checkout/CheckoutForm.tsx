@@ -3,6 +3,7 @@ import AddressSelectModal from "../home/modal/AddressSelectModal";
 import {
   useDeleteAddressMutation,
   useDisableAddressMutation,
+  useUpdateAddressMutation,
 } from "../../redux/api";
 
 export type DeliveryAddressItem = {
@@ -31,7 +32,17 @@ interface CheckoutFormProps {
 const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => {
   const [activeDeliveryIndex, setActiveDeliveryIndex] = useState<number | null>(null);
   const [deleteAddress] = useDeleteAddressMutation();
-const [disableAddress] = useDisableAddressMutation();
+  const [disableAddress] = useDisableAddressMutation();
+  const [updateAddress] = useUpdateAddressMutation();
+
+  const toAddressTitleSlug = (title: string) =>
+    title
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
 
   useEffect(() => {
     const savedPhone = localStorage.getItem("uae_phone");
@@ -85,6 +96,34 @@ const [disableAddress] = useDisableAddressMutation();
       }));
     }
   }, [setForm]);
+
+  const handleTitleChange = (index: number, newTitle: string) => {
+    const updated = form.deliveryAddresses.map((da, i) =>
+      i === index ? { ...da, title: newTitle } : da
+    );
+    setForm((prev) => ({ ...prev, deliveryAddresses: updated }));
+    localStorage.setItem("uae_delivery_addresses", JSON.stringify(updated));
+  };
+
+  const handleTitleCommit = async (index: number) => {
+    const current = form.deliveryAddresses[index];
+    if (!current?.addressId) {
+      return;
+    }
+
+    const phone = localStorage.getItem("uae_phone") || form.phone || "";
+    const titleSlug = toAddressTitleSlug(current.title) || `address-${index + 1}`;
+    const addressTitle = phone ? `${phone}-${titleSlug}` : titleSlug;
+
+    try {
+      await updateAddress({
+        addressName: current.addressId,
+        address_title: addressTitle,
+      }).unwrap();
+    } catch (err) {
+      console.warn("Failed to update checkout address title:", err);
+    }
+  };
 
 
 
@@ -218,12 +257,14 @@ const [disableAddress] = useDisableAddressMutation();
               <input
                 type="text"
                 value={delivery.title}
-                onChange={(e) => {
-                  const updated = form.deliveryAddresses.map((da, i) =>
-                    i === index ? { ...da, title: e.target.value } : da
-                  );
-                  setForm((prev) => ({ ...prev, deliveryAddresses: updated }));
-                  localStorage.setItem("uae_delivery_addresses", JSON.stringify(updated));
+                onChange={(e) => handleTitleChange(index, e.target.value)}
+                onBlur={() => {
+                  void handleTitleCommit(index);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.currentTarget.blur();
+                  }
                 }}
                 placeholder={index === 0 ? "Home" : "Office, Work…"}
                 className="w-20 border-b border-dashed border-stone-300 bg-transparent text-center text-[13px] font-medium uppercase tracking-wide text-stone-600 placeholder:text-stone-300 focus:border-brand-400 focus:outline-none"
@@ -314,6 +355,9 @@ const [disableAddress] = useDisableAddressMutation();
           addressType="Billing"
           skipCustomerCreation={activeDeliveryIndex > 0}
           redirectTo={null}
+          existingAddressId={
+            form.deliveryAddresses[activeDeliveryIndex]?.addressId || null
+          }
           customTitle={form.deliveryAddresses[activeDeliveryIndex]?.title || `delivery-${activeDeliveryIndex + 1}`}
           onSelect={(addressData) => {
             const resolvedAddress = addressData.name || "";
