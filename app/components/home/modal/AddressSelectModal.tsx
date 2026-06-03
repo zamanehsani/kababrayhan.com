@@ -12,6 +12,7 @@ import {
   useSetCustomerInfoMutation,
   ERP_API_BASE_URL,
 } from "../../../redux/api";
+import ConfirmDialog from "../../shared/ConfirmDialog";
 import {
   saveDeliveryAddress,
   getCustomerName,
@@ -55,6 +56,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [showLocationAlert, setShowLocationAlert] = useState(false);
   const [createCustomer] = useCreateCustomerMutation();
   const [createAddress] = useCreateAddressMutation();
   const [updateAddress] = useUpdateAddressMutation();
@@ -237,6 +239,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                     },
                     (error) => {
                       console.error("Geolocation error:", error);
+                      setShowLocationAlert(true);
                       // Fallback to Dubai if geolocation fails
                       mapInstanceRef.current?.setView([25.2048, 55.2708], 13);
                     }
@@ -434,6 +437,19 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
           </div>
         </div>
       </div>
+      
+      {showLocationAlert && (
+        <ConfirmDialog
+          open={true}
+          onClose={() => setShowLocationAlert(false)}
+          onConfirm={() => setShowLocationAlert(false)}
+          title="Location Access Denied"
+          message="We couldn't access your current location. The map is now showing Dubai as the default location. You can still pick your exact delivery address by tapping anywhere on the map."
+          confirmText="Got it"
+          variant="info"
+          showCancel={false}
+        />
+      )}
     </div>
   );
 };

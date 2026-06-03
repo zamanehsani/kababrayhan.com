@@ -19,6 +19,7 @@ import PhoneVerifyModal from "../components/home/modal/PhoneVerifyModal";
 import AddressSelectModal, {
   type SelectedAddress,
 } from "../components/home/modal/AddressSelectModal";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
 import {
   CUSTOMER_PORTAL_UPDATED,
   type DeliveryAddressItem,
@@ -81,6 +82,11 @@ export default function AccountProfilePage() {
   );
   const [phoneForVerify, setPhoneForVerify] = useState("");
   const [previousVerifiedPhone, setPreviousVerifiedPhone] = useState("");
+  const [isSyncingFromBackend, setIsSyncingFromBackend] = useState(false);
+  const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
+  const [updatingTitleIndex, setUpdatingTitleIndex] = useState<number | null>(null);
+  const [feedback, setFeedback] = useState<{type: 'success' | 'error', message: string} | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{index: number, label: string} | null>(null);
   const [setCustomerInfo] = useSetCustomerInfoMutation();
   const [deleteAddress] = useDeleteAddressMutation();
   const [disableAddress] = useDisableAddressMutation();
@@ -107,7 +113,12 @@ export default function AccountProfilePage() {
   }, []);
 
   useEffect(() => {
-    if (!backendAddresses) {
+    if (!backendAddresses || isSyncingFromBackend) {
+      return;
+    }
+
+    // Prevent race condition: don't overwrite during active user operations
+    if (deletingIndex !== null || updatingTitleIndex !== null) {
       return;
     }
 
@@ -146,6 +157,7 @@ export default function AccountProfilePage() {
       return;
     }
 
+    setIsSyncingFromBackend(true);
     writeDeliveryAddresses(syncedAddresses);
 
     if (syncedAddresses[0]) {
@@ -156,7 +168,10 @@ export default function AccountProfilePage() {
     } else {
       saveDeliveryAddress("", "");
     }
-  }, [backendAddresses]);
+    
+    // Release sync lock after state update
+    setTimeout(() => setIsSyncingFromBackend(false), 100);
+  }, [backendAddresses, isSyncingFromBackend, deletingIndex, updatingTitleIndex]);
 
   useEffect(() => {
     globalThis.addEventListener(CUSTOMER_PORTAL_UPDATED, refreshPortalState);
@@ -257,9 +272,30 @@ export default function AccountProfilePage() {
     setActiveDeliveryIndex(updatedAddresses.length - 1);
   };
 
-  const handleRemoveAddress = async (indexToRemove: number) => {
+  const showDeleteConfirmation = (index: number) => {
+    // Prevent deleting the last address
+    if (portalState.deliveryAddresses.length === 1) {
+      setFeedback({type: 'error', message: 'You must keep at least one address. Add another before removing this one.'});
+      setTimeout(() => setFeedback(null), 4000);
+      return;
+    }
+
+    const addressToRemove = portalState.deliveryAddresses[index];
+    if (!addressToRemove) return;
+
+    const addressLabel = addressToRemove.title || addressToRemove.address || 'this address';
+    setConfirmDelete({ index, label: addressLabel });
+  };
+
+  const handleRemoveAddress = async () => {
+    if (!confirmDelete) return;
+    
+    const indexToRemove = confirmDelete.index;
     const addressToRemove = portalState.deliveryAddresses[indexToRemove];
     if (!addressToRemove) return;
+
+    setConfirmDelete(null);
+    setDeletingIndex(indexToRemove);
 
     if (addressToRemove.addressId) {
       try {
@@ -280,10 +316,16 @@ export default function AccountProfilePage() {
             await disableAddress(addressToRemove.addressId).unwrap();
           } catch (disableErr) {
             console.warn("Failed to disable linked backend address:", disableErr);
+            setFeedback({type: 'error', message: 'Failed to remove address. Please try again.'});
+            setTimeout(() => setFeedback(null), 4000);
+            setDeletingIndex(null);
             return;
           }
         } else {
           console.warn("Failed to delete backend address:", err);
+          setFeedback({type: 'error', message: 'Failed to remove address. Please try again.'});
+          setTimeout(() => setFeedback(null), 4000);
+          setDeletingIndex(null);
           return;
         }
       }
@@ -305,7 +347,14 @@ export default function AccountProfilePage() {
       }
     }
 
+    setFeedback({type: 'success', message: 'Address removed successfully'});
+    setTimeout(() => setFeedback(null), 3000);
+    
+    // Refetch to ensure consistency across devices/tabs
+    refetchAddresses();
+    
     refreshPortalState();
+    setDeletingIndex(null);
   };
 
   const handleTitleChange = (index: number, newTitle: string) => {
@@ -326,13 +375,22 @@ export default function AccountProfilePage() {
     const titleSlug = toAddressTitleSlug(address.title) || `address-${index + 1}`;
     const addressTitle = stablePhone ? `${stablePhone}-${titleSlug}` : titleSlug;
 
+    setUpdatingTitleIndex(index);
+
     try {
       await updateAddress({
         addressName: address.addressId,
         address_title: addressTitle,
       }).unwrap();
+      
+      setFeedback({type: 'success', message: 'Address title updated'});
+      setTimeout(() => setFeedback(null), 2000);
     } catch (err: unknown) {
       console.warn("Failed to update address title:", err);
+      setFeedback({type: 'error', message: 'Failed to update title. Please try again.'});
+      setTimeout(() => setFeedback(null), 4000);
+    } finally {
+      setUpdatingTitleIndex(null);
     }
   };
 
@@ -356,6 +414,17 @@ export default function AccountProfilePage() {
       </div>
 
       <section className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+        {/* Feedback Toast */}
+        {feedback && (
+          <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 min-w-80 max-w-md rounded-2xl border-2 px-6 py-4 shadow-2xl animate-in slide-in-from-top-4 duration-300 ${
+            feedback.type === 'success' 
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-red-50 border-red-200 text-red-800'
+          }`}>
+            <p className="text-sm font-semibold text-center">{feedback.message}</p>
+          </div>
+        )}
+
         <div className="overflow-hidden rounded-3xl border border-slate-200 bg-linear-to-br from-white via-slate-50 to-orange-50/50 p-5 shadow-sm shadow-slate-200/40 sm:p-7 lg:p-9">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
@@ -469,9 +538,13 @@ export default function AccountProfilePage() {
                                 e.currentTarget.blur();
                               }
                             }}
+                            disabled={updatingTitleIndex === index}
                             placeholder={index === 0 ? "Home" : "Office, Work…"}
-                            className="text-[11px] font-semibold uppercase tracking-wider text-brand-400 bg-transparent border-b border-dashed border-slate-300 focus:border-brand-400 focus:outline-none w-24 text-center placeholder:text-slate-300"
+                            className="text-[11px] font-semibold uppercase tracking-wider text-brand-400 bg-transparent border-b border-dashed border-slate-300 focus:border-brand-400 focus:outline-none w-24 text-center placeholder:text-slate-300 disabled:opacity-50"
                           />
+                          {updatingTitleIndex === index && (
+                            <span className="ml-1 inline-block h-3 w-3 animate-spin rounded-full border-2 border-brand-400 border-t-transparent" />
+                          )}
                           <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
                             )
                           </span>
@@ -483,10 +556,11 @@ export default function AccountProfilePage() {
                           {index > 0 && (
                             <button
                               type="button"
-                              onClick={() => handleRemoveAddress(index)}
-                              className="ml-auto text-[10px] font-medium uppercase tracking-wide text-slate-400 hover:text-red-500 transition-colors"
+                              onClick={() => showDeleteConfirmation(index)}
+                              disabled={deletingIndex === index}
+                              className="ml-auto text-[10px] font-medium uppercase tracking-wide text-slate-400 hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-wait"
                             >
-                              Remove
+                              {deletingIndex === index ? 'Removing...' : 'Remove'}
                             </button>
                           )}
                         </div>
@@ -581,6 +655,20 @@ export default function AccountProfilePage() {
           }
         />
       )}
+      
+      {confirmDelete && (
+        <ConfirmDialog
+          open={true}
+          onClose={() => setConfirmDelete(null)}
+          onConfirm={handleRemoveAddress}
+          title="Remove Address?"
+          message={`Are you sure you want to remove "${confirmDelete.label}"? This action cannot be undone.`}
+          confirmText="Yes, Remove"
+          cancelText="Cancel"
+          variant="danger"
+        />
+      )}
+      
       <Footer />
     </main>
   );
