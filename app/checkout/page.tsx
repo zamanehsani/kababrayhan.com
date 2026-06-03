@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import {
@@ -13,6 +13,7 @@ import {
 import {
   useCreateSalesOrderMutation,
   useCreatePaymentIntentMutation,
+  useUpdateSalesOrderMutation,
   useGetCustomerAddressesQuery,
   useDeleteAddressMutation,
   useDisableAddressMutation,
@@ -187,8 +188,13 @@ const CheckoutPage = () => {
 
   const [createSalesOrder] = useCreateSalesOrderMutation();
   const [createPaymentIntent] = useCreatePaymentIntentMutation();
+  const [updateSalesOrder] = useUpdateSalesOrderMutation();
   const [deleteAddress] = useDeleteAddressMutation();
 const [disableAddress] = useDisableAddressMutation();
+  const hasInitializedPaymentRef = useRef(false);
+  const noteSaveTimerRef = useRef<ReturnType<typeof globalThis.setTimeout> | null>(
+    null
+  );
   const customerName = customer?.name || getCustomerName() || form.phone;
   const { data: backendAddresses } = useGetCustomerAddressesQuery(
     customerName,
@@ -326,7 +332,40 @@ const [disableAddress] = useDisableAddressMutation();
     return () => cancelAnimationFrame(frameId);
   }, [backendAddresses]);
 
+  useEffect(() => {
+    return () => {
+      if (noteSaveTimerRef.current) {
+        globalThis.clearTimeout(noteSaveTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (hasInitializedPaymentRef.current) {
+      return;
+    }
+
+    if (!customerName || !cart.length || salesOrder || clientSecret || isInitializing) {
+      return;
+    }
+
+    hasInitializedPaymentRef.current = true;
+    void handleAutoProceed();
+  }, [customerName, cart.length, salesOrder, clientSecret, isInitializing]);
+
+  useEffect(() => {
+    if (!salesOrder?.name || !customerNote.trim()) {
+      return;
+    }
+
+    void handleCustomerNoteSave();
+  }, [salesOrder?.name]);
+
   async function handleAutoProceed() {
+    if (isInitializing || clientSecret) {
+      return;
+    }
+
     setIsInitializing(true);
     setOrderError(null);
 
@@ -453,6 +492,10 @@ const [disableAddress] = useDisableAddressMutation();
       }
 
       setSalesOrder(order);
+      if (salesOrderName && globalThis.localStorage) {
+        globalThis.localStorage.setItem("pending_sales_order", salesOrderName);
+        globalThis.localStorage.setItem("sales_order", salesOrderName);
+      }
 
       const intentResult = await createPaymentIntent({
         amount: total,
@@ -469,6 +512,41 @@ const [disableAddress] = useDisableAddressMutation();
       setIsInitializing(false);
     }
   }
+
+  const handleCustomerNoteSave = async () => {
+    const salesOrderName =
+      salesOrder?.name?.trim() ||
+      globalThis.localStorage.getItem("pending_sales_order") ||
+      globalThis.localStorage.getItem("sales_order") ||
+      "";
+
+    if (!salesOrderName) {
+      return;
+    }
+
+    try {
+      await updateSalesOrder({
+        salesOrderName,
+        custom_customer_note: customerNote,
+      }).unwrap();
+    } catch (err) {
+      console.warn("Failed to update sales order note:", err);
+    }
+  };
+
+  const scheduleCustomerNoteSave = (nextNote: string) => {
+    if (noteSaveTimerRef.current) {
+      globalThis.clearTimeout(noteSaveTimerRef.current);
+    }
+
+    noteSaveTimerRef.current = globalThis.setTimeout(() => {
+      if (!nextNote.trim() && !customerNote.trim()) {
+        return;
+      }
+
+      void handleCustomerNoteSave();
+    }, 700);
+  };
 
   const total = cart.reduce(
     (sum: number, entry: any) =>
@@ -578,8 +656,13 @@ const [disableAddress] = useDisableAddressMutation();
 
               <CustomerNote
                 note={customerNote}
-                onNoteChange={setCustomerNote}
-                onSave={handleAutoProceed}
+                onNoteChange={(value) => {
+                  setCustomerNote(value);
+                  scheduleCustomerNoteSave(value);
+                }}
+                onBlurSave={() => {
+                  void handleCustomerNoteSave();
+                }}
               />
             </div>
           </div>

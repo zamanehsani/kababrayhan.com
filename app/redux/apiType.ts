@@ -166,6 +166,19 @@ export interface CreateSalesOrderRequest {
   items: CreateSalesOrderItem[];
 }
 
+export interface UpdateSalesOrderRequest {
+  salesOrderName: string;
+  custom_customer_note?: string;
+}
+
+export interface UpdateSalesOrderResponse {
+  data: {
+    name: string;
+    custom_customer_note?: string;
+    [key: string]: any;
+  };
+}
+
 export interface CreateCustomerRequest {
   customer_name: string;
   email_id: string; // Required for Login

@@ -16,6 +16,8 @@ import type {
   UpdateAddressResponse,
   CreatePaymentIntentRequest,
   CreateSalesOrderRequest,
+  UpdateSalesOrderRequest,
+  UpdateSalesOrderResponse,
   Customer,
   CustomerDetails,
   FullItemResponse,
@@ -437,6 +439,19 @@ export const erpApi = createApi({
       }),
       transformResponse: (response: { data: SalesOrder }) => response.data,
     }),
+    updateSalesOrder: builder.mutation<
+      UpdateSalesOrderResponse,
+      UpdateSalesOrderRequest
+    >({
+      query: ({ salesOrderName, ...body }) => ({
+        url: `${ERP_API_BASE_URL}/api/resource/Sales Order/${encodeURIComponent(salesOrderName)}`,
+        method: "PUT",
+        body,
+      }),
+      transformResponse: (response: { data: UpdateSalesOrderResponse["data"] }) => ({
+        data: response.data,
+      }),
+    }),
     createPaymentIntent: builder.mutation<
       PaymentIntentResponse,
       CreatePaymentIntentRequest
@@ -564,6 +579,7 @@ export const {
   useGetSalesOrderQuery,
   useGetKitchenOrderTicketQuery,
   useCreateSalesOrderMutation,
+  useUpdateSalesOrderMutation,
   useCreatePaymentIntentMutation,
   useGetItemsQuery,
   useSendOtpMutation,
