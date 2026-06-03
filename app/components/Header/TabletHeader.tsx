@@ -20,6 +20,7 @@ import {
   clearCustomerPortalSession,
   CUSTOMER_PORTAL_UPDATED,
   PHONE_KEY,
+  getCustomerName,
   readCustomerPortalSnapshot,
 } from "@/app/lib/customerPortal";
 import PhoneModal from "../home/modal/PhoneModal";
@@ -39,6 +40,7 @@ export default function TabletHeader() {
     readCustomerPortalSnapshot()
   );
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const stableCustomerName = getCustomerName() || portalState.phone;
 
   const navItems = [
     {
@@ -56,9 +58,9 @@ export default function TabletHeader() {
   ];
 
   const { data: salesOrders } = useGetCustomerSalesOrdersQuery(
-    portalState.phone,
+    stableCustomerName,
     {
-      skip: !portalState.isVerified || !portalState.phone,
+      skip: !portalState.isVerified || !stableCustomerName,
     }
   );
 

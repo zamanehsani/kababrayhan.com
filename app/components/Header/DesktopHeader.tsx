@@ -20,6 +20,7 @@ import {
   clearCustomerPortalSession,
   CUSTOMER_PORTAL_UPDATED,
   PHONE_KEY,
+  getCustomerName,
   readCustomerPortalSnapshot,
 } from "@/app/lib/customerPortal";
 import PhoneModal from "../home/modal/PhoneModal";
@@ -39,6 +40,7 @@ export default function DesktopHeader() {
     readCustomerPortalSnapshot()
   );
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const stableCustomerName = getCustomerName() || portalState.phone;
 
   const desktopNavItems = [
     { id: "home", href: "/home", label: "Home", icon: <Home size={16} /> },
@@ -46,9 +48,9 @@ export default function DesktopHeader() {
   ];
 
   const { data: salesOrders } = useGetCustomerSalesOrdersQuery(
-    portalState.phone,
+    stableCustomerName,
     {
-      skip: !portalState.isVerified || !portalState.phone,
+      skip: !portalState.isVerified || !stableCustomerName,
     }
   );
   const [logout] = useLogoutMutation();
@@ -58,7 +60,7 @@ export default function DesktopHeader() {
   }, []);
 
   const hasOrders = portalState.hasOrder || (salesOrders?.length ?? 0) > 0;
-  const shouldShowNav = portalState.isVerified && hasOrders;
+  const shouldShowNav = portalState.isVerified;
   const isHomeRoute = pathname === "/" || pathname.startsWith("/home");
   const searchValue = searchParams.get("search") ?? "";
   const shouldShowSearchInput = isSearchOpen || Boolean(searchValue);
@@ -241,7 +243,7 @@ export default function DesktopHeader() {
           {shouldShowSearchInput ? <X size={18} /> : <Search size={18} />}
         </button>
 
-        {portalState.isVerified && hasOrders && (
+        {portalState.isVerified && (
           <>
             {/* Alerts Badge */}
             <button onClick={() => router.push("/my-orders")}

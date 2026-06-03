@@ -15,6 +15,7 @@ import {
 import { CART_UPDATED } from "../lib/cart";
 import {
   CUSTOMER_PORTAL_UPDATED,
+  getCustomerName,
   readCustomerPortalSnapshot,
 } from "../lib/customerPortal";
 import type { SalesOrderSummary } from "../redux/apiType";
@@ -194,14 +195,15 @@ export default function MyOrdersPage() {
   const [portalState, setPortalState] = useState(() =>
     readCustomerPortalSnapshot()
   );
+  const stableCustomerName = getCustomerName() || portalState.phone;
 
   const refreshPortalState = useCallback(() => {
     setPortalState(readCustomerPortalSnapshot());
   }, []);
 
   const { data, isLoading, isFetching, isError, refetch } =
-    useGetCustomerSalesOrdersQuery(portalState.phone, {
-      skip: !portalState.isVerified || !portalState.phone,
+    useGetCustomerSalesOrdersQuery(stableCustomerName, {
+      skip: !portalState.isVerified || !stableCustomerName,
       pollingInterval: 30000, // Auto-refresh every 30 seconds for live updates
     });
 

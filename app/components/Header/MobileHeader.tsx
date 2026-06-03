@@ -14,6 +14,7 @@ import {
   clearCustomerPortalSession,
   CUSTOMER_PORTAL_UPDATED,
   PHONE_KEY,
+  getCustomerName,
   readCustomerPortalSnapshot,
 } from "@/app/lib/customerPortal";
 import PhoneModal from "../home/modal/PhoneModal";
@@ -44,11 +45,12 @@ export default function MobileHeader() {
   const [portalState, setPortalState] = useState(() =>
     readCustomerPortalSnapshot()
   );
+  const stableCustomerName = getCustomerName() || portalState.phone;
 
   const { data: salesOrders } = useGetCustomerSalesOrdersQuery(
-    portalState.phone,
+    stableCustomerName,
     {
-      skip: !portalState.isVerified || !portalState.phone,
+      skip: !portalState.isVerified || !stableCustomerName,
     }
   );
 
