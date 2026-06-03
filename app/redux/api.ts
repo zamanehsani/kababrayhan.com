@@ -12,6 +12,8 @@ import type {
   CreateCustomerRequest,
   CreateAddressRequest,
   CreateAddressResponse,
+  UpdateAddressRequest,
+  UpdateAddressResponse,
   CreatePaymentIntentRequest,
   CreateSalesOrderRequest,
   Customer,
@@ -482,6 +484,20 @@ export const erpApi = createApi({
         ];
       },
     }),
+    updateAddress: builder.mutation<
+      UpdateAddressResponse,
+      UpdateAddressRequest
+    >({
+      query: ({ addressName, ...body }) => ({
+        url: `${ERP_API_BASE_URL}/api/resource/Address/${encodeURIComponent(addressName)}`,
+        method: "PUT",
+        body,
+        headers: {
+          Authorization: ERP_API_AUTHORIZATION,
+        },
+      }),
+      invalidatesTags: [{ type: "CustomerAddresses", id: "LIST" }],
+    }),
     deleteAddress: builder.mutation<{ message?: unknown } | null, string>({
       queryFn: async (addressName, _api, _extraOptions, fetchWithBQ) => {
         const result = await fetchWithBQ({
@@ -531,6 +547,7 @@ export const erpApi = createApi({
 export const {
   useCreateCustomerMutation,
   useCreateAddressMutation,
+  useUpdateAddressMutation,
   useDeleteAddressMutation,
   useDisableAddressMutation,
   useGetCustomerQuery,

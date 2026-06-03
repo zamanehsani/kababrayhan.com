@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import {
   useCreateCustomerMutation,
   useCreateAddressMutation,
+  useUpdateAddressMutation,
   useSetCustomerInfoMutation,
   ERP_API_BASE_URL,
 } from "../../../redux/api";
@@ -32,6 +33,7 @@ export type AddressSelectModalProps = {
   addressType?: "Shipping" | "Billing";
   skipCustomerCreation?: boolean;
   customTitle?: string; // e.g. "Home", "Office" — used as label in ERPNext address name
+  existingAddressId?: string | null;
 };
 
 const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
@@ -42,6 +44,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
   addressType = "Shipping",
   skipCustomerCreation = false,
   customTitle,
+  existingAddressId,
 }) => {
   const router = useRouter();
   const [addressText, setAddressText] = useState("");
@@ -54,6 +57,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
   const [error, setError] = useState("");
   const [createCustomer] = useCreateCustomerMutation();
   const [createAddress] = useCreateAddressMutation();
+  const [updateAddress] = useUpdateAddressMutation();
   const [setCustomerInfo] = useSetCustomerInfoMutation();
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -352,26 +356,43 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                     }
                   }
 
-                  // 2. Create Address with the correct type
                   const addressLine = addressText || "User's Street Address";
-                  const erpAddressTitle = customTitle
-                    ? `${phone}-${customTitle.trim().toLowerCase().replace(/\s+/g, "-")}`
-                    : (addressType === "Billing" ? `${phone}-delivery` : phone);
+                  const hasExistingAddress = Boolean(existingAddressId);
 
-                  const addressResponse = await createAddress({
-                    address_title: erpAddressTitle,
-                    address_type: addressType,
-                    address_line1: addressLine,
-                    city: "Dubai",
-                    country: "United Arab Emirates",
-                    links: [
-                      {
-                        link_doctype: "Customer",
-                        // Always link to the original ERPNext customer record
-                        link_name: customerName,
-                      },
-                    ],
-                  }).unwrap();
+                  const addressResponse = hasExistingAddress
+                    ? await updateAddress({
+                        addressName: existingAddressId!,
+                        address_line1: addressLine,
+                        ...(customTitle
+                          ? {
+                              address_title: `${phone}-${customTitle
+                                .trim()
+                                .toLowerCase()
+                                .replace(/\s+/g, "-")}`,
+                            }
+                          : {}),
+                      }).unwrap()
+                    : await createAddress({
+                        address_title: customTitle
+                          ? `${phone}-${customTitle
+                              .trim()
+                              .toLowerCase()
+                              .replace(/\s+/g, "-")}`
+                          : addressType === "Billing"
+                            ? `${phone}-delivery`
+                            : phone,
+                        address_type: addressType,
+                        address_line1: addressLine,
+                        city: "Dubai",
+                        country: "United Arab Emirates",
+                        links: [
+                          {
+                            link_doctype: "Customer",
+                            // Always link to the original ERPNext customer record
+                            link_name: customerName,
+                          },
+                        ],
+                      }).unwrap();
 
                   // 3. Save to localStorage — Billing type is handled by the parent via onSelect
                   if (addressType !== "Billing") {

@@ -34,6 +34,20 @@ export interface CreateAddressResponse {
   };
 }
 
+export interface UpdateAddressRequest {
+  addressName: string;
+  address_line1?: string;
+  address_title?: string;
+}
+
+export interface UpdateAddressResponse {
+  data: {
+    name: string;
+    address_line1: string;
+    [key: string]: any;
+  };
+}
+
 // --- Address Fetching Types ---
 export interface Address {
   name: string;

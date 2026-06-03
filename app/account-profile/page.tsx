@@ -37,6 +37,7 @@ import {
   useGetCustomerAddressesQuery,
   useDisableAddressMutation,
   useSetCustomerInfoMutation,
+  useUpdateAddressMutation,
 } from "@/app/redux/api";
 import Footer from "../components/Footer/Footer";
 
@@ -83,6 +84,16 @@ export default function AccountProfilePage() {
   const [setCustomerInfo] = useSetCustomerInfoMutation();
   const [deleteAddress] = useDeleteAddressMutation();
   const [disableAddress] = useDisableAddressMutation();
+  const [updateAddress] = useUpdateAddressMutation();
+
+  const toAddressTitleSlug = (title: string) =>
+    title
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
 
   // Fetch addresses from ERPNext backend (shows addresses already saved in the system)
   const customerName = getCustomerName();
@@ -115,8 +126,9 @@ export default function AccountProfilePage() {
       })
     );
 
+    const latestPortalState = readCustomerPortalSnapshot();
     const currentSnapshot = JSON.stringify(
-      portalState.deliveryAddresses.map((item) => ({
+      latestPortalState.deliveryAddresses.map((item) => ({
         title: item.title,
         address: item.address,
         addressId: item.addressId,
@@ -144,7 +156,7 @@ export default function AccountProfilePage() {
     } else {
       saveDeliveryAddress("", "");
     }
-  }, [backendAddresses, portalState.deliveryAddresses, refreshPortalState]);
+  }, [backendAddresses]);
 
   useEffect(() => {
     globalThis.addEventListener(CUSTOMER_PORTAL_UPDATED, refreshPortalState);
@@ -299,7 +311,27 @@ export default function AccountProfilePage() {
       i === index ? { ...item, title: newTitle } : item
     );
     writeDeliveryAddresses(updatedAddresses);
-    refreshPortalState();
+  };
+
+  const handleTitleCommit = async (index: number) => {
+    const address = portalState.deliveryAddresses[index];
+    if (!address?.addressId) {
+      return;
+    }
+
+    const rawPhone =
+      globalThis.localStorage.getItem(PHONE_KEY) || portalState.phone || "";
+    const titleSlug = toAddressTitleSlug(address.title) || `address-${index + 1}`;
+    const addressTitle = rawPhone ? `${rawPhone}-${titleSlug}` : titleSlug;
+
+    try {
+      await updateAddress({
+        addressName: address.addressId,
+        address_title: addressTitle,
+      }).unwrap();
+    } catch (err: unknown) {
+      console.warn("Failed to update address title:", err);
+    }
   };
 
   const phoneLabel =
@@ -427,6 +459,14 @@ export default function AccountProfilePage() {
                             onChange={(e) =>
                               handleTitleChange(index, e.target.value)
                             }
+                            onBlur={() => {
+                              void handleTitleCommit(index);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.currentTarget.blur();
+                              }
+                            }}
                             placeholder={index === 0 ? "Home" : "Office, Work…"}
                             className="text-[11px] font-semibold uppercase tracking-wider text-brand-400 bg-transparent border-b border-dashed border-slate-300 focus:border-brand-400 focus:outline-none w-24 text-center placeholder:text-slate-300"
                           />
@@ -531,6 +571,12 @@ export default function AccountProfilePage() {
           onClose={() => setActiveDeliveryIndex(null)}
           onSelect={handleAddressSelect}
           redirectTo={null}
+          existingAddressId={
+            portalState.deliveryAddresses[activeDeliveryIndex]?.addressId || null
+          }
+          customTitle={
+            portalState.deliveryAddresses[activeDeliveryIndex]?.title || undefined
+          }
         />
       )}
       <Footer />
