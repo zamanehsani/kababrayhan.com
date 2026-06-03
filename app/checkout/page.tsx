@@ -43,6 +43,7 @@ import TabletHeader from "../components/Header/TabletHeader";
 import DesktopHeader from "../components/Header/DesktopHeader";
 import Footer from "../components/Footer/Footer";
 import CustomerNote from "../components/Checkout/CustomerNote";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
 
 const toDisplayAddressTitle = (
   rawTitle: string,
@@ -169,6 +170,7 @@ const PaymentForm = ({
 };
 
 const CheckoutPage = () => {
+  const router = useRouter();
   const [step, setStep] = useState<2 | 3>(2);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [cart, setCart] = useState<any[]>([]);
@@ -177,6 +179,9 @@ const CheckoutPage = () => {
   const [orderError, setOrderError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [customerNote, setCustomerNote] = useState<string>("");
+  const [retryCount, setRetryCount] = useState(0);
+  const [showAddressWarning, setShowAddressWarning] = useState(false);
+  const [showBackConfirm, setShowBackConfirm] = useState(false);
 
   const [form, setForm] = useState({
     phone: "",
@@ -202,12 +207,30 @@ const [disableAddress] = useDisableAddressMutation();
   );
 
   useEffect(() => {
-    if (!("window" in globalThis)) return;
+    if (!"window" in globalThis) return;
 
     const storedCustomer = readStoredCustomer();
     const cartRaw = globalThis.localStorage.getItem("cart");
     const savedPhone = globalThis.localStorage.getItem("uae_phone") || "";
     const savedAddress = globalThis.localStorage.getItem("uae_address") || "";
+
+    // Check for cart early and redirect if empty
+    const parsedCart = cartRaw ? JSON.parse(cartRaw) : [];
+    if (parsedCart.length === 0) {
+      router.push("/home");
+      return;
+    }
+
+    // Session recovery: check for existing pending sales order
+    const pendingSalesOrder = globalThis.localStorage.getItem("pending_sales_order");
+    const savedClientSecret = globalThis.sessionStorage.getItem("checkout_client_secret");
+    
+    if (pendingSalesOrder && savedClientSecret) {
+      // Resume interrupted checkout
+      setClientSecret(savedClientSecret);
+      setStep(3);
+      setSalesOrder({ name: pendingSalesOrder } as SalesOrder);
+    }
 
     const rawDelivery = globalThis.localStorage.getItem(
       "uae_delivery_addresses"
@@ -341,17 +364,30 @@ const [disableAddress] = useDisableAddressMutation();
   }, []);
 
   useEffect(() => {
+    // Prevent race condition with proper dependency check
     if (hasInitializedPaymentRef.current) {
       return;
     }
 
-    if (!customerName || !cart.length || salesOrder || clientSecret || isInitializing) {
+    // Don't auto-initialize if we're recovering a session
+    if (clientSecret && salesOrder) {
+      return;
+    }
+
+    if (!customerName || !cart.length || salesOrder || isInitializing) {
+      return;
+    }
+
+    // Critical: Validate address before payment
+    const primaryAddress = form.deliveryAddresses[0]?.address?.trim();
+    if (!primaryAddress) {
+      setShowAddressWarning(true);
       return;
     }
 
     hasInitializedPaymentRef.current = true;
     void handleAutoProceed();
-  }, [customerName, cart.length, salesOrder, clientSecret, isInitializing]);
+  }, [customerName, cart.length, salesOrder, clientSecret, isInitializing, form.deliveryAddresses]);
 
   useEffect(() => {
     if (!salesOrder?.name || !customerNote.trim()) {
@@ -370,10 +406,16 @@ const [disableAddress] = useDisableAddressMutation();
     setOrderError(null);
 
     if (!cart || cart.length === 0) {
-      setOrderError(
-        "No valid items in cart. Please add items before checkout."
-      );
+      router.push("/home");
+      return;
+    }
+
+    // Validate address before proceeding
+    const primaryAddress = form.deliveryAddresses[0]?.address?.trim();
+    if (!primaryAddress) {
+      setOrderError("Please select a delivery address before proceeding.");
       setIsInitializing(false);
+      setShowAddressWarning(true);
       return;
     }
 
@@ -504,10 +546,21 @@ const [disableAddress] = useDisableAddressMutation();
       }).unwrap();
 
       setClientSecret(intentResult.client_secret);
+      // Cache client secret for session recovery
+      if (globalThis.sessionStorage) {
+        globalThis.sessionStorage.setItem("checkout_client_secret", intentResult.client_secret);
+      }
       setStep(3);
+      setRetryCount(0); // Reset retry count on success
     } catch (err: any) {
       console.error("Setup Error:", err);
-      setOrderError(err?.data?.message || "Failed to initialize order.");
+      const errorMessage = err?.data?.message || "Failed to initialize order. Please try again.";
+      setOrderError(errorMessage);
+      
+      // Allow retry with exponential backoff
+      if (retryCount < 3) {
+        setRetryCount((prev) => prev + 1);
+      }
     } finally {
       setIsInitializing(false);
     }
@@ -554,14 +607,35 @@ const [disableAddress] = useDisableAddressMutation();
 
   if (orderError) {
     paymentSection = (
-      <div className="text-center py-6">
-        <p className="text-brand-400 font-bold mb-4">{orderError}</p>
-        <button
-          onClick={handleAutoProceed}
-          className="px-6 py-2 bg-stone-900 text-white rounded-xl text-xs font-bold uppercase"
-        >
-          Retry Connection
-        </button>
+      <div className="text-center py-6 space-y-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-50 mb-2">
+          <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <p className="text-red-600 font-semibold mb-2">{orderError}</p>
+        {retryCount < 3 && (
+          <p className="text-xs text-slate-500 mb-4">Retry attempt {retryCount + 1} of 3</p>
+        )}
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={() => {
+              hasInitializedPaymentRef.current = false;
+              setOrderError(null);
+              handleAutoProceed();
+            }}
+            disabled={isInitializing}
+            className="px-6 py-3 bg-brand-400 hover:bg-brand-700 disabled:bg-slate-300 text-white rounded-xl text-sm font-bold uppercase tracking-wide transition-all active:scale-95 disabled:cursor-not-allowed"
+          >
+            {isInitializing ? 'Retrying...' : 'Retry Payment Setup'}
+          </button>
+          <button
+            onClick={() => router.push('/home')}
+            className="px-6 py-3 bg-white border-2 border-slate-200 text-slate-700 rounded-xl text-sm font-semibold uppercase tracking-wide hover:bg-slate-50 transition-all active:scale-95"
+          >
+            Return to Menu
+          </button>
+        </div>
       </div>
     );
   } else if (isInitializing || !clientSecret) {
@@ -621,9 +695,7 @@ const [disableAddress] = useDisableAddressMutation();
           onClick={
             step === 3
               ? () => {
-                  setClientSecret(null);
-                  setSalesOrder(null);
-                  setStep(2);
+                  setShowBackConfirm(true);
                 }
               : undefined
           }
@@ -664,6 +736,49 @@ const [disableAddress] = useDisableAddressMutation();
           </div>
         </div>
       </main>
+      
+      {/* Address Warning Dialog */}
+      {showAddressWarning && (
+        <ConfirmDialog
+          open={true}
+          onClose={() => setShowAddressWarning(false)}
+          onConfirm={() => {
+            setShowAddressWarning(false);
+            // Auto-scroll to address section or open address modal
+            const addressSection = document.querySelector('[data-address-section]');
+            addressSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }}
+          title="Delivery Address Required"
+          message="Please select a delivery address before proceeding to payment. We need to know where to deliver your delicious order!"
+          confirmText="Select Address"
+          cancelText="Cancel"
+          variant="warning"
+        />
+      )}
+      
+      {/* Back Confirmation Dialog */}
+      {showBackConfirm && (
+        <ConfirmDialog
+          open={true}
+          onClose={() => setShowBackConfirm(false)}
+          onConfirm={() => {
+            setShowBackConfirm(false);
+            setClientSecret(null);
+            setSalesOrder(null);
+            hasInitializedPaymentRef.current = false;
+            if (globalThis.sessionStorage) {
+              globalThis.sessionStorage.removeItem("checkout_client_secret");
+            }
+            setStep(2);
+          }}
+          title="Change Delivery Address?"
+          message="Going back will reset your payment progress. You'll need to re-enter your payment information after changing the address. Continue?"
+          confirmText="Yes, Go Back"
+          cancelText="Stay Here"
+          variant="warning"
+        />
+      )}
+      
       <Footer />
     </div>
   );

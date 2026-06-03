@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
 import AddressSelectModal from "../home/modal/AddressSelectModal";
+import ConfirmDialog from "../shared/ConfirmDialog";
 import {
   useDeleteAddressMutation,
   useDisableAddressMutation,
   useUpdateAddressMutation,
+  useGetCustomerAddressesQuery,
 } from "../../redux/api";
+import { getCustomerName } from "@/app/lib/customerPortal";
 
 export type DeliveryAddressItem = {
   id?: string;
@@ -31,9 +34,19 @@ interface CheckoutFormProps {
 
 const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => {
   const [activeDeliveryIndex, setActiveDeliveryIndex] = useState<number | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{index: number, label: string} | null>(null);
+  const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
+  const [updatingTitleIndex, setUpdatingTitleIndex] = useState<number | null>(null);
+  const [feedback, setFeedback] = useState<{type: 'success' | 'error', message: string} | null>(null);
   const [deleteAddress] = useDeleteAddressMutation();
   const [disableAddress] = useDisableAddressMutation();
   const [updateAddress] = useUpdateAddressMutation();
+  
+  const customerName = getCustomerName() || form.phone;
+  const { refetch: refetchAddresses } = useGetCustomerAddressesQuery(
+    customerName,
+    { skip: !customerName }
+  );
 
   const toAddressTitleSlug = (title: string) =>
     title
@@ -115,23 +128,52 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => 
     const titleSlug = toAddressTitleSlug(current.title) || `address-${index + 1}`;
     const addressTitle = phone ? `${phone}-${titleSlug}` : titleSlug;
 
+    setUpdatingTitleIndex(index);
+
     try {
       await updateAddress({
         addressName: current.addressId,
         address_title: addressTitle,
       }).unwrap();
+      
+      setFeedback({type: 'success', message: 'Address title updated'});
+      setTimeout(() => setFeedback(null), 2000);
     } catch (err) {
       console.warn("Failed to update checkout address title:", err);
+      setFeedback({type: 'error', message: 'Failed to update title. Please try again.'});
+      setTimeout(() => setFeedback(null), 4000);
+    } finally {
+      setUpdatingTitleIndex(null);
     }
   };
 
 
 
 
-  const handleRemoveAddress = async (indexToRemove: number) => {
-  const addressToRemove = form.deliveryAddresses[indexToRemove];
+  const showDeleteConfirmation = (index: number) => {
+    // Prevent deleting the last address
+    if (form.deliveryAddresses.length === 1) {
+      setFeedback({type: 'error', message: 'You must keep at least one address. Add another before removing this one.'});
+      setTimeout(() => setFeedback(null), 4000);
+      return;
+    }
 
-  if (!addressToRemove) return;
+    const addressToRemove = form.deliveryAddresses[index];
+    if (!addressToRemove) return;
+
+    const addressLabel = addressToRemove.title || addressToRemove.address || 'this address';
+    setConfirmDelete({ index, label: addressLabel });
+  };
+
+  const handleRemoveAddress = async () => {
+    if (!confirmDelete) return;
+    
+    const indexToRemove = confirmDelete.index;
+    const addressToRemove = form.deliveryAddresses[indexToRemove];
+    if (!addressToRemove) return;
+
+    setConfirmDelete(null);
+    setDeletingIndex(indexToRemove);
 
   // Try deleting from ERPNext first
   if (addressToRemove.addressId) {
@@ -166,6 +208,9 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => 
             "Failed to disable checkout address:",
             disableErr
           );
+          setFeedback({type: 'error', message: 'Failed to remove address. Please try again.'});
+          setTimeout(() => setFeedback(null), 4000);
+          setDeletingIndex(null);
           return;
         }
       } else {
@@ -173,6 +218,9 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => 
           "Failed to delete checkout address:",
           err
         );
+        setFeedback({type: 'error', message: 'Failed to remove address. Please try again.'});
+        setTimeout(() => setFeedback(null), 4000);
+        setDeletingIndex(null);
         return;
       }
     }
@@ -222,9 +270,32 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => 
     localStorage.removeItem("uae_address");
     localStorage.removeItem("uae_address_id");
   }
+  
+  setFeedback({type: 'success', message: 'Address removed successfully'});
+  setTimeout(() => setFeedback(null), 3000);
+  
+  // Refetch to ensure consistency across devices/tabs
+  refetchAddresses();
+  
+  setDeletingIndex(null);
 };
   return (
-    <section className="rounded-[2rem] bg-white p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-stone-100">
+    <>
+      {/* Feedback Toast */}
+      {feedback && (
+        <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 min-w-80 max-w-md rounded-2xl border-2 px-6 py-4 shadow-2xl animate-in slide-in-from-top-4 duration-300 ${
+          feedback.type === 'success' 
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+            : 'bg-red-50 border-red-200 text-red-800'
+        }`}>
+          <p className="text-sm font-semibold text-center">{feedback.message}</p>
+        </div>
+      )}
+
+      <section 
+        className="rounded-[2rem] bg-white p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-stone-100"
+        data-address-section
+      >
       <h2 className="mb-8 flex items-center gap-3 text-xl font-medium tracking-wide text-stone-900">
         <span className="h-6 w-1 rounded-full bg-brand-400" />
         Delivery Details
@@ -266,19 +337,24 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => 
                     e.currentTarget.blur();
                   }
                 }}
+                disabled={updatingTitleIndex === index}
                 placeholder={index === 0 ? "Home" : "Office, Work…"}
-                className="w-20 border-b border-dashed border-stone-300 bg-transparent text-center text-[13px] font-medium uppercase tracking-wide text-stone-600 placeholder:text-stone-300 focus:border-brand-400 focus:outline-none"
+                className="w-20 border-b border-dashed border-stone-300 bg-transparent text-center text-[13px] font-medium uppercase tracking-wide text-stone-600 placeholder:text-stone-300 focus:border-brand-400 focus:outline-none disabled:opacity-50"
               />
+              {updatingTitleIndex === index && (
+                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-brand-400 border-t-transparent" />
+              )}
               <span className="text-[13px] font-medium uppercase tracking-wide text-stone-400 group-hover:text-brand-400 transition-colors">
                 )
               </span>
               {index > 0 && (
                 <button
                   type="button"
-                  onClick={() => handleRemoveAddress(index)}
-                  className="ml-auto text-[11px] font-medium uppercase tracking-wide text-stone-300 transition-colors hover:text-red-400"
+                  onClick={() => showDeleteConfirmation(index)}
+                  disabled={deletingIndex === index}
+                  className="ml-auto text-[11px] font-medium uppercase tracking-wide text-stone-300 transition-colors hover:text-red-400 disabled:opacity-50 disabled:cursor-wait"
                 >
-                  Remove
+                  {deletingIndex === index ? 'Removing...' : 'Remove'}
                 </button>
               )}
             </div>
@@ -377,7 +453,21 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => 
           }}
         />
       )}
+      
+      {confirmDelete && (
+        <ConfirmDialog
+          open={true}
+          onClose={() => setConfirmDelete(null)}
+          onConfirm={handleRemoveAddress}
+          title="Remove Address?"
+          message={`Are you sure you want to remove "${confirmDelete.label}"? This action cannot be undone.`}
+          confirmText="Yes, Remove"
+          cancelText="Cancel"
+          variant="danger"
+        />
+      )}
     </section>
+    </>
   );
 };
 
