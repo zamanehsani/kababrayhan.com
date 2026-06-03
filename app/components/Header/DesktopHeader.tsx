@@ -147,18 +147,21 @@ export default function DesktopHeader() {
       ""
     ).trim();
 
+    // Always clear session locally, even if backend logout fails
+    clearCustomerPortalSession();
+    setIsProfileOpen(false);
+    refreshPortalState();
+
     try {
       if (mobile) {
         await logout({ mobile }).unwrap();
-          router.push("/home");
       }
     } catch (error) {
       console.error("Logout failed", error);
     }
 
-    clearCustomerPortalSession();
-    setIsProfileOpen(false);
-    refreshPortalState();
+    // Always redirect to home after logout
+    router.push("/home");
   };
 
   let middleSectionContent: React.ReactNode = <div className="h-9 w-full" />;

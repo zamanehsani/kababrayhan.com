@@ -358,7 +358,7 @@ const [disableAddress] = useDisableAddressMutation();
       return;
     }
 
-    void handleCustomerNoteSave();
+    void handleCustomerNoteSave(customerNote);
   }, [salesOrder?.name]);
 
   async function handleAutoProceed() {
@@ -513,7 +513,7 @@ const [disableAddress] = useDisableAddressMutation();
     }
   }
 
-  const handleCustomerNoteSave = async () => {
+  const handleCustomerNoteSave = async (noteToSave: string = customerNote) => {
     const salesOrderName =
       salesOrder?.name?.trim() ||
       globalThis.localStorage.getItem("pending_sales_order") ||
@@ -527,7 +527,7 @@ const [disableAddress] = useDisableAddressMutation();
     try {
       await updateSalesOrder({
         salesOrderName,
-        custom_customer_note: customerNote,
+        custom_customer_note: noteToSave,
       }).unwrap();
     } catch (err) {
       console.warn("Failed to update sales order note:", err);
@@ -540,11 +540,7 @@ const [disableAddress] = useDisableAddressMutation();
     }
 
     noteSaveTimerRef.current = globalThis.setTimeout(() => {
-      if (!nextNote.trim() && !customerNote.trim()) {
-        return;
-      }
-
-      void handleCustomerNoteSave();
+      void handleCustomerNoteSave(nextNote);
     }, 700);
   };
 
@@ -661,7 +657,7 @@ const [disableAddress] = useDisableAddressMutation();
                   scheduleCustomerNoteSave(value);
                 }}
                 onBlurSave={() => {
-                  void handleCustomerNoteSave();
+                  void handleCustomerNoteSave(customerNote);
                 }}
               />
             </div>

@@ -319,10 +319,10 @@ export default function AccountProfilePage() {
       return;
     }
 
-    const rawPhone =
-      globalThis.localStorage.getItem(PHONE_KEY) || portalState.phone || "";
+    // Use stable customer name for consistent address title namespacing
+    const stablePhone = getCustomerName() || portalState.phone || "";
     const titleSlug = toAddressTitleSlug(address.title) || `address-${index + 1}`;
-    const addressTitle = rawPhone ? `${rawPhone}-${titleSlug}` : titleSlug;
+    const addressTitle = stablePhone ? `${stablePhone}-${titleSlug}` : titleSlug;
 
     try {
       await updateAddress({

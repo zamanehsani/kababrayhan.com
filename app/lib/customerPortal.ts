@@ -243,6 +243,9 @@ export const clearCustomerPortalSession = () => {
   globalThis.localStorage?.removeItem("uae_delivery_address_id");
   globalThis.localStorage?.removeItem(DELIVERY_ADDRESSES_KEY);
   globalThis.localStorage?.removeItem(CUSTOMER_NAME_KEY);
+  // Clear ERPNext customer cache to prevent stale customer data on re-login
+  globalThis.localStorage?.removeItem("erpnext.customer");
+  globalThis.localStorage?.removeItem("erpnext.customerProfile");
   store.dispatch(clearSession());
   dispatchCustomerPortalUpdated();
 };

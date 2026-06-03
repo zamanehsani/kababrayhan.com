@@ -171,8 +171,6 @@ export default function CartDrawer() {
     setShowAddressModal(true);
   };
 
-
-  console.log("the cart data: ", cart)
   return (
     <div className="fixed inset-0 z-300 flex justify-end">
       {/* Backdrop Blur Layer */}

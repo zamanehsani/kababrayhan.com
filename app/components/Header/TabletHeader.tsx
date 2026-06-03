@@ -65,9 +65,9 @@ export default function TabletHeader() {
   );
 
   const { data: customerAvatar } = useGetCustomerAvatarQuery(
-    portalState.phone,
+    stableCustomerName,
     {
-      skip: !portalState.isVerified || !portalState.phone,
+      skip: !portalState.isVerified || !stableCustomerName,
     }
   );
   const [logout] = useLogoutMutation();
@@ -187,6 +187,11 @@ export default function TabletHeader() {
   const handleSignOut = async () => {
     const mobile = (portalState.phone || localStorage.getItem(PHONE_KEY) || "").trim();
 
+    // Always clear session locally, even if backend logout fails
+    clearCustomerPortalSession();
+    setIsProfileOpen(false);
+    refreshPortalState();
+
     try {
       if (mobile) {
         await logout({ mobile }).unwrap();
@@ -195,9 +200,8 @@ export default function TabletHeader() {
       console.error("Logout failed", error);
     }
 
-    clearCustomerPortalSession();
-    setIsProfileOpen(false);
-    refreshPortalState();
+    // Always redirect to home after logout
+    router.push("/home");
   };
 
   return (
