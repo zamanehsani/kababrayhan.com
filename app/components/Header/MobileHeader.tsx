@@ -173,7 +173,7 @@ export default function MobileHeader() {
             className="flex min-w-0 w-full items-center gap-3 text-left"
           >
           {/* Profile Image - Kept at 48px, perfect for mobile */}
-          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-orange-100 bg-slate-50 shadow-sm">
+          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-red-100 bg-slate-50 shadow-sm">
             {customerAvatar ? (
               <Image
                 src={customerAvatar}
@@ -217,7 +217,7 @@ export default function MobileHeader() {
 
               <button
                 type="button"
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-brand-400 hover:bg-red-50"
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
                 onClick={handleSignOut}
               >
                 <LogOut size={16} />

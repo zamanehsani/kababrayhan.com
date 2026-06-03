@@ -266,7 +266,7 @@ export default function DesktopHeader() {
               onClick={() => setIsProfileOpen(!isProfileOpen)}
               className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all duration-200 group ${
                 isProfileOpen
-                  ? "border-orange-200 bg-orange-50/40"
+                  ? "border-red-200 bg-orange-50/40"
                   : "border-slate-200/80 bg-white hover:bg-slate-50"
               }`}
             >
@@ -312,7 +312,7 @@ export default function DesktopHeader() {
 
                 <button
                   type="button"
-                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-brand-400 hover:bg-red-50 transition-colors"
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors"
                   onClick={handleSignOut}
                 >
                   <LogOut size={16} />

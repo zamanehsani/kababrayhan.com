@@ -257,7 +257,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
 
           <button
             onClick={onClose}
-            className="pointer-events-auto bg-white/90 backdrop-blur text-gray-400 hover:text-brand-400 rounded-2xl w-10 h-10 flex items-center justify-center shadow-xl border border-gray-100 transition-all active:scale-90 text-3xl font-light"
+            className="pointer-events-auto bg-white/90 backdrop-blur text-gray-400 hover:text-red-600 rounded-2xl w-10 h-10 flex items-center justify-center shadow-xl border border-gray-100 transition-all active:scale-90 text-3xl font-light"
           >
             ×
           </button>
@@ -275,7 +275,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-1001">
               <div className="relative flex items-center justify-center">
                 <div className="w-10 h-10 border-2 border-red-500/50 rounded-full animate-ping absolute" />
-                <div className="w-4 h-4 bg-brand-400 rounded-full border-2 border-white shadow-lg" />
+                <div className="w-4 h-4 bg-red-600 rounded-full border-2 border-white shadow-lg" />
                 <div className="absolute top-10 whitespace-nowrap bg-gray-900/80 text-white px-3 py-1 rounded-lg text-xs font-normal tracking-wide">
                   Click to drop pin
                 </div>
@@ -294,7 +294,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
               <div className="min-h-12 flex items-center">
                 {isLoading ? (
                   <div className="flex items-center gap-3 text-gray-400 italic">
-                    <div className="w-4 h-4 border-2 border-brand-400 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
                     Fetching address details...
                   </div>
                 ) : (
@@ -306,7 +306,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
             </div>
 
             <button
-              className="w-full bg-brand-400 hover:bg-brand-700 disabled:bg-gray-200 disabled:text-gray-400 text-white py-5 rounded-[1.5rem] font-medium uppercase tracking-widest transition-all shadow-lg shadow-red-200 active:scale-[0.98]"
+              className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-200 disabled:text-gray-400 text-white py-5 rounded-[1.5rem] font-medium uppercase tracking-widest transition-all shadow-lg shadow-red-200 active:scale-[0.98]"
               disabled={!selectedLatLng || isLoading || submitting}
               onClick={async () => {
                 setSubmitting(true);
@@ -430,7 +430,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
               {submitting ? "Saving..." : "Confirm & Deliver Here"}
             </button>
             {error && (
-              <div className="text-brand-400 text-sm text-center mt-2">
+              <div className="text-red-600 text-sm text-center mt-2">
                 {error}
               </div>
             )}

@@ -32,7 +32,7 @@ const getKitchenStatusDisplay = (kotStatus?: string) => {
     case "preparing":
       return {
         label: "Being Prepared",
-        color: "bg-yellow-50 border-yellow-200 text-yellow-700",
+        color: "bg-yellow-50 border-red-200 text-red-700",
       };
     case "ready":
       return {
@@ -114,7 +114,7 @@ function OrderKitchenStatus({ kotId }: Readonly<{ kotId?: string }>) {
                 {!isLast && (
                   <span
                     className={`absolute left-2 top-4 h-6 w-0.5 ${
-                      index < activeStepIndex ? "bg-brand-300" : "bg-slate-200"
+                      index < activeStepIndex ? "bg-red-300" : "bg-slate-200"
                     }`}
                   />
                 )}
@@ -122,9 +122,9 @@ function OrderKitchenStatus({ kotId }: Readonly<{ kotId?: string }>) {
                 <span
                   className={`absolute left-0 top-0.5 inline-flex h-4 w-4 rounded-full border-2 transition-colors ${
                     isReached
-                      ? "border-brand-400 bg-brand-400"
+                      ? "border-red-600 bg-red-600"
                       : "border-slate-300 bg-white"
-                  } ${isCurrent ? "ring-2 ring-brand-100" : ""}`}
+                  } ${isCurrent ? "ring-2 ring-red-100" : ""}`}
                 />
 
                 <div className="flex items-center gap-2">
@@ -137,7 +137,7 @@ function OrderKitchenStatus({ kotId }: Readonly<{ kotId?: string }>) {
                   </span>
 
                   {isCurrent && (
-                    <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-brand-700">
+                    <span className="rounded-full bg-red-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-red-700">
                       Current
                     </span>
                   )}
@@ -150,7 +150,7 @@ function OrderKitchenStatus({ kotId }: Readonly<{ kotId?: string }>) {
         <div className="relative hidden sm:block">
           <div className="absolute left-3 right-3 top-2 h-1 rounded-full bg-slate-200" />
           <div
-            className="absolute left-3 top-2 h-1 rounded-full bg-brand-400 transition-all duration-500"
+            className="absolute left-3 top-2 h-1 rounded-full bg-red-600 transition-all duration-500"
             style={{
               width: `calc((100% - 1.5rem) * ${progressPercent / 100})`,
             }}
@@ -169,9 +169,9 @@ function OrderKitchenStatus({ kotId }: Readonly<{ kotId?: string }>) {
                   <span
                     className={`inline-flex h-4 w-4 items-center justify-center rounded-full border-2 transition-colors ${
                       isReached
-                        ? "border-brand-400 bg-brand-400"
+                        ? "border-red-600 bg-red-600"
                         : "border-slate-300 bg-white"
-                    } ${isCurrent ? "scale-110 ring-2 ring-brand-100" : ""}`}
+                    } ${isCurrent ? "scale-110 ring-2 ring-red-100" : ""}`}
                   />
                   <span
                     className={`mt-2 text-[9px] font-semibold uppercase tracking-wide ${
@@ -262,7 +262,7 @@ export default function MyOrdersPage() {
         <section className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-400">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-red-600">
                 Orders
               </p>
               <h1 className="mt-1 text-xl font-normal text-slate-900">
@@ -310,7 +310,7 @@ export default function MyOrdersPage() {
 
           {portalState.isVerified && isError && (
             <div className="rounded-2xl border border-red-100 bg-red-50 p-6 shadow-sm">
-              <p className="text-sm text-brand-700">
+              <p className="text-sm text-red-700">
                 Could not fetch your orders right now. Try again.
               </p>
             </div>

@@ -65,7 +65,7 @@ export function ItemDetailModal({
             onClick={() => handleSingleSelect(group.id, option.id)}
             className={`flex aspect-square flex-col items-center justify-center rounded-xl border px-2 text-center transition-colors ${
               isSelected
-                ? "border-brand-400 bg-yellow-50 text-slate-900"
+                ? "border-red-600 bg-brand-50 text-slate-900"
                 : "border-slate-200 bg-white text-slate-700"
             }`}
           >
@@ -74,11 +74,11 @@ export function ItemDetailModal({
             </span>
             <span className="mt-1.5 flex items-center gap-1 text-[10px] font-semibold">
               {option.price > 0 && (
-                <span className="text-emerald-600">
+                <span className="text-red-600">
                   AED {option.price.toFixed(2)}
                 </span>
               )}
-              {isSelected && <Check size={14} className="text-brand-500" />}
+              {isSelected && <Check size={14} className="text-red-500" />}
             </span>
           </button>
         );
@@ -210,8 +210,8 @@ export function ItemDetailModal({
         <h1 className="text-xl font-medium text-slate-800 tracking-wide max-w-[70%]">
           {dish.name}
         </h1>
-        <span className="flex items-center text-xl font-semibold text-emerald-600">
-          <DirhamIcon size={16} className="mr-0.5 text-emerald-600" />
+        <span className="flex items-center text-xl font-semibold text-red-600">
+          <DirhamIcon size={16} className="mr-0.5 text-red-600" />
           {unitPrice.toFixed(2)}
         </span>
       </div>
@@ -219,7 +219,7 @@ export function ItemDetailModal({
       {/* 5. QUICK METRICS (Calories, Time, Rating) */}
       <div className="flex items-center justify-between px-5 py-3 border-y border-slate-100 mb-2 text-slate-600 text-xs font-semibold">
         <div className="flex items-center gap-1">
-          <Flame size={14} className="text-orange-500" />
+          <Flame size={14} className="text-red-500" />
           <span>{dish.cal} calories</span>
         </div>
         <div className="h-4 w-px bg-slate-200"></div>
@@ -229,7 +229,7 @@ export function ItemDetailModal({
         </div>
         <div className="h-4 w-px bg-slate-200"></div>
         <div className="flex items-center gap-1">
-          <Star size={14} className="text-brand-400 fill-brand-400" />
+          <Star size={14} className="text-red-600 fill-red-600" />
           <span>{dish.rating} stars</span>
         </div>
       </div>
@@ -269,7 +269,7 @@ export function ItemDetailModal({
           </span>
           <button
             onClick={() => setQuantity(quantity + 1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-400 text-slate-800 shadow-sm active:scale-90"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-red-200 text-slate-800 shadow-sm active:scale-90"
           >
             <Plus size={16} />
           </button>
@@ -282,7 +282,7 @@ export function ItemDetailModal({
           disabled={!canAddToCart}
           className={`flex-1 h-12 rounded-full font-semibold text-sm tracking-wide shadow-md transition-transform ${
             canAddToCart
-              ? "bg-brand-400 text-slate-800 shadow-yellow-200/50 active:scale-[0.98]"
+              ? "bg-red-300 text-slate-800 shadow-red-200/50 active:scale-[0.98]"
               : "bg-slate-200 text-slate-500 shadow-slate-100 cursor-not-allowed"
           }`}
         >

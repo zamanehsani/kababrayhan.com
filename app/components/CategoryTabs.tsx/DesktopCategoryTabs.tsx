@@ -193,8 +193,8 @@ export default function DesktopCategoryTabs() {
                   }}
                   className={`inline-flex w-fit shrink-0 items-center gap-1 rounded-full px-3 py-2 transition-all duration-200 group relative ${
                     activeCategory === cat.name
-                      ? "bg-brand-400 text-slate-800 shadow-xl shadow-yellow-200/30"
-                      : "border border-slate-200/80 bg-white text-slate-700 hover:-translate-y-1 hover:border-orange-200 hover:shadow-md hover:shadow-orange-100/30"
+                      ? "bg-red-600 text-white shadow-xl shadow-red-200/30"
+                      : "border border-slate-200/80 bg-white text-slate-700 hover:-translate-y-1 hover:border-red-200 hover:shadow-md hover:shadow-red-100/30"
                   }`}
                 >
                   {cat.icon && (
@@ -202,7 +202,7 @@ export default function DesktopCategoryTabs() {
                       className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors ${
                         activeCategory === cat.name
                           ? " text-slate-800"
-                          : " text-slate-400 group-hover:bg-orange-50 group-hover:text-orange-500"
+                          : " text-slate-400 group-hover:bg-orange-50 group-hover:text-red-500"
                       }`}
                     >
                       {cat.icon}

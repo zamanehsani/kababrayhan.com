@@ -209,7 +209,7 @@ export default function PopularDishes() {
                   <div className="mt-2 flex items-center justify-between">
                     {/* Calories on the Left */}
                     <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-400">
-                      <Flame size={12} className="text-orange-500" />
+                      <Flame size={12} className="text-red-500" />
                       <span>{dish.cal} kcal</span>
                     </div>
 
@@ -219,8 +219,8 @@ export default function PopularDishes() {
                         Options
                       </span>
                     ) : (
-                      <span className="flex items-center text-[16px] font-semibold text-emerald-600">
-                        <DirhamIcon size={12} className="mr-0.5 text-emerald-600" />
+                      <span className="flex items-center text-[16px] font-semibold text-red-600">
+                        <DirhamIcon size={12} className="mr-0.5 text-red-600" />
                         {dish.price}
                       </span>
                     )}

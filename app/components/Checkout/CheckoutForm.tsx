@@ -297,7 +297,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => 
         data-address-section
       >
       <h2 className="mb-8 flex items-center gap-3 text-xl font-medium tracking-wide text-stone-900">
-        <span className="h-6 w-1 rounded-full bg-brand-400" />
+        <span className="h-6 w-1 rounded-full bg-red-600" />
         Delivery Details
       </h2>
 
@@ -322,7 +322,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => 
         {form.deliveryAddresses.map((delivery, index) => (
           <div key={delivery.id ?? String(index)} className="group">
             <div className="mb-3 ml-1 flex items-center gap-1">
-              <span className="text-[13px] font-medium uppercase tracking-wide text-stone-400 group-hover:text-brand-400 transition-colors">
+              <span className="text-[13px] font-medium uppercase tracking-wide text-stone-400 group-hover:text-red-600 transition-colors">
                 Delivery To&nbsp;(
               </span>
               <input
@@ -339,12 +339,12 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => 
                 }}
                 disabled={updatingTitleIndex === index}
                 placeholder={index === 0 ? "Home" : "Office, Work…"}
-                className="w-20 border-b border-dashed border-stone-300 bg-transparent text-center text-[13px] font-medium uppercase tracking-wide text-stone-600 placeholder:text-stone-300 focus:border-brand-400 focus:outline-none disabled:opacity-50"
+                className="w-20 border-b border-dashed border-stone-300 bg-transparent text-center text-[13px] font-medium uppercase tracking-wide text-stone-600 placeholder:text-stone-300 focus:border-red-600 focus:outline-none disabled:opacity-50"
               />
               {updatingTitleIndex === index && (
-                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-brand-400 border-t-transparent" />
+                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
               )}
-              <span className="text-[13px] font-medium uppercase tracking-wide text-stone-400 group-hover:text-brand-400 transition-colors">
+              <span className="text-[13px] font-medium uppercase tracking-wide text-stone-400 group-hover:text-red-600 transition-colors">
                 )
               </span>
               {index > 0 && (
@@ -369,7 +369,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => 
               <div className="flex min-w-0 flex-1 items-center gap-4">
                 <div
                   className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-colors ${
-                    delivery.address ? "bg-red-50 text-brand-400" : "bg-stone-200 text-stone-400"
+                    delivery.address ? "bg-red-50 text-red-600" : "bg-stone-200 text-stone-400"
                   }`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
@@ -388,8 +388,8 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => 
                 onClick={() => setActiveDeliveryIndex(index)}
                 className={`w-full shrink-0 rounded-xl px-4 py-2 text-[13px] font-medium uppercase tracking-widest transition-all active:scale-95 sm:w-auto ${
                   delivery.address
-                    ? "bg-stone-100 text-stone-600 hover:bg-brand-400 hover:text-white"
-                    : "bg-brand-400 text-white shadow-lg shadow-red-200"
+                    ? "bg-stone-100 text-stone-600 hover:bg-red-600 hover:text-white"
+                    : "bg-red-600 text-white shadow-lg shadow-red-200"
                 }`}
               >
                 {delivery.address ? "Edit" : "Select"}
@@ -409,14 +409,14 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => 
             localStorage.setItem("uae_delivery_addresses", JSON.stringify(updated));
             setActiveDeliveryIndex(updated.length - 1);
           }}
-          className="ml-1 flex items-center gap-2 text-[13px] font-medium uppercase tracking-wide text-stone-400 transition-colors hover:text-brand-400"
+          className="ml-1 flex items-center gap-2 text-[13px] font-medium uppercase tracking-wide text-stone-400 transition-colors hover:text-red-600"
         >
           <span className="text-base leading-none">+</span> Add Delivery Address
         </button>
       </div>
 
       {error && (
-        <div className="mt-8 flex items-center gap-3 rounded-2xl bg-red-50 p-4 text-xs font-medium text-brand-400 ring-1 ring-red-100 animate-in fade-in slide-in-from-top-2">
+        <div className="mt-8 flex items-center gap-3 rounded-2xl bg-red-50 p-4 text-xs font-medium text-red-600 ring-1 ring-red-100 animate-in fade-in slide-in-from-top-2">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 shrink-0">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
           </svg>

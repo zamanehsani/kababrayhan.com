@@ -428,7 +428,7 @@ export default function AccountProfilePage() {
         <div className="overflow-hidden rounded-3xl border border-slate-200 bg-linear-to-br from-white via-slate-50 to-orange-50/50 p-5 shadow-sm shadow-slate-200/40 sm:p-7 lg:p-9">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-brand-400">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-red-600">
                 Account
               </p>
               <h1 className="mt-2 text-xl font-normal leading-wide text-slate-900 sm:text-xl lg:text-2xl">
@@ -455,7 +455,7 @@ export default function AccountProfilePage() {
               <div className="py-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex min-w-0 items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-50 text-brand-400">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-50 text-red-600">
                       <Phone size={20} />
                     </div>
                     <div className="min-w-0 pt-0.5">
@@ -508,7 +508,7 @@ export default function AccountProfilePage() {
                 <div className="space-y-4">
                   {isLoadingAddresses ? (
                     <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center">
-                      <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-brand-400" />
+                      <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-red-600" />
                       <p className="mt-2 text-sm text-slate-500">
                         Loading saved addresses...
                       </p>
@@ -517,7 +517,7 @@ export default function AccountProfilePage() {
                     portalState.deliveryAddresses.map((delivery, index) => (
                       <div
                         key={delivery.id ?? String(index)}
-                        className="group rounded-2xl border-2 border-slate-200 bg-white p-4 transition-all hover:border-brand-400/30 hover:shadow-md"
+                        className="group rounded-2xl border-2 border-slate-200 bg-white p-4 transition-all hover:border-red-600/30 hover:shadow-md"
                       >
                         {/* Address Title Row */}
                         <div className="mb-3 flex items-center gap-2">
@@ -540,16 +540,16 @@ export default function AccountProfilePage() {
                             }}
                             disabled={updatingTitleIndex === index}
                             placeholder={index === 0 ? "Home" : "Office, Work…"}
-                            className="text-[11px] font-semibold uppercase tracking-wider text-brand-400 bg-transparent border-b border-dashed border-slate-300 focus:border-brand-400 focus:outline-none w-24 text-center placeholder:text-slate-300 disabled:opacity-50"
+                            className="text-[11px] font-semibold uppercase tracking-wider text-red-600 bg-transparent border-b border-dashed border-slate-300 focus:border-red-600 focus:outline-none w-24 text-center placeholder:text-slate-300 disabled:opacity-50"
                           />
                           {updatingTitleIndex === index && (
-                            <span className="ml-1 inline-block h-3 w-3 animate-spin rounded-full border-2 border-brand-400 border-t-transparent" />
+                            <span className="ml-1 inline-block h-3 w-3 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
                           )}
                           <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
                             )
                           </span>
                           {index === 0 && (
-                            <span className="ml-2 rounded-full bg-brand-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                            <span className="ml-2 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
                               Default
                             </span>
                           )}
@@ -585,7 +585,7 @@ export default function AccountProfilePage() {
                             className={`shrink-0 rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
                               delivery.address
                                 ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                                : "bg-brand-400 text-white shadow-lg shadow-red-200 hover:bg-brand-700"
+                                : "bg-red-600 text-white shadow-lg shadow-red-200 hover:bg-red-700"
                             }`}
                           >
                             <Pencil size={12} className="inline mr-1.5" />
@@ -610,7 +610,7 @@ export default function AccountProfilePage() {
                   <button
                     type="button"
                     onClick={handleAddNewAddress}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-600 transition-all hover:border-brand-400 hover:bg-brand-50 hover:text-brand-400"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-600 transition-all hover:border-red-600 hover:bg-brand-50 hover:text-red-600"
                   >
                     <span className="text-lg leading-none">+</span>
                     Add Another Address

@@ -213,7 +213,7 @@ export default function TabletHeader() {
           <button
             type="button"
             onClick={handleProfileTrigger}
-            className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-orange-100 bg-slate-50 shadow-sm"
+            className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-red-100 bg-slate-50 shadow-sm"
             aria-haspopup="menu"
             aria-expanded={isProfileOpen}
           >
@@ -260,7 +260,7 @@ export default function TabletHeader() {
 
               <button
                 type="button"
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-brand-400 hover:bg-red-50"
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
                 onClick={handleSignOut}
               >
                 <LogOut size={16} />
@@ -322,7 +322,7 @@ export default function TabletHeader() {
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold tracking-wide transition-all ${
                   (item.id === "home" && isHomeRoute) ||
                   (item.id === "orders" && pathname.startsWith("/my-orders"))
-                    ? "bg-brand-400 text-slate-900 shadow-sm"
+                    ? "bg-red-600 text-slate-900 shadow-sm"
                     : "text-slate-500 hover:text-slate-800"
                 }`}
               >

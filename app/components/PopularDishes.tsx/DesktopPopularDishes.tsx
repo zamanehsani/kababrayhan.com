@@ -234,7 +234,7 @@ export default function DesktopPopularDishes() {
                   <div className="mt-auto pt-2 flex items-center justify-between">
                     {/* Calories (Left) */}
                     <div className="flex items-center gap-1 text-xs font-semibold tracking-wide text-slate-400 bg-slate-100/80 group-hover:bg-slate-50 px-2 py-0.5 rounded-full transition-colors">
-                      <Flame size={12} className="text-orange-500" />
+                      <Flame size={12} className="text-red-500" />
                       <span>{dish.cal} kcal</span>
                     </div>
 
@@ -244,10 +244,10 @@ export default function DesktopPopularDishes() {
                         Options
                       </span>
                     ) : (
-                      <span className="flex items-center text-[18px] font-semibold tracking-wide text-emerald-600 group-hover:text-emerald-700 transition-colors">
+                      <span className="flex items-center text-[18px] font-semibold tracking-wide text-red-600 group-hover:text-red-700 transition-colors">
                         <DirhamIcon
                           size={14}
-                          className="mr-1 text-emerald-600 group-hover:text-emerald-700 transition-colors"
+                          className="mr-1 text-red-600 group-hover:text-red-700 transition-colors"
                         />
                         {dish.price}
                       </span>

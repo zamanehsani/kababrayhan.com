@@ -62,7 +62,7 @@ const PaymentForm = ({
       </div>
 
       {paymentError && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-brand-700">
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
           {paymentError}
         </div>
       )}
@@ -73,7 +73,7 @@ const PaymentForm = ({
         className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4 text-xs font-black uppercase tracking-[0.2em] transition-all shadow-xl ${
           !stripe || !elements || isProcessing
             ? "cursor-not-allowed bg-stone-400 text-white"
-            : "bg-brand-400 text-white shadow-red-200 hover:bg-brand-700 active:scale-95"
+            : "bg-red-600 text-white shadow-red-200 hover:bg-red-700 active:scale-95"
         }`}
       >
         {isProcessing ? (

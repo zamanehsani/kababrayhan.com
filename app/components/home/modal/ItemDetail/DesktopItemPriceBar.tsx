@@ -26,8 +26,8 @@ export function DesktopItemPriceBar({
         <span className="text-xs font-normal tracking-wide text-slate-400">
           Total Price
         </span>
-        <span className="flex items-center text-3xl font-medium tracking-wide text-emerald-600">
-          <DirhamIcon size={22} className="mr-1 text-emerald-600" />
+        <span className="flex items-center text-3xl font-medium tracking-wide text-red-600">
+          <DirhamIcon size={22} className="mr-1 text-red-600" />
           {totalPrice}
         </span>
       </div>
@@ -45,7 +45,7 @@ export function DesktopItemPriceBar({
           </span>
           <button
             onClick={onIncrement}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-400 text-slate-800 shadow-sm transition-all hover:bg-brand-500 active:scale-90"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-white shadow-sm transition-all hover:bg-red-500 active:scale-90"
           >
             <Plus size={14} />
           </button>
@@ -57,7 +57,7 @@ export function DesktopItemPriceBar({
           disabled={!canAddToCart}
           className={`h-12 rounded-full px-8 text-sm font-medium tracking-wide shadow-md transition-all ${
             canAddToCart
-              ? "bg-brand-400 text-slate-800 shadow-yellow-200/40 hover:bg-brand-500 active:scale-[0.98]"
+              ? "bg-red-600 text-white shadow-red-200/40 hover:bg-red-500 active:scale-[0.98]"
               : "cursor-not-allowed bg-slate-200 text-slate-500 shadow-slate-100"
           }`}
         >

@@ -25,15 +25,15 @@
 
 
 @theme {
-  --color-brand-50: #fff4ed;
-  --color-brand-100: #ffead5;
-  --color-brand-200: #fed0aa;
-  --color-brand-300: #feaf73;
-  --color-brand-400: #fc8c4a; /* Your original color fits perfectly here as the 400/500 base */
-  --color-brand-500: #fa6115;
-  --color-brand-600: #eb460b; /* Shifted original slightly down for better text contrast */
-  --color-brand-700: #c3320b;
-  --color-brand-800: #9b2911;
-  --color-brand-900: #7c2512;
-  --color-brand-950: #430f07;
+  --color-brand-50: #FFF3F1;
+  --color-brand-100: #FFE4E0;
+  --color-brand-200: #FFCDC6;
+  --color-brand-300: #FFA89D;
+  --color-brand-400: #FF7765;
+  --color-brand-500: #FE4C35;
+  --color-brand-600: #E52B13; /* Primary Brand Accent */
+  --color-brand-700: #C7230E;
+  --color-brand-800: #A42110;
+  --color-brand-900: #872215;
+  --color-brand-950: #4A0D05;
 }

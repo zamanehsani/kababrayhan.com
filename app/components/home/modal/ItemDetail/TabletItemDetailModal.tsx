@@ -51,16 +51,16 @@ export function TabletItemDetailModal({
             onClick={() => handleSingleSelect(group.id, option.id)}
             className={`flex aspect-square flex-col items-center justify-center rounded-xl border px-2 text-center transition-colors ${
               isSelected
-                ? "border-brand-400 bg-yellow-50 text-slate-900"
+                ? "border-red-600 bg-yellow-50 text-slate-900"
                 : "border-slate-200 bg-white text-slate-700"
             }`}
           >
             <span className="text-[11px] font-medium leading-tight">{option.name}</span>
             <span className="mt-1.5 flex items-center gap-1 text-[10px] font-semibold">
               {option.price > 0 && (
-                <span className="text-emerald-600">AED {option.price.toFixed(2)}</span>
+                <span className="text-red-600">AED {option.price.toFixed(2)}</span>
               )}
-              {isSelected && <Check size={14} className="text-brand-500" />}
+              {isSelected && <Check size={14} className="text-red-500" />}
             </span>
           </button>
         );
@@ -190,22 +190,22 @@ export function TabletItemDetailModal({
           <div className="flex flex-col gap-4 p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <span className="text-xs font-medium uppercase tracking-wide text-orange-500">
+                <span className="text-xs font-medium uppercase tracking-wide text-red-500">
                   {dish.restaurant}
                 </span>
                 <h1 className="mt-0.5 text-2xl font-medium tracking-wide text-slate-800">
                   {dish.name}
                 </h1>
               </div>
-              <span className="flex shrink-0 items-center text-2xl font-medium tracking-wide text-emerald-600">
-                <DirhamIcon size={18} className="mr-0.5 text-emerald-600" />
+              <span className="flex shrink-0 items-center text-2xl font-medium tracking-wide text-red-600">
+                <DirhamIcon size={18} className="mr-0.5 text-red-600" />
                 {unitPrice.toFixed(2)}
               </span>
             </div>
 
             <div className="mx-auto flex items-center gap-4 rounded-2xl border border-slate-100/80 bg-slate-50 px-4 py-2.5 text-xs font-medium tracking-wide text-slate-500">
               <div className="flex items-center gap-1.5">
-                <Flame size={14} className="text-orange-500" />
+                <Flame size={14} className="text-red-500" />
                 <span>{dish.cal} kcal</span>
               </div>
               <div className="h-3 w-px bg-slate-200"></div>
@@ -215,7 +215,7 @@ export function TabletItemDetailModal({
               </div>
               <div className="h-3 w-px bg-slate-200"></div>
               <div className="flex items-center gap-1.5">
-                <Star size={14} className="text-brand-400 fill-brand-400" />
+                <Star size={14} className="text-red-600 fill-red-600" />
                 <span>{dish.rating} stars</span>
               </div>
             </div>
@@ -251,7 +251,7 @@ export function TabletItemDetailModal({
             </span>
             <button
               onClick={() => setQuantity(quantity + 1)}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-400 text-slate-800 shadow-sm transition-all active:scale-90"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-slate-800 shadow-sm transition-all active:scale-90"
             >
               <Plus size={14} />
             </button>
@@ -263,7 +263,7 @@ export function TabletItemDetailModal({
             disabled={!canAddToCart}
             className={`h-12 flex-1 rounded-full text-sm font-medium tracking-wide shadow-md transition-all ${
               canAddToCart
-                ? "bg-brand-400 text-slate-800 shadow-yellow-200/40 active:scale-[0.98]"
+                ? "bg-red-600 text-slate-800 shadow-red-200/40 active:scale-[0.98]"
                 : "cursor-not-allowed bg-slate-200 text-slate-500 shadow-slate-100"
             }`}
           >

@@ -38,20 +38,20 @@ export default function ThankYouPage() {
           <div className="flex flex-col items-center text-center">
             {/* Minimalist Success Icon Plate */}
             <div className="relative mb-5 flex h-20 w-20 items-center justify-center">
-              <span className="absolute inset-0 animate-pulse rounded-full bg-emerald-500/10" />
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white border border-emerald-100 shadow-sm">
+              <span className="absolute inset-0 animate-pulse rounded-full bg-red-500/10" />
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white border border-red-100 shadow-sm">
                 <CheckCircle2
                   size={28}
                   strokeWidth={1.5}
-                  className="text-emerald-500"
+                  className="text-red-500"
                 />
               </div>
             </div>
 
             {/* Elegant Calm Status Badge */}
-            <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50/60 px-3.5 py-1 text-xs font-semibold text-emerald-700 tracking-wide">
+            <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-red-100 bg-emerald-50/60 px-3.5 py-1 text-xs font-semibold text-red-700 tracking-wide">
               <span
-                className="h-1.5 w-1.5 rounded-full bg-emerald-500"
+                className="h-1.5 w-1.5 rounded-full bg-red-500"
                 aria-hidden="true"
               />
               Payment Successful
@@ -108,7 +108,7 @@ export default function ThankYouPage() {
             </div>
 
             <div className="flex items-start gap-4 rounded-2xl border border-slate-100 bg-white p-4 lg:p-5 shadow-sm transition-all hover:border-slate-200">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-600 border border-orange-100/60">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-600 border border-red-100/60">
                 <ClipboardList size={18} strokeWidth={2} />
               </span>
               <div className="flex-grow">

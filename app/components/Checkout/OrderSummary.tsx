@@ -25,7 +25,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total }) => {
       {/* Header with Red Accent */}
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="h-6 w-1 rounded-full bg-brand-400" />
+          <span className="h-6 w-1 rounded-full bg-red-600" />
           <h2 className="text-xl font-medium tracking-wide text-stone-900">
             Your Order
           </h2>
@@ -52,7 +52,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total }) => {
               </div>
               <div>
                 <div className="text-base font-medium text-stone-900 leading-tight">
-                  <span className="text-brand-400">{entry.qty || 1}x</span> {entry.item?.title}
+                  <span className="text-red-600">{entry.qty || 1}x</span> {entry.item?.title}
                 </div>
                 {entry.addon?.title && (
                   <div className="mt-1 text-[12px] font-medium text-stone-400">
@@ -80,7 +80,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total }) => {
         </div>
         <div className="flex items-center justify-between text-sm">
           <span className="font-medium text-stone-500">Delivery Fee</span>
-          <span className="font-bold text-emerald-600 uppercase text-[10px] tracking-widest bg-emerald-50 px-2 py-0.5 rounded-md">
+          <span className="font-bold text-red-600 uppercase text-[10px] tracking-widest bg-emerald-50 px-2 py-0.5 rounded-md">
             Free
           </span>
         </div>
@@ -89,8 +89,8 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total }) => {
         <div className="mt-6 flex items-center justify-between rounded-[2rem] bg-stone-900 p-6 shadow-xl shadow-stone-200">
           <span className="text-base font-medium text-white uppercase tracking-widest">Total</span>
           <div className="text-right">
-            <span className="flex items-center gap-0.5 text-2xl font-medium text-brand-500 leading-none">
-              <DirhamIcon size={16} className="text-brand-500" />
+            <span className="flex items-center gap-0.5 text-2xl font-medium text-red-500 leading-none">
+              <DirhamIcon size={16} className="text-red-500" />
               {total.toFixed(2)}
             </span>
             <span className="mt-1 block text-[11px] font-medium text-stone-500 uppercase tracking-tighter">

@@ -40,10 +40,10 @@ export default function ConfirmDialog({
       border: "border-red-100",
     },
     warning: {
-      icon: <AlertTriangle size={48} className="text-orange-500" />,
+      icon: <AlertTriangle size={48} className="text-red-500" />,
       iconBg: "bg-orange-50",
-      confirmBtn: "bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-200",
-      border: "border-orange-100",
+      confirmBtn: "bg-red-500 hover:bg-orange-600 text-white shadow-lg shadow-red-200",
+      border: "border-red-100",
     },
     info: {
       icon: <Info size={48} className="text-blue-500" />,

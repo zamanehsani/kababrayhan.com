@@ -45,7 +45,7 @@ export function DesktopCustomizationDrawer({
           Customize your order
         </h3>
         {selectedCount > 0 && (
-          <span className="ml-auto rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-medium tracking-wide text-yellow-700">
+          <span className="ml-auto rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-medium tracking-wide text-red-700">
             {selectedCount} chosen
           </span>
         )}

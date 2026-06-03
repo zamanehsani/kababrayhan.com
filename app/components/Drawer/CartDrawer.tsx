@@ -186,7 +186,7 @@ export default function CartDrawer() {
         {/* Header Segment */}
         <div className="flex items-center justify-between p-5 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
-            <ShoppingBag size={20} className="text-brand-500" />
+            <ShoppingBag size={20} className="text-red-500" />
             <h2 className="text-lg font-semibold tracking-wide text-slate-900">
               {cart.length} item{cart.length === 1 ? "" : "s"} selected
             </h2>
@@ -282,7 +282,7 @@ export default function CartDrawer() {
                         {entry.qty || 1}
                       </span>
                       <button
-                        className="w-6 h-6 flex items-center justify-center bg-brand-400 rounded-full text-slate-800 shadow-sm active:scale-90 text-sm"
+                        className="w-6 h-6 flex items-center justify-center bg-red-600 rounded-full text-white shadow-sm active:scale-90 text-sm"
                         onClick={() => handleAdjustQty(idx, 1)}
                       >
                         +

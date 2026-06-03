@@ -213,7 +213,7 @@ export default function TabletPopularDishes() {
                   <div className="mt-auto pt-1 flex items-center justify-between">
                     {/* Calories */}
                     <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 bg-slate-100/70 group-hover:bg-slate-50 px-2 py-0.5 rounded-full transition-colors">
-                      <Flame size={12} className="text-orange-500" />
+                      <Flame size={12} className="text-red-500" />
                       <span>{dish.cal} kcal</span>
                     </div>
 
@@ -223,8 +223,8 @@ export default function TabletPopularDishes() {
                         Options
                       </span>
                     ) : (
-                      <span className="flex items-center text-[17px] font-bold text-emerald-600 transition-colors group-hover:text-emerald-700">
-                        <DirhamIcon size={13} className="mr-0.5 text-emerald-600 group-hover:text-emerald-700 transition-colors" />
+                      <span className="flex items-center text-[17px] font-bold text-red-600 transition-colors group-hover:text-red-700">
+                        <DirhamIcon size={13} className="mr-0.5 text-red-600 group-hover:text-red-700 transition-colors" />
                         {dish.price}
                       </span>
                     )}

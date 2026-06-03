@@ -149,7 +149,7 @@ const PaymentForm = ({
       </div>
 
       {paymentError && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-brand-700">
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
           {paymentError}
         </div>
       )}
@@ -160,7 +160,7 @@ const PaymentForm = ({
         className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4 text-xs font-black uppercase tracking-[0.2em] transition-all shadow-xl ${
           isProcessing
             ? "bg-stone-400 text-white cursor-not-allowed"
-            : "bg-brand-400 text-white shadow-red-200 hover:bg-brand-700 active:scale-95"
+            : "bg-red-600 text-white shadow-red-200 hover:bg-red-700 active:scale-95"
         }`}
       >
         {isProcessing ? "Processing..." : `Pay AED ${total.toFixed(2)}`}
@@ -625,7 +625,7 @@ const [disableAddress] = useDisableAddressMutation();
               handleAutoProceed();
             }}
             disabled={isInitializing}
-            className="px-6 py-3 bg-brand-400 hover:bg-brand-700 disabled:bg-slate-300 text-white rounded-xl text-sm font-bold uppercase tracking-wide transition-all active:scale-95 disabled:cursor-not-allowed"
+            className="px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-slate-300 text-white rounded-xl text-sm font-bold uppercase tracking-wide transition-all active:scale-95 disabled:cursor-not-allowed"
           >
             {isInitializing ? 'Retrying...' : 'Retry Payment Setup'}
           </button>
@@ -641,7 +641,7 @@ const [disableAddress] = useDisableAddressMutation();
   } else if (isInitializing || !clientSecret) {
     paymentSection = (
       <div className="flex flex-col items-center py-10">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-stone-100 border-t-brand-400 mb-4" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-stone-100 border-t-red-600 mb-4" />
         <p className="text-stone-400 font-bold uppercase text-[10px] tracking-widest">
           Securing Payment Line...
         </p>

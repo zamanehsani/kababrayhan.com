@@ -211,8 +211,8 @@ export function DesktopItemDetailModal({
                               onClick={() => handleMultiToggle(group.id, option.id)}
                               className={`group relative aspect-square overflow-hidden rounded-xl border-2 transition-all ${
                                 isSelected
-                                  ? "border-brand-400 ring-2 ring-brand-400/30 scale-95"
-                                  : "border-slate-200 hover:border-emerald-400"
+                                  ? "border-red-600 ring-2 ring-red-600/30 scale-95"
+                                  : "border-slate-200 hover:border-red-400"
                               }`}
                             >
                               {option.img && (
@@ -226,8 +226,8 @@ export function DesktopItemDetailModal({
                               
                               {/* Selected Overlay */}
                               {isSelected && (
-                                <div className="absolute inset-0 bg-brand-400/20 flex items-center justify-center">
-                                  <div className="h-6 w-6 rounded-full bg-brand-400 flex items-center justify-center">
+                                <div className="absolute inset-0 bg-red-600/20 flex items-center justify-center">
+                                  <div className="h-6 w-6 rounded-full bg-red-600 flex items-center justify-center">
                                     <Check size={14} strokeWidth={3} className="text-slate-900" />
                                   </div>
                                 </div>
@@ -235,7 +235,7 @@ export function DesktopItemDetailModal({
                               
                               {/* Price Badge */}
                               {option.price > 0 && (
-                                <div className="absolute bottom-1 right-1 rounded-md bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                                <div className="absolute bottom-1 right-1 rounded-md bg-red-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
                                   +{option.price.toFixed(0)}
                                 </div>
                               )}

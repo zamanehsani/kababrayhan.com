@@ -58,7 +58,7 @@ export default function CartSidebarWidget() {
           <div className="relative p-1">
             <ShoppingCart
               size={20}
-              className="text-brand-400 group-hover:scale-105 transition-transform"
+              className="text-red-600 group-hover:scale-105 transition-transform"
             />
             {itemCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white ring-2 ring-slate-900 animate-scale-up">
