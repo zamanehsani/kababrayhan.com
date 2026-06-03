@@ -269,7 +269,7 @@ export function ItemDetailModal({
           </span>
           <button
             onClick={() => setQuantity(quantity + 1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-red-200 text-slate-800 shadow-sm active:scale-90"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-white shadow-sm active:scale-90"
           >
             <Plus size={16} />
           </button>
@@ -282,7 +282,7 @@ export function ItemDetailModal({
           disabled={!canAddToCart}
           className={`flex-1 h-12 rounded-full font-semibold text-sm tracking-wide shadow-md transition-transform ${
             canAddToCart
-              ? "bg-red-300 text-slate-800 shadow-red-200/50 active:scale-[0.98]"
+              ? "bg-red-600 text-white shadow-red-200/50 active:scale-[0.98]"
               : "bg-slate-200 text-slate-500 shadow-slate-100 cursor-not-allowed"
           }`}
         >
