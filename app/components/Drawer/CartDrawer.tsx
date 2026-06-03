@@ -308,7 +308,7 @@ export default function CartDrawer() {
           <button
             onClick={handleBeginCheckout}
             disabled={cart.length === 0}
-            className="w-full h-12 rounded-full bg-slate-900 text-white font-semibold text-sm tracking-wide shadow-lg shadow-slate-900/10 hover:bg-slate-800 active:scale-[0.99] transition-all disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center relative group"
+            className="w-full h-12 rounded-full bg-red-600 text-white font-semibold text-sm tracking-wide shadow-lg shadow-slate-900/10 hover:bg-slate-800 active:scale-[0.99] transition-all disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center relative group"
           >
             <span>Proceed to Checkout</span>
             <ArrowRight
