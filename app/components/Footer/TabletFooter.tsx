@@ -123,28 +123,28 @@ export default function TabletFooter() {
               <div className="flex gap-4">
                 <a
                   href="https://www.facebook.com/Kababalrayhan"
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-red-600 hover:text-slate-900 transition-all"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-red-600 hover:text-white transition-all"
                   aria-label="Facebook"
                 >
                   <FacebookIcon size={20} />
                 </a>
                 <a
                   href="https://www.instagram.com/kabab_alrayhan/"
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-red-600 hover:text-slate-900 transition-all"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-red-600 hover:text-white transition-all"
                   aria-label="Instagram"
                 >
                   <InstagramIcon size={20} />
                 </a>
                 <a
                   href="https://www.tiktok.com/@kabab.alrayhan"
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-red-600 hover:text-slate-900 transition-all"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-red-600 hover:text-white transition-all"
                   aria-label="TikTok"
                 >
                   <TiktokIcon size={20} />
                 </a>
                 <a
                   href="https://wa.me/971503021317?text=Hello!%20I%20have%20a%20question%20about%20your%20services."
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-red-600 hover:text-slate-900 transition-all"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-red-600 hover:text-white transition-all"
                   aria-label="WhatsApp"
                 >
                   <WhatsappIcon size={20} />

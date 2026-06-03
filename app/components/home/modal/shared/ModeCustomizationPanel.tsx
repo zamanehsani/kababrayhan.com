@@ -50,7 +50,7 @@ export function ModeCustomizationPanel({
                       group.type === "single" ? "rounded-full" : "rounded-md"
                     } ${
                       isSelected
-                        ? "border-red-600 bg-red-600 text-slate-900"
+                        ? "border-red-600 bg-red-600 text-white"
                         : "border-slate-300 bg-white"
                     }`}
                   >

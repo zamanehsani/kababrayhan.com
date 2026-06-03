@@ -251,7 +251,7 @@ export function TabletItemDetailModal({
             </span>
             <button
               onClick={() => setQuantity(quantity + 1)}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-slate-800 shadow-sm transition-all active:scale-90"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-white shadow-sm transition-all active:scale-90"
             >
               <Plus size={14} />
             </button>
@@ -263,7 +263,7 @@ export function TabletItemDetailModal({
             disabled={!canAddToCart}
             className={`h-12 flex-1 rounded-full text-sm font-medium tracking-wide shadow-md transition-all ${
               canAddToCart
-                ? "bg-red-600 text-slate-800 shadow-red-200/40 active:scale-[0.98]"
+                ? "bg-red-600 text-white shadow-red-200/40 active:scale-[0.98]"
                 : "cursor-not-allowed bg-slate-200 text-slate-500 shadow-slate-100"
             }`}
           >

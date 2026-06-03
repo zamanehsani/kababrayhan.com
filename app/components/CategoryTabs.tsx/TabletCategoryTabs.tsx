@@ -223,7 +223,7 @@ export default function TabletCategoryTabs() {
                   onClick={() => handleTabClick(cat.name)}
                   className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-2 transition-all duration-200 active:scale-95 ${
                     activeCategory === cat.name
-                      ? "bg-red-600 text-slate-900 shadow-lg shadow-red-200/40"
+                      ? "bg-red-600 text-white shadow-lg shadow-red-200/40"
                       : "border border-slate-200 bg-white text-slate-600 active:bg-slate-50"
                   }`}
                 >
@@ -232,7 +232,7 @@ export default function TabletCategoryTabs() {
                     <span
                       className={`transition-colors ${
                         activeCategory === cat.name
-                          ? "text-slate-900"
+                          ? "text-white"
                           : "text-slate-400"
                       }`}
                     >

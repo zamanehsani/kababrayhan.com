@@ -322,7 +322,7 @@ export default function TabletHeader() {
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold tracking-wide transition-all ${
                   (item.id === "home" && isHomeRoute) ||
                   (item.id === "orders" && pathname.startsWith("/my-orders"))
-                    ? "bg-red-600 text-slate-900 shadow-sm"
+                    ? "bg-red-600 text-white shadow-sm"
                     : "text-slate-500 hover:text-slate-800"
                 }`}
               >

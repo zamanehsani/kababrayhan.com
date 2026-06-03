@@ -227,14 +227,14 @@ export default function CategoryTabs() {
                 onClick={() => handleTabClick(cat.name)}
                 className={`flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-2 transition-all duration-200 select-none ${
                   activeCategory === cat.name
-                    ? "bg-red-600 text-slate-900 shadow-md shadow-red-200/60 font-bold scale-100"
+                    ? "bg-red-600 text-white shadow-md shadow-red-200/60 font-bold scale-100"
                     : "border border-slate-100 bg-white text-slate-600 font-semibold hover:border-slate-200 active:bg-slate-50 text-sm"
                 }`}
               >
                 {cat.icon && (
                   <span
                     className={`transition-colors duration-200 ${
-                      activeCategory === cat.name ? "text-slate-900" : "text-slate-400"
+                      activeCategory === cat.name ? "text-white" : "text-slate-400"
                     }`}
                   >
                     {cat.icon}
