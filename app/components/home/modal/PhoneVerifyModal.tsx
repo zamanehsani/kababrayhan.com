@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { useSendOtpMutation } from "../../../redux/api";
+import { useSendOtpMutation, useGetCustomerAddressesQuery } from "../../../redux/api";
 import { useVerifyOtpMutation } from "../../../redux/authApi";
 import {
   saveVerifiedPhone,
+  getCustomerName,
 } from "@/app/lib/customerPortal";
 
 type PhoneVerifyModalProps = {
@@ -28,6 +29,13 @@ const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, phon
   ];
   const otpSlotKeys = ["otp-1", "otp-2", "otp-3", "otp-4"] as const;
 
+  // Pre-fetch addresses query so we can refetch after verification
+  const customerName = getCustomerName() || phone;
+  const { refetch: refetchAddresses } = useGetCustomerAddressesQuery(
+    customerName,
+    { skip: true } // Initially skip, we'll refetch manually after verification
+  );
+
   // Timer for resend
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -49,6 +57,15 @@ const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, phon
         if (result.status === "success") {
           saveVerifiedPhone(phone);
           setError("");
+          
+          // Immediately fetch addresses after successful verification
+          // This ensures addresses are loaded before user navigates to account-profile
+          try {
+            await refetchAddresses();
+          } catch (err) {
+            console.warn("Failed to prefetch addresses after verification:", err);
+          }
+          
           onClose();
         } else {
           setError("Invalid code. Please try again.");

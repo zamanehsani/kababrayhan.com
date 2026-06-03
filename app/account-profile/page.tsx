@@ -97,7 +97,7 @@ export default function AccountProfilePage() {
 
   // Fetch addresses from ERPNext backend (shows addresses already saved in the system)
   const customerName = getCustomerName();
-  const { data: backendAddresses, isLoading: isLoadingAddresses } = useGetCustomerAddressesQuery(
+  const { data: backendAddresses, isLoading: isLoadingAddresses, refetch: refetchAddresses } = useGetCustomerAddressesQuery(
     customerName,
     { skip: !customerName || !portalState.isVerified }
   );
@@ -203,6 +203,8 @@ export default function AccountProfilePage() {
         );
       }
       refreshPortalState();
+      // Refetch addresses after verification to show existing addresses immediately
+      refetchAddresses();
       return;
     }
 
