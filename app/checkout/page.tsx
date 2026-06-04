@@ -739,8 +739,9 @@ const CheckoutPage = () => {
           }
         />
 
-        <div className="grid gap-12 lg:grid-cols-2 lg:items-start">
-          <div className="space-y-8">
+        <div className="grid gap-12 lg:grid-cols-2 lg:items-start flex flex-col md:flex-col lg:flex-row">
+          {/* Left Section (Form & Payment) - Appears SECOND on mobile/tablet, FIRST on desktop */}
+          <div className="space-y-8 order-2 lg:order-1">
             <CheckoutForm form={form} setForm={setForm} error={null} />
 
             {(isInitializing || clientSecret || orderError) && (
@@ -756,8 +757,9 @@ const CheckoutPage = () => {
             )}
           </div>
 
-          <div className="sticky top-24">
-            <div className="">
+          {/* Right Section (Order Summary & Note) - Appears FIRST on mobile/tablet, SECOND on desktop */}
+          <div className="lg:sticky lg:top-24 order-1 lg:order-2">
+            <div>
               <OrderSummary cart={cart} total={total} />
 
               <CustomerNote
@@ -773,6 +775,8 @@ const CheckoutPage = () => {
             </div>
           </div>
         </div>
+
+       
       </main>
 
       {/* Address Warning Dialog */}
