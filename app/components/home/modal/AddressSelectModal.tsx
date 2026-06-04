@@ -14,9 +14,9 @@ import {
 } from "../../../redux/api";
 import ConfirmDialog from "../../shared/ConfirmDialog";
 import {
-  saveDeliveryAddress,
   getCustomerName,
   saveCustomerName,
+  addDeliveryAddress,
 } from "@/app/lib/customerPortal";
 
 export type SelectedAddress = {
@@ -108,7 +108,11 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
     }
 
     const payload = (await response.json()) as {
-      data?: Array<{ name: string; customer_name?: string; mobile_no?: string }>;
+      data?: Array<{
+        name: string;
+        customer_name?: string;
+        mobile_no?: string;
+      }>;
     };
 
     return payload.data ?? [];
@@ -219,12 +223,16 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                   navigator.geolocation.getCurrentPosition(
                     (position) => {
                       const { latitude, longitude } = position.coords;
-                      mapInstanceRef.current?.setView([latitude, longitude], 20);
-                      
+                      mapInstanceRef.current?.setView(
+                        [latitude, longitude],
+                        20
+                      );
+
                       // Also set the marker and fetch address
                       setSelectedLatLng({ lat: latitude, lng: longitude });
-                      
-                      const L = (globalThis as typeof globalThis & { L?: any }).L;
+
+                      const L = (globalThis as typeof globalThis & { L?: any })
+                        .L;
                       if (L) {
                         if (markerRef.current) {
                           markerRef.current.setLatLng([latitude, longitude]);
@@ -234,7 +242,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                           }).addTo(mapInstanceRef.current);
                         }
                       }
-                      
+
                       fetchAddress(latitude, longitude);
                     },
                     (error) => {
@@ -251,7 +259,8 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
               }}
               className="bg-white/90 backdrop-blur shadow-xl border border-gray-100 px-4 py-2 rounded-2xl font-normal text-gray-800 flex items-center gap-2 hover:bg-white transition-all active:scale-95"
             >
-              <span className="text-red-500 text-base">📍</span> Current Location
+              <span className="text-red-500 text-base">📍</span> Current
+              Location
             </button>
           </div>
 
@@ -333,10 +342,15 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                           value: phone,
                         }).unwrap();
                       } catch (e) {
-                        console.warn("Could not update customer mobile_no, continuing...", e);
+                        console.warn(
+                          "Could not update customer mobile_no, continuing...",
+                          e
+                        );
                       }
                     } else {
-                      const existingCustomers = await lookupCustomersByMobile(phone);
+                      const existingCustomers = await lookupCustomersByMobile(
+                        phone
+                      );
 
                       if (existingCustomers.length > 0) {
                         customerName = existingCustomers[0].name;
@@ -382,8 +396,8 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                               .toLowerCase()
                               .replace(/\s+/g, "-")}`
                           : addressType === "Billing"
-                            ? `${phone}-delivery`
-                            : phone,
+                          ? `${phone}-delivery`
+                          : phone,
                         address_type: addressType,
                         address_line1: addressLine,
                         city: "Dubai",
@@ -399,10 +413,16 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
 
                   // 3. Save to localStorage — Billing type is handled by the parent via onSelect
                   if (addressType !== "Billing") {
-                    saveDeliveryAddress(
-                      addressResponse.data.address_line1,
-                      addressResponse.data.name
-                    );
+                    // saveDeliveryAddress(
+                    //   addressResponse.data.address_line1,
+                    //   addressResponse.data.name
+                    // );
+                    addDeliveryAddress({
+                      id: addressResponse.data.name,
+                      title: customTitle || "Address",
+                      address: addressResponse.data.address_line1,
+                      addressId: addressResponse.data.name,
+                    });
                   }
 
                   onSelect({
@@ -437,7 +457,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
           </div>
         </div>
       </div>
-      
+
       {showLocationAlert && (
         <ConfirmDialog
           open={true}

@@ -308,3 +308,27 @@ export const writeDeliveryAddresses = (addresses: DeliveryAddressItem[]) => {
   );
   dispatchCustomerPortalUpdated();
 };
+
+
+
+export const addDeliveryAddress = (
+  item: DeliveryAddressItem
+) => {
+  const existing = readDeliveryAddresses();
+
+  const exists = existing.some(
+    (addr) => addr.addressId === item.addressId
+  );
+
+  const updatedAddresses = exists
+    ? existing
+    : [...existing, item];
+
+  // persist addresses array
+  writeDeliveryAddresses(updatedAddresses);
+
+  // persist currently selected address
+  saveDeliveryAddress(item.address, item.addressId);
+
+  return updatedAddresses;
+};

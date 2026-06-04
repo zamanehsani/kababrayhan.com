@@ -125,6 +125,7 @@ export default function DesktopPopularDishes() {
       - mx-auto centers the section block perfectly on screens beyond 1440px
     */
     <section className="mt-8 max-w-[1440px] mx-auto px-12 pb-20">
+
       {/* HEADER SECTION */}
       <div className=" flex items-center justify-between">
         

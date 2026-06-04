@@ -201,7 +201,7 @@ export default function DesktopCategoryTabs() {
                     <div
                       className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors ${
                         activeCategory === cat.name
-                          ? " text-slate-800"
+                          ? " text-white"
                           : " text-slate-400 group-hover:bg-orange-50 group-hover:text-red-500"
                       }`}
                     >

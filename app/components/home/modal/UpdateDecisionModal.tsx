@@ -60,20 +60,7 @@ export default function UpdateDecisionModal({
             {confirmLabel}
           </button>
 
-          {/* <button
-            type="button"
-            onClick={onSkip}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-medium uppercase tracking-widest text-slate-600 transition-colors hover:bg-slate-50  "
-          >
-            {skipLabel}
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="rounded-xl bg-red-600 px-4 py-2 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-red-700"
-          >
-            {confirmLabel}
-          </button> */}
+          
         </div>
       </div>
     </div>

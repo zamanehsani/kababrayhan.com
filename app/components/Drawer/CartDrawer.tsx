@@ -14,7 +14,9 @@ import {
   PHONE_KEY,
   PHONE_STATUS_KEY,
   readCustomerPortalSnapshot,
+  saveDeliveryAddress,
 } from "@/app/lib/customerPortal";
+import SavedAddressesModal from "../home/modal/SavedAddressesModal";
 
 export default function CartDrawer() {
   const router = useRouter();
@@ -25,12 +27,20 @@ export default function CartDrawer() {
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
+  // const [address, setAddress] = useState("");
   const [showDeliveryTakeaway, setShowDeliveryTakeaway] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showPhoneUpdatePrompt, setShowPhoneUpdatePrompt] = useState(false);
-  const [showAddressUpdatePrompt, setShowAddressUpdatePrompt] = useState(false);
+  // const [showAddressUpdatePrompt, setShowAddressUpdatePrompt] = useState(false);
   const [allowExistingPhoneInput, setAllowExistingPhoneInput] = useState(false);
+  const [showSavedAddressesModal, setShowSavedAddressesModal] = useState(false);
+
+  const [snapshot, setSnapshot] = useState(
+  readCustomerPortalSnapshot()
+);
+  const [selectedDeliveryAddressId, setSelectedDeliveryAddressId] = useState<
+    string | undefined
+  >(snapshot.addressId);
 
   useEffect(() => {
     const handleOpen = () => {
@@ -115,16 +125,16 @@ export default function CartDrawer() {
     proceedAfterPhoneDecision();
   };
 
-  const handleAddressUpdateConfirm = () => {
-    setShowAddressUpdatePrompt(false);
-    setShowAddressModal(true);
-  };
+  // const handleAddressUpdateConfirm = () => {
+  //   setShowAddressUpdatePrompt(false);
+  //   setShowAddressModal(true);
+  // };
 
-  const handleAddressUpdateSkip = () => {
-    setShowAddressUpdatePrompt(false);
-    setOpen(false);
-    router.push("/checkout");
-  };
+  // const handleAddressUpdateSkip = () => {
+  //   setShowAddressUpdatePrompt(false);
+  //   setOpen(false);
+  //   router.push("/checkout");
+  // };
 
   const handlePhoneModalClose = (phoneJustSaved?: string) => {
     setShowPhoneModal(false);
@@ -162,9 +172,14 @@ export default function CartDrawer() {
 
     const snapshot = readCustomerPortalSnapshot();
 
-    if (snapshot.address) {
-      setAddress(snapshot.address);
-      setShowAddressUpdatePrompt(true);
+    const addresses = snapshot.deliveryAddresses;
+
+    console.log("SNAPSHOT", snapshot);
+    console.log("ADDRESSES", addresses);
+    console.log("ADDRESSES LENGTH", addresses.length);
+
+    if (addresses.length > 0) {
+      setShowSavedAddressesModal(true);
       return;
     }
 
@@ -240,7 +255,6 @@ export default function CartDrawer() {
                     <h3 className="font-semibold text-base text-slate-900 leading-tight tracking-wide mb-0.5">
                       {entry.item.title}
                     </h3>
-                    
 
                     {/* Addon Bracket */}
                     <div className="inline-flex flex-col">
@@ -346,9 +360,28 @@ export default function CartDrawer() {
         {showAddressModal && (
           <AddressSelectModal
             open={showAddressModal}
-            onClose={() => setShowAddressModal(false)}
-            onSelect={() => setShowAddressModal(false)}
+            redirectTo={null}
+            onClose={() => {
+              setShowAddressModal(false);
+            }}
+            onSelect={(newAddress) => {
+              setShowAddressModal(false);
+
+              const updatedSnapshot = readCustomerPortalSnapshot();
+
+              setSnapshot(updatedSnapshot);
+
+              setSelectedDeliveryAddressId(newAddress.id);
+
+              setShowSavedAddressesModal(true);
+            }}
           />
+          // <AddressSelectModal
+          //   open={showAddressModal}
+          //   onClose={() => setShowAddressModal(false)}
+          //   onSelect={() => setShowAddressModal(false)}
+          //   redirectTo={null}
+          // />
         )}
         <UpdateDecisionModal
           open={showPhoneUpdatePrompt}
@@ -360,15 +393,28 @@ export default function CartDrawer() {
           onConfirm={handlePhoneUpdateConfirm}
           onSkip={handlePhoneUpdateSkip}
         />
-        <UpdateDecisionModal
-          open={showAddressUpdatePrompt}
-          title="Delivery address saved"
-          description="We found a saved delivery address. Keep it or choose a different one before placing your order."
-          detail={address}
-          confirmLabel="Change Address"
-          skipLabel="Use This Address"
-          onConfirm={handleAddressUpdateConfirm}
-          onSkip={handleAddressUpdateSkip}
+        <SavedAddressesModal
+          open={showSavedAddressesModal}
+          addresses={snapshot.deliveryAddresses}
+          selectedAddressId={selectedDeliveryAddressId}
+          onSelect={(selected) => {
+            saveDeliveryAddress(selected.address, selected.addressId);
+
+            setSelectedDeliveryAddressId(selected.addressId);
+          }}
+          onAddNew={() => {
+            setShowSavedAddressesModal(false);
+            setShowAddressModal(true);
+          }}
+          onClose={() => {
+            setShowSavedAddressesModal(false);
+          }}
+          onContinue={() => {
+            setShowSavedAddressesModal(false);
+            setOpen(false);
+
+            router.push("/checkout");
+          }}
         />
       </div>
     </div>
