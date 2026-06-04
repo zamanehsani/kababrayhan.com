@@ -25,13 +25,13 @@ const DeliveryTakeawayModal: React.FC<DeliveryTakeawayModalProps> = ({ open, onS
         <h2 className="text-xl font-normal mb-6 text-center tracking-wide">Choose Order Type</h2>
         <div className="flex flex-col gap-4">
           <button
-            className="w-full rounded-xl bg-red-600 py-3 text-base font-medium uppercase tracking-widest text-white transition-all hover:bg-red-700 active:scale-[0.98]"
+            className="w-full rounded-xl bg-red-600 py-3 text-base font-medium  tracking-widest text-white transition-all hover:bg-red-700 active:scale-[0.98]"
             onClick={() => onSelect("delivery")}
           >
             Delivery (Specify Address)
           </button>
           <button
-            className="w-full rounded-xl bg-gray-100 py-3 text-base font-medium uppercase tracking-widest text-gray-700 transition-all hover:bg-gray-200 active:scale-[0.98]"
+            className="w-full rounded-xl bg-gray-100 py-3 text-base font-medium  tracking-widest text-gray-700 transition-all hover:bg-gray-200 active:scale-[0.98]"
             onClick={() => onSelect("takeaway")}
           >
             Take Away
