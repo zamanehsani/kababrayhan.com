@@ -8,6 +8,10 @@ import {
   useGetCustomerAddressesQuery,
 } from "../../redux/api";
 import { getCustomerName } from "@/app/lib/customerPortal";
+import ErrorIcon from "../icon/ErrorIcon";
+import AddressRoles from "../address/AddressRoles";
+import LocationPinIcon from "../icon/LocationPinIcon";
+import ContactPhoneCard from "./ContactPhoneCard";
 
 export type DeliveryAddressItem = {
   id?: string;
@@ -59,11 +63,12 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
   const [updateAddress] = useUpdateAddressMutation();
 
   const customerName = getCustomerName() || form.phone;
-  const { refetch: refetchAddresses } = useGetCustomerAddressesQuery(
-    customerName,
-    { skip: !customerName }
-  );
-
+  const { data: customerAddresses, refetch: refetchAddresses } =
+    useGetCustomerAddressesQuery(customerName, {
+      skip: !customerName,
+    });
+  console.log("the customer Address: ", customerAddresses);
+  console.log("form ", form);
   const toAddressTitleSlug = (title: string) =>
     title
       .trim()
@@ -133,6 +138,40 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
       }));
     }
   }, [setForm]);
+
+  useEffect(() => {
+    if (!customerAddresses?.length) return;
+
+    const mappedAddresses: DeliveryAddressItem[] = customerAddresses.map(
+      (addr: any, index: number) => ({
+        id: addr.name || String(index),
+
+        title:
+          addr.address_title || addr.address_type || `Address ${index + 1}`,
+
+        address: addr.display || addr.address || addr.address_line1 || "",
+
+        addressId: addr.name,
+
+        // ERPNext flags
+        isDelivery:
+          addr.is_shipping_address === 1 || addr.is_shipping_address === "1",
+
+        isBilling:
+          addr.is_primary_address === 1 || addr.is_primary_address === "1",
+      })
+    );
+
+    setForm((prev) => ({
+      ...prev,
+      deliveryAddresses: mappedAddresses,
+    }));
+
+    localStorage.setItem(
+      "uae_delivery_addresses",
+      JSON.stringify(mappedAddresses)
+    );
+  }, [customerAddresses, setForm]);
 
   const handleTitleChange = (index: number, newTitle: string) => {
     const updated = form.deliveryAddresses.map((da, i) =>
@@ -296,7 +335,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
   const handleToggleDelivery = async (index: number) => {
     const updated = form.deliveryAddresses.map((item, i) => ({
       ...item,
-      isDelivery: i === index,
+      isDelivery: i === index ? !item.isDelivery : item.isDelivery,
     }));
 
     setForm((prev) => ({
@@ -347,6 +386,12 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     }
   };
 
+  const DeliveryAddress = customerAddresses?.find(
+    (addr) => addr.is_shipping_address === 1
+  );
+  const deliery = DeliveryAddress?.address_title;
+  console.log("the delivery address: ", DeliveryAddress);
+
   return (
     <>
       {/* Feedback Toast */}
@@ -374,160 +419,120 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
         </h2>
 
         <div className="space-y-8">
-          <div className="group">
-            <label className="mb-3 ml-1 block text-[13px] font-medium uppercase tracking-wide text-stone-400">
-              Contact Phone
-            </label>
-            <div className="flex items-center gap-4 rounded-2xl border-2 border-stone-50 bg-stone-50/50 px-5 py-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-stone-400 shadow-sm">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="h-5 w-5"
-                >
-                  <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                </svg>
-              </div>
-              <div className="flex flex-1 flex-col">
-                <span className="text-xs font-medium uppercase tracking-wide text-green-600">
-                  Verified
-                </span>
-                <span className="font-medium text-stone-900">{form.phone}</span>
-              </div>
-            </div>
-          </div>
+          <ContactPhoneCard phone={form.phone} />
 
-          {form.deliveryAddresses.map((delivery, index) => (
-            <div key={delivery.id ?? String(index)} className="group">
-              <div className="mb-3 ml-1 flex items-center gap-1">
-                <span className="text-[13px] font-medium uppercase tracking-wide text-stone-400 group-hover:text-red-600 transition-colors">
-                  Delivery To&nbsp;(
-                </span>
-                <input
-                  type="text"
-                  value={delivery.title}
-                  onChange={(e) => handleTitleChange(index, e.target.value)}
-                  onBlur={() => {
-                    void handleTitleCommit(index);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.currentTarget.blur();
-                    }
-                  }}
-                  disabled={updatingTitleIndex === index}
-                  placeholder={index === 0 ? "Home" : "Office, Work…"}
-                  className="w-20 border-b border-dashed border-stone-300 bg-transparent text-center text-[13px] font-medium uppercase tracking-wide text-stone-600 placeholder:text-stone-300 focus:border-red-600 focus:outline-none disabled:opacity-50"
-                />
-                {updatingTitleIndex === index && (
-                  <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
-                )}
-                <span className="text-[13px] font-medium uppercase tracking-wide text-stone-400 group-hover:text-red-600 transition-colors">
-                  )
-                </span>
-                {index > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => showDeleteConfirmation(index)}
-                    disabled={deletingIndex === index}
-                    className="ml-auto text-[11px] font-medium uppercase tracking-wide text-stone-300 transition-colors hover:text-red-400 disabled:opacity-50 disabled:cursor-wait"
-                  >
-                    {deletingIndex === index ? "Removing..." : "Remove"}
-                  </button>
-                )}
-              </div>
+          {customerAddresses?.map((address, index) => {
+            const isDeliveryChecked =
+              address.is_shipping_address === 1 ;
 
-              <div
-                className={`flex flex-col gap-4 rounded-2xl border-2 p-5 transition-all sm:flex-row sm:items-center ${
-                  delivery.address
-                    ? "border-stone-100 bg-white shadow-xl shadow-stone-200/40"
-                    : "border-dashed border-stone-200 bg-stone-50"
-                }`}
-              >
-                <div className="flex min-w-0 flex-1 items-center gap-4">
-                  <div
-                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-colors ${
-                      delivery.address
-                        ? "bg-red-50 text-red-600"
-                        : "bg-stone-200 text-stone-400"
-                    }`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      className="h-6 w-6"
+            const isBillingChecked =
+              address.is_primary_address === 1 
+
+            const resolvedAddress =
+              address.address_line1 || "";
+
+            const resolvedTitle =
+              address.address_title ||
+              address.address_type ||
+              `Address ${index + 1}`;
+
+            return (
+              <div key={address.name} className="group">
+                <div className="mb-3 ml-1 flex items-center gap-1">
+                  <span className="text-[13px] font-medium uppercase tracking-wide text-stone-400 group-hover:text-red-600 transition-colors">
+                    Delivery To&nbsp;(
+                  </span>
+
+                  <input
+                    type="text"
+                    value={resolvedTitle}
+                    onChange={(e) => handleTitleChange(index, e.target.value)}
+                    onBlur={() => {
+                      void handleTitleCommit(index);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.currentTarget.blur();
+                      }
+                    }}
+                    disabled={updatingTitleIndex === index}
+                    placeholder={index === 0 ? "Home" : "Office, Work…"}
+                    className="w-40 border-b border-dashed border-stone-300 bg-transparent text-center text-[13px] font-medium uppercase tracking-wide text-stone-600 placeholder:text-stone-300 focus:border-red-600 focus:outline-none disabled:opacity-50"
+                  />
+
+                  {updatingTitleIndex === index && (
+                    <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
+                  )}
+
+                  <span className="text-[13px] font-medium uppercase tracking-wide text-stone-400 group-hover:text-red-600 transition-colors">
+                    )
+                  </span>
+
+                  {index > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => showDeleteConfirmation(index)}
+                      disabled={deletingIndex === index}
+                      className="ml-auto text-[11px] font-medium uppercase tracking-wide text-stone-300 transition-colors hover:text-red-400 disabled:opacity-50 disabled:cursor-wait"
                     >
-                      <path
-                        fillRule="evenodd"
-                        d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.152-.722c1.102-.74 2.499-1.856 3.635-3.456 1.137-1.6 1.832-3.41 1.832-5.212 0-4.72-3.8-8.502-8.514-8.502-4.714 0-8.514 3.782-8.514 8.502 0 1.802.695 3.612 1.832 5.212 1.136 1.6 2.533 2.716 3.635 3.456a16.977 16.977 0 001.152.722zM12.75 12a.75.75 0 01-.75.75 2.25 2.25 0 110-4.5.75.75 0 01.75.75v3z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  {/* <div className="flex-1 overflow-hidden">
-                    <p
-                      className={`text-sm font-medium leading-snug ${
-                        delivery.address
-                          ? "text-stone-900"
-                          : "text-stone-400 italic"
-                      }`}
-                    >
-                      {delivery.address || "Select your delivery location..."}
-                    </p>
-                  </div> */}
-                  <div className="flex-1 overflow-hidden">
-                    <p
-                      className={`text-sm font-medium leading-snug ${
-                        delivery.address
-                          ? "text-stone-900"
-                          : "text-stone-400 italic"
-                      }`}
-                    >
-                      {delivery.address || "Select your delivery location..."}
-                    </p>
-
-                    {/* Address Roles */}
-                    <div className="mt-4 flex flex-wrap gap-4">
-                      <label className="flex items-center gap-2 text-xs font-medium text-stone-600">
-                        <input
-                          type="checkbox"
-                          checked={delivery.isDelivery || false}
-                          onChange={() => handleToggleDelivery(index)}
-                          className="h-4 w-4 rounded border-stone-300 text-red-600 focus:ring-red-500"
-                        />
-                        Delivery Address
-                      </label>
-
-                      <label className="flex items-center gap-2 text-xs font-medium text-stone-600">
-                        <input
-                          type="checkbox"
-                          checked={delivery.isBilling || false}
-                          onChange={() => handleToggleBilling(index)}
-                          className="h-4 w-4 rounded border-stone-300 text-red-600 focus:ring-red-500"
-                        />
-                        Billing Address
-                      </label>
-                    </div>
-                  </div>
+                      {deletingIndex === index ? "Removing..." : "Remove"}
+                    </button>
+                  )}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setActiveDeliveryIndex(index)}
-                  className={`w-full shrink-0 rounded-xl px-4 py-2 text-[13px] font-medium uppercase tracking-widest transition-all active:scale-95 sm:w-auto ${
-                    delivery.address
-                      ? "bg-stone-100 text-stone-600 hover:bg-red-600 hover:text-white"
-                      : "bg-red-600 text-white shadow-lg shadow-red-200"
+                <div
+                  className={`flex flex-col gap-4 rounded-2xl border-2 p-5 transition-all sm:flex-row sm:items-center ${
+                    resolvedAddress
+                      ? "border-stone-100 bg-white shadow-xl shadow-stone-200/40"
+                      : "border-dashed border-stone-200 bg-stone-50"
                   }`}
                 >
-                  {delivery.address ? "Edit" : "Select"}
-                </button>
-              </div>
-            </div>
-          ))}
+                  <div className="flex min-w-0 flex-1 items-center gap-4">
+                    <div
+                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-colors ${
+                        resolvedAddress
+                          ? "bg-red-50 text-red-600"
+                          : "bg-stone-200 text-stone-400"
+                      }`}
+                    >
+                      <LocationPinIcon />
+                    </div>
 
+                    <div className="flex-1 overflow-hidden">
+                      <p
+                        className={`text-sm font-medium leading-snug ${
+                          resolvedAddress
+                            ? "text-stone-900"
+                            : "text-stone-400 italic"
+                        }`}
+                      >
+                        {resolvedAddress || "Select your delivery location..."}
+                      </p>
+
+                      <AddressRoles
+                        isDelivery={isDeliveryChecked}
+                        isBilling={isBillingChecked}
+                        onToggleDelivery={() => handleToggleDelivery(index)}
+                        onToggleBilling={() => handleToggleBilling(index)}
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveDeliveryIndex(index)}
+                    className={`w-full shrink-0 rounded-xl px-4 py-2 text-[13px] font-medium uppercase tracking-widest transition-all active:scale-95 sm:w-auto ${
+                      resolvedAddress
+                        ? "bg-stone-100 text-stone-600 hover:bg-red-600 hover:text-white"
+                        : "bg-red-600 text-white shadow-lg shadow-red-200"
+                    }`}
+                  >
+                    {resolvedAddress ? "Edit" : "Select"}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
           <button
             type="button"
             onClick={() => {
@@ -558,18 +563,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
         {error && (
           <div className="mt-8 flex items-center gap-3 rounded-2xl bg-red-50 p-4 text-xs font-medium text-red-600 ring-1 ring-red-100 animate-in fade-in slide-in-from-top-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="h-5 w-5 shrink-0"
-            >
-              <path
-                fillRule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <ErrorIcon />
             {error}
           </div>
         )}
@@ -605,15 +599,22 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
                 }).unwrap();
 
                 // Local UI update
-                const updated = form.deliveryAddresses.map((da, i) =>
-                  i === activeDeliveryIndex
+                const updated = form.deliveryAddresses.map((da, i) => ({
+                  ...da,
+
+                  ...(i === activeDeliveryIndex
                     ? {
-                        ...da,
                         address: resolvedAddress,
                         addressId,
                       }
-                    : da
-                );
+                    : {}),
+
+                  // only selected becomes delivery
+                  isDelivery: i === activeDeliveryIndex,
+
+                  // only first becomes billing
+                  isBilling: activeDeliveryIndex === 0 ? i === 0 : da.isBilling,
+                }));
 
                 setForm((prev) => ({
                   ...prev,
@@ -657,22 +658,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
                 setActiveDeliveryIndex(null);
               }
             }}
-            // onSelect={(addressData) => {
-            //   const resolvedAddress = addressData.name || "";
-            //   const addressId = addressData.id;
-            //   const updated = form.deliveryAddresses.map((da, i) =>
-            //     i === activeDeliveryIndex ? { ...da, address: resolvedAddress, addressId } : da
-            //   );
-            //   setForm((prev) => ({ ...prev, deliveryAddresses: updated }));
-            //   localStorage.setItem("uae_delivery_addresses", JSON.stringify(updated));
-
-            //   if (activeDeliveryIndex === 0) {
-            //     localStorage.setItem("uae_delivery_address", resolvedAddress);
-            //     localStorage.setItem("uae_delivery_address_id", addressId);
-            //     localStorage.setItem("uae_address", resolvedAddress);
-            //     localStorage.setItem("uae_address_id", addressId);
-            //   }
-            // }}
           />
         )}
 
