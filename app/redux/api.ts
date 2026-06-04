@@ -44,7 +44,9 @@ export const ERP_API_METHOD_URL = `${ERP_API_BASE_URL}/api/method/`;
 
 // Read token from environment variable (more secure than hardcoding)
 // TODO: Replace with proper session-based auth (see AUTHENTICATION_IMPROVEMENT_PLAN.md)
-const ERP_API_AUTHORIZATION = `token ${process.env.NEXT_PUBLIC_ERP_API_TOKEN || ""}`;
+const ERP_API_AUTHORIZATION = `token ${
+  process.env.NEXT_PUBLIC_ERP_API_TOKEN || ""
+}`;
 
 export const toErpAbsoluteUrl = (value: string) => {
   if (/^https?:\/\//i.test(value)) {
@@ -130,12 +132,12 @@ export const erpApi = createApi({
         const custom_allowed_addons = rawAddOns
           .map((row) => {
             const addOnName =
-              typeof row.add_on === "string"
-                ? row.add_on.trim()
-                : "";
+              typeof row.add_on === "string" ? row.add_on.trim() : "";
 
             const parsedPrice =
-              typeof row.price === "number" ? row.price : Number(row.price ?? 0);
+              typeof row.price === "number"
+                ? row.price
+                : Number(row.price ?? 0);
 
             if (!addOnName) return null;
 
@@ -144,8 +146,8 @@ export const erpApi = createApi({
               price: Number.isFinite(parsedPrice) ? parsedPrice : 0,
             };
           })
-          .filter(
-            (row): row is { add_on: string; price: number } => Boolean(row)
+          .filter((row): row is { add_on: string; price: number } =>
+            Boolean(row)
           );
 
         return {
@@ -189,7 +191,11 @@ export const erpApi = createApi({
         },
       }),
       transformResponse: (response: {
-        data: Array<{ name: string; customer_name?: string; mobile_no?: string }>;
+        data: Array<{
+          name: string;
+          customer_name?: string;
+          mobile_no?: string;
+        }>;
       }) => response.data,
     }),
     getCustomerAvatar: builder.query<string | null, string>({
@@ -233,6 +239,7 @@ export const erpApi = createApi({
             "country",
             "phone",
             "is_primary_address",
+            "is_shipping_address",
           ]),
         },
       }),
@@ -444,11 +451,15 @@ export const erpApi = createApi({
       UpdateSalesOrderRequest
     >({
       query: ({ salesOrderName, ...body }) => ({
-        url: `${ERP_API_BASE_URL}/api/resource/Sales Order/${encodeURIComponent(salesOrderName)}`,
+        url: `${ERP_API_BASE_URL}/api/resource/Sales Order/${encodeURIComponent(
+          salesOrderName
+        )}`,
         method: "PUT",
         body,
       }),
-      transformResponse: (response: { data: UpdateSalesOrderResponse["data"] }) => ({
+      transformResponse: (response: {
+        data: UpdateSalesOrderResponse["data"];
+      }) => ({
         data: response.data,
       }),
     }),
@@ -504,7 +515,9 @@ export const erpApi = createApi({
       UpdateAddressRequest
     >({
       query: ({ addressName, ...body }) => ({
-        url: `${ERP_API_BASE_URL}/api/resource/Address/${encodeURIComponent(addressName)}`,
+        url: `${ERP_API_BASE_URL}/api/resource/Address/${encodeURIComponent(
+          addressName
+        )}`,
         method: "PUT",
         body,
         headers: {
@@ -529,9 +542,7 @@ export const erpApi = createApi({
 
         return { data: (result.data as { message?: unknown } | null) ?? null };
       },
-      invalidatesTags: () => [
-        { type: "CustomerAddresses", id: "LIST" },
-      ],
+      invalidatesTags: () => [{ type: "CustomerAddresses", id: "LIST" }],
     }),
     disableAddress: builder.mutation<{ message?: unknown } | null, string>({
       queryFn: async (addressName, _api, _extraOptions, fetchWithBQ) => {
@@ -552,9 +563,7 @@ export const erpApi = createApi({
 
         return { data: (result.data as { message?: unknown } | null) ?? null };
       },
-      invalidatesTags: () => [
-        { type: "CustomerAddresses", id: "LIST" },
-      ],
+      invalidatesTags: () => [{ type: "CustomerAddresses", id: "LIST" }],
     }),
   }),
 });

@@ -14,6 +14,8 @@ export type DeliveryAddressItem = {
   title: string;
   address: string;
   addressId: string;
+  isDelivery?: boolean;
+  isBilling?: boolean;
 };
 
 interface CheckoutFormProps {
@@ -32,16 +34,30 @@ interface CheckoutFormProps {
   error: string | null;
 }
 
-const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => {
-  const [activeDeliveryIndex, setActiveDeliveryIndex] = useState<number | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<{index: number, label: string} | null>(null);
+const CheckoutForm: React.FC<CheckoutFormProps> = ({
+  form,
+  setForm,
+  error,
+}) => {
+  const [activeDeliveryIndex, setActiveDeliveryIndex] = useState<number | null>(
+    null
+  );
+  const [confirmDelete, setConfirmDelete] = useState<{
+    index: number;
+    label: string;
+  } | null>(null);
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
-  const [updatingTitleIndex, setUpdatingTitleIndex] = useState<number | null>(null);
-  const [feedback, setFeedback] = useState<{type: 'success' | 'error', message: string} | null>(null);
+  const [updatingTitleIndex, setUpdatingTitleIndex] = useState<number | null>(
+    null
+  );
+  const [feedback, setFeedback] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
   const [deleteAddress] = useDeleteAddressMutation();
   const [disableAddress] = useDisableAddressMutation();
   const [updateAddress] = useUpdateAddressMutation();
-  
+
   const customerName = getCustomerName() || form.phone;
   const { refetch: refetchAddresses } = useGetCustomerAddressesQuery(
     customerName,
@@ -79,6 +95,8 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => 
               localStorage.getItem("uae_delivery_address_id") ||
               localStorage.getItem("uae_address_id") ||
               "",
+            isDelivery: true,
+            isBilling: true,
           },
         ];
       }
@@ -94,11 +112,17 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => 
             localStorage.getItem("uae_delivery_address_id") ||
             localStorage.getItem("uae_address_id") ||
             "",
+          isDelivery: true,
+          isBilling: true,
         },
       ];
     }
 
-    if (savedPhone || savedAddress || deliveryAddresses.some((d) => d.address)) {
+    if (
+      savedPhone ||
+      savedAddress ||
+      deliveryAddresses.some((d) => d.address)
+    ) {
       setForm((prev) => ({
         ...prev,
         phone: savedPhone || prev.phone,
@@ -125,7 +149,8 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => 
     }
 
     const phone = localStorage.getItem("uae_phone") || form.phone || "";
-    const titleSlug = toAddressTitleSlug(current.title) || `address-${index + 1}`;
+    const titleSlug =
+      toAddressTitleSlug(current.title) || `address-${index + 1}`;
     const addressTitle = phone ? `${phone}-${titleSlug}` : titleSlug;
 
     setUpdatingTitleIndex(index);
@@ -135,25 +160,29 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => 
         addressName: current.addressId,
         address_title: addressTitle,
       }).unwrap();
-      
-      setFeedback({type: 'success', message: 'Address title updated'});
+
+      setFeedback({ type: "success", message: "Address title updated" });
       setTimeout(() => setFeedback(null), 2000);
     } catch (err) {
       console.warn("Failed to update checkout address title:", err);
-      setFeedback({type: 'error', message: 'Failed to update title. Please try again.'});
+      setFeedback({
+        type: "error",
+        message: "Failed to update title. Please try again.",
+      });
       setTimeout(() => setFeedback(null), 4000);
     } finally {
       setUpdatingTitleIndex(null);
     }
   };
 
-
-
-
   const showDeleteConfirmation = (index: number) => {
     // Prevent deleting the last address
     if (form.deliveryAddresses.length === 1) {
-      setFeedback({type: 'error', message: 'You must keep at least one address. Add another before removing this one.'});
+      setFeedback({
+        type: "error",
+        message:
+          "You must keep at least one address. Add another before removing this one.",
+      });
       setTimeout(() => setFeedback(null), 4000);
       return;
     }
@@ -161,13 +190,14 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => 
     const addressToRemove = form.deliveryAddresses[index];
     if (!addressToRemove) return;
 
-    const addressLabel = addressToRemove.title || addressToRemove.address || 'this address';
+    const addressLabel =
+      addressToRemove.title || addressToRemove.address || "this address";
     setConfirmDelete({ index, label: addressLabel });
   };
 
   const handleRemoveAddress = async () => {
     if (!confirmDelete) return;
-    
+
     const indexToRemove = confirmDelete.index;
     const addressToRemove = form.deliveryAddresses[indexToRemove];
     if (!addressToRemove) return;
@@ -175,298 +205,490 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ form, setForm, error }) => 
     setConfirmDelete(null);
     setDeletingIndex(indexToRemove);
 
-  // Try deleting from ERPNext first
-  if (addressToRemove.addressId) {
-    try {
-      await deleteAddress(addressToRemove.addressId).unwrap();
-    } catch (err: unknown) {
-      const errorData =
-        typeof err === "object" &&
-        err !== null &&
-        "data" in err
-          ? (err as {
-              data?: {
-                _server_messages?: unknown;
-                exception?: unknown;
-              };
-            }).data
-          : undefined;
+    // Try deleting from ERPNext first
+    if (addressToRemove.addressId) {
+      try {
+        await deleteAddress(addressToRemove.addressId).unwrap();
+      } catch (err: unknown) {
+        const errorData =
+          typeof err === "object" && err !== null && "data" in err
+            ? (
+                err as {
+                  data?: {
+                    _server_messages?: unknown;
+                    exception?: unknown;
+                  };
+                }
+              ).data
+            : undefined;
 
-      const serverMessages = String(
-        errorData?._server_messages ||
-          errorData?.exception ||
-          ""
-      );
+        const serverMessages = String(
+          errorData?._server_messages || errorData?.exception || ""
+        );
 
-      // If address is linked to Sales Order etc
-      // ERPNext prevents deletion → disable instead
-      if (serverMessages.includes("LinkExistsError")) {
-        try {
-          await disableAddress(addressToRemove.addressId).unwrap();
-        } catch (disableErr) {
-          console.warn(
-            "Failed to disable checkout address:",
-            disableErr
-          );
-          setFeedback({type: 'error', message: 'Failed to remove address. Please try again.'});
+        // If address is linked to Sales Order etc
+        // ERPNext prevents deletion → disable instead
+        if (serverMessages.includes("LinkExistsError")) {
+          try {
+            await disableAddress(addressToRemove.addressId).unwrap();
+          } catch (disableErr) {
+            console.warn("Failed to disable checkout address:", disableErr);
+            setFeedback({
+              type: "error",
+              message: "Failed to remove address. Please try again.",
+            });
+            setTimeout(() => setFeedback(null), 4000);
+            setDeletingIndex(null);
+            return;
+          }
+        } else {
+          console.warn("Failed to delete checkout address:", err);
+          setFeedback({
+            type: "error",
+            message: "Failed to remove address. Please try again.",
+          });
           setTimeout(() => setFeedback(null), 4000);
           setDeletingIndex(null);
           return;
         }
-      } else {
-        console.warn(
-          "Failed to delete checkout address:",
-          err
-        );
-        setFeedback({type: 'error', message: 'Failed to remove address. Please try again.'});
-        setTimeout(() => setFeedback(null), 4000);
-        setDeletingIndex(null);
-        return;
       }
     }
-  }
 
-  // Remove locally
-  const updated = form.deliveryAddresses.filter(
-    (_, i) => i !== indexToRemove
-  );
-
-  setForm((prev) => ({
-    ...prev,
-    deliveryAddresses: updated,
-    address: updated[0]?.address || "",
-  }));
-
-  // Sync localStorage
-  localStorage.setItem(
-    "uae_delivery_addresses",
-    JSON.stringify(updated)
-  );
-
-  // Keep primary/default address synced
-  if (updated[0]) {
-    localStorage.setItem(
-      "uae_delivery_address",
-      updated[0].address
+    // Remove locally
+    const updated = form.deliveryAddresses.filter(
+      (_, i) => i !== indexToRemove
     );
 
-    localStorage.setItem(
-      "uae_delivery_address_id",
-      updated[0].addressId
-    );
+    setForm((prev) => ({
+      ...prev,
+      deliveryAddresses: updated,
+      address: updated[0]?.address || "",
+    }));
 
-    localStorage.setItem(
-      "uae_address",
-      updated[0].address
-    );
+    // Sync localStorage
+    localStorage.setItem("uae_delivery_addresses", JSON.stringify(updated));
 
-    localStorage.setItem(
-      "uae_address_id",
-      updated[0].addressId
-    );
-  } else {
-    localStorage.removeItem("uae_delivery_address");
-    localStorage.removeItem("uae_delivery_address_id");
-    localStorage.removeItem("uae_address");
-    localStorage.removeItem("uae_address_id");
-  }
-  
-  setFeedback({type: 'success', message: 'Address removed successfully'});
-  setTimeout(() => setFeedback(null), 3000);
-  
-  // Refetch to ensure consistency across devices/tabs
-  refetchAddresses();
-  
-  setDeletingIndex(null);
-};
+    // Keep primary/default address synced
+    if (updated[0]) {
+      localStorage.setItem("uae_delivery_address", updated[0].address);
+
+      localStorage.setItem("uae_delivery_address_id", updated[0].addressId);
+
+      localStorage.setItem("uae_address", updated[0].address);
+
+      localStorage.setItem("uae_address_id", updated[0].addressId);
+    } else {
+      localStorage.removeItem("uae_delivery_address");
+      localStorage.removeItem("uae_delivery_address_id");
+      localStorage.removeItem("uae_address");
+      localStorage.removeItem("uae_address_id");
+    }
+
+    setFeedback({ type: "success", message: "Address removed successfully" });
+    setTimeout(() => setFeedback(null), 3000);
+
+    // Refetch to ensure consistency across devices/tabs
+    refetchAddresses();
+
+    setDeletingIndex(null);
+  };
+
+  const handleToggleDelivery = async (index: number) => {
+    const updated = form.deliveryAddresses.map((item, i) => ({
+      ...item,
+      isDelivery: i === index,
+    }));
+
+    setForm((prev) => ({
+      ...prev,
+      deliveryAddresses: updated,
+    }));
+
+    localStorage.setItem("uae_delivery_addresses", JSON.stringify(updated));
+
+    const selected = updated[index];
+
+    if (selected?.addressId) {
+      try {
+        await updateAddress({
+          addressName: selected.addressId,
+          is_shipping_address: selected.isDelivery ? 1 : 0,
+        }).unwrap();
+      } catch (err) {
+        console.error("Failed to update delivery address:", err);
+      }
+    }
+  };
+
+  const handleToggleBilling = async (index: number) => {
+    const updated = form.deliveryAddresses.map((item, i) => ({
+      ...item,
+      isBilling: i === index,
+    }));
+
+    setForm((prev) => ({
+      ...prev,
+      deliveryAddresses: updated,
+    }));
+
+    localStorage.setItem("uae_delivery_addresses", JSON.stringify(updated));
+
+    const selected = updated[index];
+
+    if (selected?.addressId) {
+      try {
+        await updateAddress({
+          addressName: selected.addressId,
+          is_primary_address: selected.isBilling ? 1 : 0,
+        }).unwrap();
+      } catch (err) {
+        console.error("Failed to update billing address:", err);
+      }
+    }
+  };
+
   return (
     <>
       {/* Feedback Toast */}
       {feedback && (
-        <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 min-w-80 max-w-md rounded-2xl border-2 px-6 py-4 shadow-2xl animate-in slide-in-from-top-4 duration-300 ${
-          feedback.type === 'success' 
-            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-            : 'bg-red-50 border-red-200 text-red-800'
-        }`}>
-          <p className="text-sm font-semibold text-center">{feedback.message}</p>
+        <div
+          className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 min-w-80 max-w-md rounded-2xl border-2 px-6 py-4 shadow-2xl animate-in slide-in-from-top-4 duration-300 ${
+            feedback.type === "success"
+              ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+              : "bg-red-50 border-red-200 text-red-800"
+          }`}
+        >
+          <p className="text-sm font-semibold text-center">
+            {feedback.message}
+          </p>
         </div>
       )}
 
-      <section 
+      <section
         className="rounded-[2rem] bg-white p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-stone-100"
         data-address-section
       >
-      <h2 className="mb-8 flex items-center gap-3 text-xl font-medium tracking-wide text-stone-900">
-        <span className="h-6 w-1 rounded-full bg-red-600" />
-        Delivery Details
-      </h2>
+        <h2 className="mb-8 flex items-center gap-3 text-xl font-medium tracking-wide text-stone-900">
+          <span className="h-6 w-1 rounded-full bg-red-600" />
+          Delivery Details
+        </h2>
 
-      <div className="space-y-8">
-        <div className="group">
-          <label className="mb-3 ml-1 block text-[13px] font-medium uppercase tracking-wide text-stone-400">
-            Contact Phone
-          </label>
-          <div className="flex items-center gap-4 rounded-2xl border-2 border-stone-50 bg-stone-50/50 px-5 py-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-stone-400 shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
-                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-              </svg>
-            </div>
-            <div className="flex flex-1 flex-col">
-              <span className="text-xs font-medium uppercase tracking-wide text-green-600">Verified</span>
-              <span className="font-medium text-stone-900">{form.phone}</span>
+        <div className="space-y-8">
+          <div className="group">
+            <label className="mb-3 ml-1 block text-[13px] font-medium uppercase tracking-wide text-stone-400">
+              Contact Phone
+            </label>
+            <div className="flex items-center gap-4 rounded-2xl border-2 border-stone-50 bg-stone-50/50 px-5 py-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-stone-400 shadow-sm">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="h-5 w-5"
+                >
+                  <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                </svg>
+              </div>
+              <div className="flex flex-1 flex-col">
+                <span className="text-xs font-medium uppercase tracking-wide text-green-600">
+                  Verified
+                </span>
+                <span className="font-medium text-stone-900">{form.phone}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {form.deliveryAddresses.map((delivery, index) => (
-          <div key={delivery.id ?? String(index)} className="group">
-            <div className="mb-3 ml-1 flex items-center gap-1">
-              <span className="text-[13px] font-medium uppercase tracking-wide text-stone-400 group-hover:text-red-600 transition-colors">
-                Delivery To&nbsp;(
-              </span>
-              <input
-                type="text"
-                value={delivery.title}
-                onChange={(e) => handleTitleChange(index, e.target.value)}
-                onBlur={() => {
-                  void handleTitleCommit(index);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.currentTarget.blur();
-                  }
-                }}
-                disabled={updatingTitleIndex === index}
-                placeholder={index === 0 ? "Home" : "Office, Work…"}
-                className="w-20 border-b border-dashed border-stone-300 bg-transparent text-center text-[13px] font-medium uppercase tracking-wide text-stone-600 placeholder:text-stone-300 focus:border-red-600 focus:outline-none disabled:opacity-50"
-              />
-              {updatingTitleIndex === index && (
-                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
-              )}
-              <span className="text-[13px] font-medium uppercase tracking-wide text-stone-400 group-hover:text-red-600 transition-colors">
-                )
-              </span>
-              {index > 0 && (
-                <button
-                  type="button"
-                  onClick={() => showDeleteConfirmation(index)}
-                  disabled={deletingIndex === index}
-                  className="ml-auto text-[11px] font-medium uppercase tracking-wide text-stone-300 transition-colors hover:text-red-400 disabled:opacity-50 disabled:cursor-wait"
-                >
-                  {deletingIndex === index ? 'Removing...' : 'Remove'}
-                </button>
-              )}
-            </div>
-
-            <div
-              className={`flex flex-col gap-4 rounded-2xl border-2 p-5 transition-all sm:flex-row sm:items-center ${
-                delivery.address
-                  ? "border-stone-100 bg-white shadow-xl shadow-stone-200/40"
-                  : "border-dashed border-stone-200 bg-stone-50"
-              }`}
-            >
-              <div className="flex min-w-0 flex-1 items-center gap-4">
-                <div
-                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-colors ${
-                    delivery.address ? "bg-red-50 text-red-600" : "bg-stone-200 text-stone-400"
-                  }`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
-                    <path fillRule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.152-.722c1.102-.74 2.499-1.856 3.635-3.456 1.137-1.6 1.832-3.41 1.832-5.212 0-4.72-3.8-8.502-8.514-8.502-4.714 0-8.514 3.782-8.514 8.502 0 1.802.695 3.612 1.832 5.212 1.136 1.6 2.533 2.716 3.635 3.456a16.977 16.977 0 001.152.722zM12.75 12a.75.75 0 01-.75.75 2.25 2.25 0 110-4.5.75.75 0 01.75.75v3z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div className="flex-1 overflow-hidden">
-                  <p className={`text-sm font-medium leading-snug ${delivery.address ? "text-stone-900" : "text-stone-400 italic"}`}>
-                    {delivery.address || "Select your delivery location..."}
-                  </p>
-                </div>
+          {form.deliveryAddresses.map((delivery, index) => (
+            <div key={delivery.id ?? String(index)} className="group">
+              <div className="mb-3 ml-1 flex items-center gap-1">
+                <span className="text-[13px] font-medium uppercase tracking-wide text-stone-400 group-hover:text-red-600 transition-colors">
+                  Delivery To&nbsp;(
+                </span>
+                <input
+                  type="text"
+                  value={delivery.title}
+                  onChange={(e) => handleTitleChange(index, e.target.value)}
+                  onBlur={() => {
+                    void handleTitleCommit(index);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.currentTarget.blur();
+                    }
+                  }}
+                  disabled={updatingTitleIndex === index}
+                  placeholder={index === 0 ? "Home" : "Office, Work…"}
+                  className="w-20 border-b border-dashed border-stone-300 bg-transparent text-center text-[13px] font-medium uppercase tracking-wide text-stone-600 placeholder:text-stone-300 focus:border-red-600 focus:outline-none disabled:opacity-50"
+                />
+                {updatingTitleIndex === index && (
+                  <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
+                )}
+                <span className="text-[13px] font-medium uppercase tracking-wide text-stone-400 group-hover:text-red-600 transition-colors">
+                  )
+                </span>
+                {index > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => showDeleteConfirmation(index)}
+                    disabled={deletingIndex === index}
+                    className="ml-auto text-[11px] font-medium uppercase tracking-wide text-stone-300 transition-colors hover:text-red-400 disabled:opacity-50 disabled:cursor-wait"
+                  >
+                    {deletingIndex === index ? "Removing..." : "Remove"}
+                  </button>
+                )}
               </div>
 
-              <button
-                type="button"
-                onClick={() => setActiveDeliveryIndex(index)}
-                className={`w-full shrink-0 rounded-xl px-4 py-2 text-[13px] font-medium uppercase tracking-widest transition-all active:scale-95 sm:w-auto ${
+              <div
+                className={`flex flex-col gap-4 rounded-2xl border-2 p-5 transition-all sm:flex-row sm:items-center ${
                   delivery.address
-                    ? "bg-stone-100 text-stone-600 hover:bg-red-600 hover:text-white"
-                    : "bg-red-600 text-white shadow-lg shadow-red-200"
+                    ? "border-stone-100 bg-white shadow-xl shadow-stone-200/40"
+                    : "border-dashed border-stone-200 bg-stone-50"
                 }`}
               >
-                {delivery.address ? "Edit" : "Select"}
-              </button>
+                <div className="flex min-w-0 flex-1 items-center gap-4">
+                  <div
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-colors ${
+                      delivery.address
+                        ? "bg-red-50 text-red-600"
+                        : "bg-stone-200 text-stone-400"
+                    }`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="h-6 w-6"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.152-.722c1.102-.74 2.499-1.856 3.635-3.456 1.137-1.6 1.832-3.41 1.832-5.212 0-4.72-3.8-8.502-8.514-8.502-4.714 0-8.514 3.782-8.514 8.502 0 1.802.695 3.612 1.832 5.212 1.136 1.6 2.533 2.716 3.635 3.456a16.977 16.977 0 001.152.722zM12.75 12a.75.75 0 01-.75.75 2.25 2.25 0 110-4.5.75.75 0 01.75.75v3z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  {/* <div className="flex-1 overflow-hidden">
+                    <p
+                      className={`text-sm font-medium leading-snug ${
+                        delivery.address
+                          ? "text-stone-900"
+                          : "text-stone-400 italic"
+                      }`}
+                    >
+                      {delivery.address || "Select your delivery location..."}
+                    </p>
+                  </div> */}
+                  <div className="flex-1 overflow-hidden">
+                    <p
+                      className={`text-sm font-medium leading-snug ${
+                        delivery.address
+                          ? "text-stone-900"
+                          : "text-stone-400 italic"
+                      }`}
+                    >
+                      {delivery.address || "Select your delivery location..."}
+                    </p>
+
+                    {/* Address Roles */}
+                    <div className="mt-4 flex flex-wrap gap-4">
+                      <label className="flex items-center gap-2 text-xs font-medium text-stone-600">
+                        <input
+                          type="checkbox"
+                          checked={delivery.isDelivery || false}
+                          onChange={() => handleToggleDelivery(index)}
+                          className="h-4 w-4 rounded border-stone-300 text-red-600 focus:ring-red-500"
+                        />
+                        Delivery Address
+                      </label>
+
+                      <label className="flex items-center gap-2 text-xs font-medium text-stone-600">
+                        <input
+                          type="checkbox"
+                          checked={delivery.isBilling || false}
+                          onChange={() => handleToggleBilling(index)}
+                          className="h-4 w-4 rounded border-stone-300 text-red-600 focus:ring-red-500"
+                        />
+                        Billing Address
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveDeliveryIndex(index)}
+                  className={`w-full shrink-0 rounded-xl px-4 py-2 text-[13px] font-medium uppercase tracking-widest transition-all active:scale-95 sm:w-auto ${
+                    delivery.address
+                      ? "bg-stone-100 text-stone-600 hover:bg-red-600 hover:text-white"
+                      : "bg-red-600 text-white shadow-lg shadow-red-200"
+                  }`}
+                >
+                  {delivery.address ? "Edit" : "Select"}
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        <button
-          type="button"
-          onClick={() => {
-            const updated = [
-              ...form.deliveryAddresses,
-              { id: String(Date.now()), title: "", address: "", addressId: "" },
-            ];
-            setForm((prev) => ({ ...prev, deliveryAddresses: updated }));
-            localStorage.setItem("uae_delivery_addresses", JSON.stringify(updated));
-            setActiveDeliveryIndex(updated.length - 1);
-          }}
-          className="ml-1 flex items-center gap-2 text-[13px] font-medium uppercase tracking-wide text-stone-400 transition-colors hover:text-red-600"
-        >
-          <span className="text-base leading-none">+</span> Add Delivery Address
-        </button>
-      </div>
-
-      {error && (
-        <div className="mt-8 flex items-center gap-3 rounded-2xl bg-red-50 p-4 text-xs font-medium text-red-600 ring-1 ring-red-100 animate-in fade-in slide-in-from-top-2">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 shrink-0">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
-          {error}
+          <button
+            type="button"
+            onClick={() => {
+              const updated = [
+                ...form.deliveryAddresses,
+                {
+                  id: String(Date.now()),
+                  title: "",
+                  address: "",
+                  addressId: "",
+                  isDelivery: false,
+                  isBilling: false,
+                },
+              ];
+              setForm((prev) => ({ ...prev, deliveryAddresses: updated }));
+              localStorage.setItem(
+                "uae_delivery_addresses",
+                JSON.stringify(updated)
+              );
+              setActiveDeliveryIndex(updated.length - 1);
+            }}
+            className="ml-1 flex items-center gap-2 text-[13px] font-medium uppercase tracking-wide text-stone-400 transition-colors hover:text-red-600"
+          >
+            <span className="text-base leading-none">+</span> Add Delivery
+            Address
+          </button>
         </div>
-      )}
 
-      {activeDeliveryIndex !== null && (
-        <AddressSelectModal
-          open={true}
-          onClose={() => setActiveDeliveryIndex(null)}
-          addressType="Billing"
-          skipCustomerCreation={activeDeliveryIndex > 0}
-          redirectTo={null}
-          existingAddressId={
-            form.deliveryAddresses[activeDeliveryIndex]?.addressId || null
-          }
-          customTitle={form.deliveryAddresses[activeDeliveryIndex]?.title || `delivery-${activeDeliveryIndex + 1}`}
-          onSelect={(addressData) => {
-            const resolvedAddress = addressData.name || "";
-            const addressId = addressData.id;
-            const updated = form.deliveryAddresses.map((da, i) =>
-              i === activeDeliveryIndex ? { ...da, address: resolvedAddress, addressId } : da
-            );
-            setForm((prev) => ({ ...prev, deliveryAddresses: updated }));
-            localStorage.setItem("uae_delivery_addresses", JSON.stringify(updated));
+        {error && (
+          <div className="mt-8 flex items-center gap-3 rounded-2xl bg-red-50 p-4 text-xs font-medium text-red-600 ring-1 ring-red-100 animate-in fade-in slide-in-from-top-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="h-5 w-5 shrink-0"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clipRule="evenodd"
+              />
+            </svg>
+            {error}
+          </div>
+        )}
 
-            if (activeDeliveryIndex === 0) {
-              localStorage.setItem("uae_delivery_address", resolvedAddress);
-              localStorage.setItem("uae_delivery_address_id", addressId);
-              localStorage.setItem("uae_address", resolvedAddress);
-              localStorage.setItem("uae_address_id", addressId);
+        {activeDeliveryIndex !== null && (
+          <AddressSelectModal
+            open={true}
+            onClose={() => setActiveDeliveryIndex(null)}
+            addressType="Billing"
+            skipCustomerCreation={activeDeliveryIndex > 0}
+            redirectTo={null}
+            existingAddressId={
+              form.deliveryAddresses[activeDeliveryIndex]?.addressId || null
             }
-          }}
-        />
-      )}
-      
-      {confirmDelete && (
-        <ConfirmDialog
-          open={true}
-          onClose={() => setConfirmDelete(null)}
-          onConfirm={handleRemoveAddress}
-          title="Remove Address?"
-          message={`Are you sure you want to remove "${confirmDelete.label}"? This action cannot be undone.`}
-          confirmText="Yes, Remove"
-          cancelText="Cancel"
-          variant="danger"
-        />
-      )}
-    </section>
+            customTitle={
+              form.deliveryAddresses[activeDeliveryIndex]?.title ||
+              `delivery-${activeDeliveryIndex + 1}`
+            }
+            onSelect={async (addressData) => {
+              const resolvedAddress = addressData.name || "";
+              const addressId = addressData.id;
+
+              try {
+                // Sync ERPNext native address roles
+                await updateAddress({
+                  addressName: addressId,
+
+                  // Delivery address
+                  is_shipping_address: 1,
+
+                  // First/main checkout address becomes billing too
+                  is_primary_address: activeDeliveryIndex === 0 ? 1 : 0,
+                }).unwrap();
+
+                // Local UI update
+                const updated = form.deliveryAddresses.map((da, i) =>
+                  i === activeDeliveryIndex
+                    ? {
+                        ...da,
+                        address: resolvedAddress,
+                        addressId,
+                      }
+                    : da
+                );
+
+                setForm((prev) => ({
+                  ...prev,
+                  deliveryAddresses: updated,
+                }));
+
+                localStorage.setItem(
+                  "uae_delivery_addresses",
+                  JSON.stringify(updated)
+                );
+
+                // Sync primary local values
+                if (activeDeliveryIndex === 0) {
+                  localStorage.setItem("uae_delivery_address", resolvedAddress);
+
+                  localStorage.setItem("uae_delivery_address_id", addressId);
+
+                  localStorage.setItem("uae_address", resolvedAddress);
+
+                  localStorage.setItem("uae_address_id", addressId);
+                }
+
+                setFeedback({
+                  type: "success",
+                  message: "Address updated successfully",
+                });
+
+                setTimeout(() => setFeedback(null), 2500);
+
+                refetchAddresses();
+              } catch (err) {
+                console.error("Failed to update address roles:", err);
+
+                setFeedback({
+                  type: "error",
+                  message: "Failed to update address",
+                });
+
+                setTimeout(() => setFeedback(null), 4000);
+              } finally {
+                setActiveDeliveryIndex(null);
+              }
+            }}
+            // onSelect={(addressData) => {
+            //   const resolvedAddress = addressData.name || "";
+            //   const addressId = addressData.id;
+            //   const updated = form.deliveryAddresses.map((da, i) =>
+            //     i === activeDeliveryIndex ? { ...da, address: resolvedAddress, addressId } : da
+            //   );
+            //   setForm((prev) => ({ ...prev, deliveryAddresses: updated }));
+            //   localStorage.setItem("uae_delivery_addresses", JSON.stringify(updated));
+
+            //   if (activeDeliveryIndex === 0) {
+            //     localStorage.setItem("uae_delivery_address", resolvedAddress);
+            //     localStorage.setItem("uae_delivery_address_id", addressId);
+            //     localStorage.setItem("uae_address", resolvedAddress);
+            //     localStorage.setItem("uae_address_id", addressId);
+            //   }
+            // }}
+          />
+        )}
+
+        {confirmDelete && (
+          <ConfirmDialog
+            open={true}
+            onClose={() => setConfirmDelete(null)}
+            onConfirm={handleRemoveAddress}
+            title="Remove Address?"
+            message={`Are you sure you want to remove "${confirmDelete.label}"? This action cannot be undone.`}
+            confirmText="Yes, Remove"
+            cancelText="Cancel"
+            variant="danger"
+          />
+        )}
+      </section>
     </>
   );
 };

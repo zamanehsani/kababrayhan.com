@@ -36,8 +36,22 @@ export interface CreateAddressResponse {
 
 export interface UpdateAddressRequest {
   addressName: string;
-  address_line1?: string;
+
   address_title?: string;
+  address_type?: string;
+
+  address_line1?: string;
+  address_line2?: string;
+
+  city?: string;
+  country?: string;
+  phone?: string;
+
+  disabled?: number;
+
+  // ADD THESE
+  is_primary_address?: number;
+  is_shipping_address?: number;
 }
 
 export interface UpdateAddressResponse {
@@ -59,6 +73,7 @@ export interface Address {
   country: string;
   phone?: string;
   is_primary_address?: number;
+  is_shipping_address?: number;
 }
 
 // --- OTP Verification Types ---

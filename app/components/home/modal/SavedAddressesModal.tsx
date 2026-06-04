@@ -106,10 +106,18 @@ export default function SavedAddressesModal({
 
                     {/* Content */}
                     <div className="min-w-0">
-                      <p className="text-base font-semibold tracking-wide text-slate-900">
-                        {item.title}
-                      </p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-base font-semibold tracking-wide text-slate-900">
+                          {item.title}
+                        </p>
 
+                        {/* Visual Badge Added Here */}
+                        {isSelected && (
+                          <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
+                            Delivery To
+                          </span>
+                        )}
+                      </div>
                       <p className="mt-2 text-sm leading-6 text-slate-500 break-words">
                         {item.address}
                       </p>

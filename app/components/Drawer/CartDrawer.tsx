@@ -17,6 +17,7 @@ import {
   saveDeliveryAddress,
 } from "@/app/lib/customerPortal";
 import SavedAddressesModal from "../home/modal/SavedAddressesModal";
+import { useUpdateAddressMutation } from "@/app/redux/api";
 
 export default function CartDrawer() {
   const router = useRouter();
@@ -35,12 +36,12 @@ export default function CartDrawer() {
   const [allowExistingPhoneInput, setAllowExistingPhoneInput] = useState(false);
   const [showSavedAddressesModal, setShowSavedAddressesModal] = useState(false);
 
-  const [snapshot, setSnapshot] = useState(
-  readCustomerPortalSnapshot()
-);
+  const [snapshot, setSnapshot] = useState(readCustomerPortalSnapshot());
   const [selectedDeliveryAddressId, setSelectedDeliveryAddressId] = useState<
     string | undefined
   >(snapshot.addressId);
+
+  const [updateAddress] = useUpdateAddressMutation();
 
   useEffect(() => {
     const handleOpen = () => {
@@ -397,10 +398,26 @@ export default function CartDrawer() {
           open={showSavedAddressesModal}
           addresses={snapshot.deliveryAddresses}
           selectedAddressId={selectedDeliveryAddressId}
-          onSelect={(selected) => {
-            saveDeliveryAddress(selected.address, selected.addressId);
+          onSelect={async (selected) => {
+            try {
+              // Update ERPNext native shipping address
+              await updateAddress({
+                addressName: selected.addressId,
+                is_shipping_address: 1,
+              }).unwrap();
 
-            setSelectedDeliveryAddressId(selected.addressId);
+              // Persist local snapshot
+              saveDeliveryAddress(selected.address, selected.addressId);
+
+              // Update UI state
+              setSelectedDeliveryAddressId(selected.addressId);
+
+              // Refresh local snapshot
+              const updatedSnapshot = readCustomerPortalSnapshot();
+              setSnapshot(updatedSnapshot);
+            } catch (error) {
+              console.error("Failed to update delivery address", error);
+            }
           }}
           onAddNew={() => {
             setShowSavedAddressesModal(false);
