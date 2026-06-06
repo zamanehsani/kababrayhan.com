@@ -2,13 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  ChevronLeft,
-  MapPin,
-  Pencil,
-  Phone,
-  ShieldCheck,
-} from "lucide-react";
+import { ChevronLeft, MapPin, Pencil, Phone, ShieldCheck } from "lucide-react";
 import MobileHeader from "../components/Header/MobileHeader";
 import TabletHeader from "../components/Header/TabletHeader";
 import DesktopHeader from "../components/Header/DesktopHeader";
@@ -42,33 +36,33 @@ import {
 } from "@/app/redux/api";
 import Footer from "../components/Footer/Footer";
 
-const toDisplayAddressTitle = (
-  rawTitle: string,
-  addressType: string,
-  index: number
-) => {
-  const segments = rawTitle
-    .split("-")
-    .map((segment) => segment.trim())
-    .filter(Boolean);
+// Robust recursive string utility to strip out prefixes and format titles beautifully
+const extractFriendlyTitle = (addressTitle?: string, phone?: string) => {
+  if (!addressTitle) return "";
 
-  const filteredSegments = segments.filter((segment) => {
-    const normalized = segment.toLowerCase();
-    return (
-      !segment.startsWith("+") &&
-      normalized !== addressType.toLowerCase() &&
-      normalized !== "billing" &&
-      normalized !== "shipping"
-    );
-  });
+  let clean = addressTitle.trim();
 
-  const candidate = filteredSegments.join(" ").trim();
-
-  if (candidate) {
-    return candidate.replace(/\b\w/g, (char) => char.toUpperCase());
+  // Recursively strip out the phone number prefix if it exists
+  if (phone) {
+    const formattedPhone = phone.trim();
+    while (clean.startsWith(formattedPhone)) {
+      clean = clean.slice(formattedPhone.length).replace(/^-/, "");
+    }
+    const phoneNoPlus = formattedPhone.replace("+", "");
+    while (clean.startsWith(phoneNoPlus)) {
+      clean = clean.slice(phoneNoPlus.length).replace(/^-/, "");
+    }
   }
 
-  return index === 0 ? "Home" : `Address ${index + 1}`;
+  // Replace lingering dashes with spaces
+  clean = clean.replace(/-/g, " ").trim();
+
+  // Capitalize nicely for premium UI layout presentation
+  if (clean) {
+    return clean.replace(/\b\w/g, (char) => char.toUpperCase());
+  }
+
+  return "";
 };
 
 export default function AccountProfilePage() {
@@ -84,29 +78,31 @@ export default function AccountProfilePage() {
   const [previousVerifiedPhone, setPreviousVerifiedPhone] = useState("");
   const [isSyncingFromBackend, setIsSyncingFromBackend] = useState(false);
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
-  const [updatingTitleIndex, setUpdatingTitleIndex] = useState<number | null>(null);
-  const [feedback, setFeedback] = useState<{type: 'success' | 'error', message: string} | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<{index: number, label: string} | null>(null);
+  const [updatingTitleIndex, setUpdatingTitleIndex] = useState<number | null>(
+    null
+  );
+  const [feedback, setFeedback] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{
+    index: number;
+    label: string;
+  } | null>(null);
   const [setCustomerInfo] = useSetCustomerInfoMutation();
   const [deleteAddress] = useDeleteAddressMutation();
   const [disableAddress] = useDisableAddressMutation();
   const [updateAddress] = useUpdateAddressMutation();
 
-  const toAddressTitleSlug = (title: string) =>
-    title
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "");
-
-  // Fetch addresses from ERPNext backend (shows addresses already saved in the system)
+  // Fetch addresses from ERPNext backend
   const customerName = getCustomerName();
-  const { data: backendAddresses, isLoading: isLoadingAddresses, refetch: refetchAddresses } = useGetCustomerAddressesQuery(
-    customerName,
-    { skip: !customerName || !portalState.isVerified }
-  );
+  const {
+    data: backendAddresses,
+    isLoading: isLoadingAddresses,
+    refetch: refetchAddresses,
+  } = useGetCustomerAddressesQuery(customerName, {
+    skip: !customerName || !portalState.isVerified,
+  });
 
   const refreshPortalState = useCallback(() => {
     setPortalState(readCustomerPortalSnapshot());
@@ -117,23 +113,29 @@ export default function AccountProfilePage() {
       return;
     }
 
-    // Prevent race condition: don't overwrite during active user operations
+    // Prevent race condition: don't overwrite during active user mutations
     if (deletingIndex !== null || updatingTitleIndex !== null) {
       return;
     }
 
     const syncedAddresses: DeliveryAddressItem[] = backendAddresses.map(
-      (address: (typeof backendAddresses)[number], index: number) => ({
+      (address: any, index: number) => ({
         id: address.name,
-        title: toDisplayAddressTitle(
-          address.address_title,
-          address.address_type,
-          index
-        ),
+        title:
+          extractFriendlyTitle(address.address_title, portalState.phone) ||
+          address.address_type ||
+          (index === 0 ? "Home" : `Address ${index + 1}`),
         address: [address.address_line1, address.address_line2]
           .filter(Boolean)
           .join(", "),
         addressId: address.name,
+        // Track underlying functional data parameters locally
+        isDelivery:
+          address.is_shipping_address === 1 ||
+          address.is_shipping_address === "1",
+        isBilling:
+          address.is_primary_address === 1 ||
+          address.is_primary_address === "1",
       })
     );
 
@@ -168,10 +170,15 @@ export default function AccountProfilePage() {
     } else {
       saveDeliveryAddress("", "");
     }
-    
-    // Release sync lock after state update
+
     setTimeout(() => setIsSyncingFromBackend(false), 100);
-  }, [backendAddresses, isSyncingFromBackend, deletingIndex, updatingTitleIndex]);
+  }, [
+    backendAddresses,
+    isSyncingFromBackend,
+    deletingIndex,
+    updatingTitleIndex,
+    portalState.phone,
+  ]);
 
   useEffect(() => {
     globalThis.addEventListener(CUSTOMER_PORTAL_UPDATED, refreshPortalState);
@@ -210,20 +217,20 @@ export default function AccountProfilePage() {
     if (status === "verified") {
       const newPhone = globalThis.localStorage.getItem(PHONE_KEY) || "";
       const customerName = getCustomerName();
-      // If the user changed their phone, update mobile_no on the existing
-      // ERPNext Customer record instead of letting a new one be created.
       if (customerName && newPhone && customerName !== newPhone) {
-        setCustomerInfo({ customerName, fieldname: "mobile_no", value: newPhone }).catch(
-          (err: unknown) => console.warn("Failed to update customer mobile_no:", err)
+        setCustomerInfo({
+          customerName,
+          fieldname: "mobile_no",
+          value: newPhone,
+        }).catch((err: unknown) =>
+          console.warn("Failed to update customer mobile_no:", err)
         );
       }
       refreshPortalState();
-      // Refetch addresses after verification to show existing addresses immediately
       refetchAddresses();
       return;
     }
 
-    // Revert temporary phone update if verification did not succeed.
     if (previousVerifiedPhone) {
       saveVerifiedPhone(previousVerifiedPhone);
     } else {
@@ -250,7 +257,6 @@ export default function AccountProfilePage() {
 
     writeDeliveryAddresses(updatedAddresses);
 
-    // Keep primary keys in sync if the first address is updated
     if (activeDeliveryIndex === 0) {
       saveDeliveryAddress(resolvedAddress, addressId);
     }
@@ -273,9 +279,12 @@ export default function AccountProfilePage() {
   };
 
   const showDeleteConfirmation = (index: number) => {
-    // Prevent deleting the last address
     if (portalState.deliveryAddresses.length === 1) {
-      setFeedback({type: 'error', message: 'You must keep at least one address. Add another before removing this one.'});
+      setFeedback({
+        type: "error",
+        message:
+          "You must keep at least one address. Add another before removing this one.",
+      });
       setTimeout(() => setFeedback(null), 4000);
       return;
     }
@@ -283,13 +292,14 @@ export default function AccountProfilePage() {
     const addressToRemove = portalState.deliveryAddresses[index];
     if (!addressToRemove) return;
 
-    const addressLabel = addressToRemove.title || addressToRemove.address || 'this address';
+    const addressLabel =
+      addressToRemove.title || addressToRemove.address || "this address";
     setConfirmDelete({ index, label: addressLabel });
   };
 
   const handleRemoveAddress = async () => {
     if (!confirmDelete) return;
-    
+
     const indexToRemove = confirmDelete.index;
     const addressToRemove = portalState.deliveryAddresses[indexToRemove];
     if (!addressToRemove) return;
@@ -303,8 +313,11 @@ export default function AccountProfilePage() {
       } catch (err: unknown) {
         const errorData =
           typeof err === "object" && err !== null && "data" in err
-            ? (err as { data?: { _server_messages?: unknown; exception?: unknown } })
-                .data
+            ? (
+                err as {
+                  data?: { _server_messages?: unknown; exception?: unknown };
+                }
+              ).data
             : undefined;
 
         const serverMessages = String(
@@ -315,15 +328,24 @@ export default function AccountProfilePage() {
           try {
             await disableAddress(addressToRemove.addressId).unwrap();
           } catch (disableErr) {
-            console.warn("Failed to disable linked backend address:", disableErr);
-            setFeedback({type: 'error', message: 'Failed to remove address. Please try again.'});
+            console.warn(
+              "Failed to disable linked backend address:",
+              disableErr
+            );
+            setFeedback({
+              type: "error",
+              message: "Failed to remove address. Please try again.",
+            });
             setTimeout(() => setFeedback(null), 4000);
             setDeletingIndex(null);
             return;
           }
         } else {
           console.warn("Failed to delete backend address:", err);
-          setFeedback({type: 'error', message: 'Failed to remove address. Please try again.'});
+          setFeedback({
+            type: "error",
+            message: "Failed to remove address. Please try again.",
+          });
           setTimeout(() => setFeedback(null), 4000);
           setDeletingIndex(null);
           return;
@@ -347,12 +369,10 @@ export default function AccountProfilePage() {
       }
     }
 
-    setFeedback({type: 'success', message: 'Address removed successfully'});
+    setFeedback({ type: "success", message: "Address removed successfully" });
     setTimeout(() => setFeedback(null), 3000);
-    
-    // Refetch to ensure consistency across devices/tabs
+
     refetchAddresses();
-    
     refreshPortalState();
     setDeletingIndex(null);
   };
@@ -366,28 +386,52 @@ export default function AccountProfilePage() {
 
   const handleTitleCommit = async (index: number) => {
     const address = portalState.deliveryAddresses[index];
-    if (!address?.addressId) {
-      return;
-    }
+    if (!address?.addressId) return;
 
-    // Use stable customer name for consistent address title namespacing
+    // Build the accurate un-prefixed validation string
+    const cleanFriendlyTitle = extractFriendlyTitle(
+      address.title,
+      portalState.phone
+    );
+    if (!cleanFriendlyTitle) return;
+
+    // Prepend target structure identifier configuration safely before hitting API
     const stablePhone = getCustomerName() || portalState.phone || "";
-    const titleSlug = toAddressTitleSlug(address.title) || `address-${index + 1}`;
-    const addressTitle = stablePhone ? `${stablePhone}-${titleSlug}` : titleSlug;
+    const slug = cleanFriendlyTitle
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+
+    const backendTitle = stablePhone ? `${stablePhone}-${slug}` : slug;
 
     setUpdatingTitleIndex(index);
 
     try {
       await updateAddress({
         addressName: address.addressId,
-        address_title: addressTitle,
+        address_title: backendTitle,
       }).unwrap();
-      
-      setFeedback({type: 'success', message: 'Address title updated'});
+
+      // Update with matching casing locally instantly
+      const updatedAddresses = portalState.deliveryAddresses.map((item, i) =>
+        i === index ? { ...item, title: cleanFriendlyTitle } : item
+      );
+      writeDeliveryAddresses(updatedAddresses);
+
+      setFeedback({
+        type: "success",
+        message: "Address title updated successfully",
+      });
       setTimeout(() => setFeedback(null), 2000);
+
+      refetchAddresses();
     } catch (err: unknown) {
       console.warn("Failed to update address title:", err);
-      setFeedback({type: 'error', message: 'Failed to update title. Please try again.'});
+      setFeedback({
+        type: "error",
+        message: "Failed to update title. Please try again.",
+      });
       setTimeout(() => setFeedback(null), 4000);
     } finally {
       setUpdatingTitleIndex(null);
@@ -414,14 +458,17 @@ export default function AccountProfilePage() {
       </div>
 
       <section className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-        {/* Feedback Toast */}
         {feedback && (
-          <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 min-w-80 max-w-md rounded-2xl border-2 px-6 py-4 shadow-2xl animate-in slide-in-from-top-4 duration-300 ${
-            feedback.type === 'success' 
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-              : 'bg-red-50 border-red-200 text-red-800'
-          }`}>
-            <p className="text-sm font-semibold text-center">{feedback.message}</p>
+          <div
+            className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 min-w-80 max-w-md rounded-2xl border-2 px-6 py-4 shadow-2xl animate-in slide-in-from-top-4 duration-300 ${
+              feedback.type === "success"
+                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                : "bg-red-50 border-red-200 text-red-800"
+            }`}
+          >
+            <p className="text-sm font-semibold text-center">
+              {feedback.message}
+            </p>
           </div>
         )}
 
@@ -486,7 +533,7 @@ export default function AccountProfilePage() {
                 )}
               </div>
 
-              {/* -- Delivery Addresses Section (Multi-Address Support) -- */}
+              {/* -- Delivery Addresses Section -- */}
               <div className="py-6">
                 <div className="mb-5 flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -504,7 +551,7 @@ export default function AccountProfilePage() {
                   </div>
                 </div>
 
-                {/* Address List */}
+                {/* Address List Container */}
                 <div className="space-y-4">
                   {isLoadingAddresses ? (
                     <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center">
@@ -519,8 +566,8 @@ export default function AccountProfilePage() {
                         key={delivery.id ?? String(index)}
                         className="group rounded-2xl border-2 border-slate-200 bg-white p-4 transition-all hover:border-red-600/30 hover:shadow-md"
                       >
-                        {/* Address Title Row */}
-                        <div className="mb-3 flex items-center gap-2">
+                        {/* Address Title Configuration Row */}
+                        <div className="mb-3 flex flex-wrap items-center gap-2">
                           <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
                             Delivery to (
                           </span>
@@ -548,11 +595,26 @@ export default function AccountProfilePage() {
                           <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
                             )
                           </span>
-                          {index === 0 && (
-                            <span className="ml-2 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
-                              Default
-                            </span>
-                          )}
+
+                          {/* Upgraded Native Role Badges Layout based on Database parameters */}
+                          <div className="ml-2 flex flex-wrap gap-1 items-center">
+                            {index === 0 && (
+                              <span className="rounded bg-stone-900 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-xs">
+                                Primary Default
+                              </span>
+                            )}
+                            {(delivery as any).isDelivery && (
+                              <span className="rounded bg-red-50 border border-red-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-red-700">
+                                Shipping
+                              </span>
+                            )}
+                            {(delivery as any).isBilling && (
+                              <span className="rounded bg-amber-50 border border-amber-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-800">
+                                Billing
+                              </span>
+                            )}
+                          </div>
+
                           {index > 0 && (
                             <button
                               type="button"
@@ -560,12 +622,14 @@ export default function AccountProfilePage() {
                               disabled={deletingIndex === index}
                               className="ml-auto text-[10px] font-medium uppercase tracking-wide text-slate-400 hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-wait"
                             >
-                              {deletingIndex === index ? 'Removing...' : 'Remove'}
+                              {deletingIndex === index
+                                ? "Removing..."
+                                : "Remove"}
                             </button>
                           )}
                         </div>
 
-                        {/* Address Content */}
+                        {/* Address Content Row */}
                         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                           <div className="flex-1 min-w-0">
                             <p
@@ -575,8 +639,7 @@ export default function AccountProfilePage() {
                                   : "text-slate-400 italic"
                               }`}
                             >
-                              {delivery.address ||
-                                "No address selected yet"}
+                              {delivery.address || "No address selected yet"}
                             </p>
                           </div>
                           <button
@@ -606,7 +669,7 @@ export default function AccountProfilePage() {
                     </div>
                   )}
 
-                  {/* Add Another Address Button */}
+                  {/* Add Another Address Action Trigger */}
                   <button
                     type="button"
                     onClick={handleAddNewAddress}
@@ -648,14 +711,16 @@ export default function AccountProfilePage() {
           onSelect={handleAddressSelect}
           redirectTo={null}
           existingAddressId={
-            portalState.deliveryAddresses[activeDeliveryIndex]?.addressId || null
+            portalState.deliveryAddresses[activeDeliveryIndex]?.addressId ||
+            null
           }
           customTitle={
-            portalState.deliveryAddresses[activeDeliveryIndex]?.title || undefined
+            portalState.deliveryAddresses[activeDeliveryIndex]?.title ||
+            undefined
           }
         />
       )}
-      
+
       {confirmDelete && (
         <ConfirmDialog
           open={true}
@@ -668,8 +733,9 @@ export default function AccountProfilePage() {
           variant="danger"
         />
       )}
-      
+
       <Footer />
     </main>
   );
 }
+
