@@ -175,9 +175,6 @@ export default function CartDrawer() {
 
     const addresses = snapshot.deliveryAddresses;
 
-    console.log("SNAPSHOT", snapshot);
-    console.log("ADDRESSES", addresses);
-    console.log("ADDRESSES LENGTH", addresses.length);
 
     if (addresses.length > 0) {
       setShowSavedAddressesModal(true);

@@ -67,8 +67,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     useGetCustomerAddressesQuery(customerName, {
       skip: !customerName,
     });
-  console.log("the customer Address: ", customerAddresses);
-  console.log("form ", form);
   const toAddressTitleSlug = (title: string) =>
     title
       .trim()
