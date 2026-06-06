@@ -109,9 +109,12 @@ export default function TabletFooter() {
                 <Link href="#" className="text-base text-slate-400 hover:text-red-600 transition-colors">
                   Contact
                 </Link> */}
-                {/* <Link href="#" className="text-base text-slate-400 hover:text-red-600 transition-colors">
-                  Terms
-                </Link> */}
+                <Link href="/terms-conditions" className="text-base text-slate-400 hover:text-red-600 transition-colors">
+                  Terms &amp; Conditions
+                </Link>
+                 <Link href="/privacy-policy" className="text-base text-slate-400 hover:text-red-600 transition-colors">
+                  Privacy Policy
+                </Link>
               </div>
             </div>
 

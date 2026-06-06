@@ -113,12 +113,12 @@ export default function DesktopFooter() {
               {/* <Link href="#" className="block text-sm text-slate-400 hover:text-red-600 transition-colors">
                 Contact
               </Link> */}
-              {/* <Link href="#" className="block text-sm text-slate-400 hover:text-red-600 transition-colors">
+              <Link href="/terms-conditions" className="block text-sm text-slate-400 hover:text-red-600 transition-colors">
                 Terms & Conditions
               </Link>
-              <Link href="#" className="block text-sm text-slate-400 hover:text-red-600 transition-colors">
+              <Link href="/privacy-policy" className="block text-sm text-slate-400 hover:text-red-600 transition-colors">
                 Privacy Policy
-              </Link> */}
+              </Link>
             </div>
           </div>
 

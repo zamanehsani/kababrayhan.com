@@ -99,9 +99,12 @@ export default function MobileFooter() {
             >
               Profile
             </Link>
-            {/* <Link href="#" className="text-sm text-slate-400 hover:text-red-600 transition-colors">
-              About Us
-            </Link> */}
+            <Link href="/terms-conditions" className="text-sm text-slate-400 hover:text-red-600 transition-colors">
+              Terms & Conditions
+            </Link>
+            <Link href="/privacy-policy" className="text-sm text-slate-400 hover:text-red-600 transition-colors">
+              Privacy Policy
+            </Link>
           </div>
         </div>
 
