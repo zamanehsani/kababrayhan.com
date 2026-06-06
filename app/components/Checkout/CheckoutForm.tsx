@@ -146,14 +146,16 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
       (addr: any, index: number) => ({
         id: addr.name || String(index),
 
+        // Strip prefixes right here during initial parse
         title:
-          addr.address_title || addr.address_type || `Address ${index + 1}`,
+          extractFriendlyTitle(addr.address_title, form.phone) ||
+          addr.address_type ||
+          `Address ${index + 1}`,
 
         address: addr.display || addr.address || addr.address_line1 || "",
 
         addressId: addr.name,
 
-        // ERPNext flags
         isDelivery:
           addr.is_shipping_address === 1 || addr.is_shipping_address === "1",
 
@@ -171,7 +173,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
       "uae_delivery_addresses",
       JSON.stringify(mappedAddresses)
     );
-  }, [customerAddresses, setForm]);
+  }, [customerAddresses, setForm, form.phone]);
 
   const handleTitleChange = (index: number, newTitle: string) => {
     const updated = form.deliveryAddresses.map((da, i) =>
@@ -183,31 +185,51 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
   const handleTitleCommit = async (index: number) => {
     const current = form.deliveryAddresses[index];
-    if (!current?.addressId) {
-      return;
-    }
+    if (!current?.addressId) return;
 
-    const phone = localStorage.getItem("uae_phone") || form.phone || "";
-    const titleSlug =
-      toAddressTitleSlug(current.title) || `address-${index + 1}`;
-    const addressTitle = phone ? `${phone}-${titleSlug}` : titleSlug;
+    // Build friendly clean display value
+    const cleanFriendlyTitle = extractFriendlyTitle(current.title, form.phone);
+    if (!cleanFriendlyTitle) return;
+
+    // Convert friendly title to backend title format (e.g., "+971567777788-offi")
+    const backendTitle = buildBackendTitle(
+      cleanFriendlyTitle,
+      form.phone || ""
+    );
 
     setUpdatingTitleIndex(index);
 
     try {
       await updateAddress({
         addressName: current.addressId,
-        address_title: addressTitle,
+        // Save prefixed title configuration
+        address_title: backendTitle,
       }).unwrap();
 
-      setFeedback({ type: "success", message: "Address title updated" });
+      // Instantly update the local state to match what was committed
+      const updated = form.deliveryAddresses.map((da, i) =>
+        i === index ? { ...da, title: cleanFriendlyTitle } : da
+      );
+      setForm((prev) => ({ ...prev, deliveryAddresses: updated }));
+      localStorage.setItem("uae_delivery_addresses", JSON.stringify(updated));
+
+      // Refetch source-of-truth from backend
+      await refetchAddresses();
+
+      setFeedback({
+        type: "success",
+        message: "Address title updated successfully",
+      });
+
       setTimeout(() => setFeedback(null), 2000);
     } catch (err) {
       console.warn("Failed to update checkout address title:", err);
+
       setFeedback({
         type: "error",
-        message: "Failed to update title. Please try again.",
+        message: "Failed to update title",
       });
+
       setTimeout(() => setFeedback(null), 4000);
     } finally {
       setUpdatingTitleIndex(null);
@@ -386,11 +408,41 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     }
   };
 
-  const DeliveryAddress = customerAddresses?.find(
-    (addr) => addr.is_shipping_address === 1
-  );
-  const deliery = DeliveryAddress?.address_title;
-  console.log("the delivery address: ", DeliveryAddress);
+  const extractFriendlyTitle = (addressTitle?: string, phone?: string) => {
+    if (!addressTitle) return "";
+
+    let clean = addressTitle.trim();
+
+    // Recursively strip out the phone number prefix if it exists
+    if (phone) {
+      const formattedPhone = phone.trim();
+      // This will catch "+97156..." or "97156..." prefixes followed by a dash
+      while (clean.startsWith(formattedPhone)) {
+        clean = clean.slice(formattedPhone.length).replace(/^-/, "");
+      }
+      // Also try stripping it without the '+' character just in case
+      const phoneNoPlus = formattedPhone.replace("+", "");
+      while (clean.startsWith(phoneNoPlus)) {
+        clean = clean.slice(phoneNoPlus.length).replace(/^-/, "");
+      }
+    }
+
+    // Replace lingering dashes with spaces
+    clean = clean.replace(/-/g, " ").trim();
+
+    return clean;
+  };
+
+  const buildBackendTitle = (label: string, phone?: string) => {
+    const slug = label
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+
+    // Prepend the phone number prefix so ERPNext keeps its structured identifier
+    return phone ? `${phone}-${slug}` : slug;
+  };
 
   return (
     <>
@@ -422,30 +474,27 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
           <ContactPhoneCard phone={form.phone} />
 
           {customerAddresses?.map((address, index) => {
-            const isDeliveryChecked =
-              address.is_shipping_address === 1 ;
+            const isDeliveryChecked = address.is_shipping_address === 1;
+            const isBillingChecked = address.is_primary_address === 1;
+            const resolvedAddress = address.address_line1 || "";
 
-            const isBillingChecked =
-              address.is_primary_address === 1 
+            // 1. CRITICAL: Read directly from your local state array instead of the raw API cache!
+            const localAddressItem = form.deliveryAddresses[index];
 
-            const resolvedAddress =
-              address.address_line1 || "";
-
-            const resolvedTitle =
-              address.address_title ||
-              address.address_type ||
-              `Address ${index + 1}`;
+            // 2. Fall back cleanly if the local array item isn't ready yet
+            const displayTitle = localAddressItem?.title || "";
 
             return (
-              <div key={address.name} className="group">
+              <div key={address.name || index} className="group">
                 <div className="mb-3 ml-1 flex items-center gap-1">
                   <span className="text-[13px] font-medium uppercase tracking-wide text-stone-400 group-hover:text-red-600 transition-colors">
                     Delivery To&nbsp;(
                   </span>
 
+                  {/* 3. Bind the input value to our tracked state value */}
                   <input
                     type="text"
-                    value={resolvedTitle}
+                    value={displayTitle}
                     onChange={(e) => handleTitleChange(index, e.target.value)}
                     onBlur={() => {
                       void handleTitleCommit(index);
@@ -456,7 +505,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
                       }
                     }}
                     disabled={updatingTitleIndex === index}
-                    placeholder={index === 0 ? "Home" : "Office, Work…"}
+                    placeholder={index === 0 ? "Home" : `Address ${index + 1}`}
                     className="w-40 border-b border-dashed border-stone-300 bg-transparent text-center text-[13px] font-medium uppercase tracking-wide text-stone-600 placeholder:text-stone-300 focus:border-red-600 focus:outline-none disabled:opacity-50"
                   />
 
@@ -533,6 +582,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
               </div>
             );
           })}
+
           <button
             type="button"
             onClick={() => {
