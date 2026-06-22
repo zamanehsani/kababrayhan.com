@@ -144,10 +144,10 @@ const PaymentForm = ({
           options={{
             layout: "tabs",
             // Explicitly request wallet payment methods
-            wallets: {
-              applePay: "auto",
-              googlePay: "auto",
-            },
+            // wallets: {
+            //   applePay: "auto",
+            //   googlePay: "auto",
+            // },
           }}
         />
       </div>
