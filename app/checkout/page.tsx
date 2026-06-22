@@ -45,6 +45,9 @@ import Footer from "../components/Footer/Footer";
 import CustomerNote from "../components/Checkout/CustomerNote";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import DirhamIcon from "../components/icon/DirhamIcon";
+import PaymentMethodSelector from "../components/Checkout/PaymentMethodSelector";
+import PaymentErrorSection from "../components/Checkout/PaymentErrorSection";
+import CashOnDeliverySection from "../components/Checkout/CashOnDeliverySection";
 
 const toDisplayAddressTitle = (
   rawTitle: string,
@@ -158,11 +161,10 @@ const PaymentForm = ({
       <button
         type="submit"
         disabled={!stripe || !elements || isProcessing}
-        className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4 text-xs font-black uppercase tracking-[0.2em] transition-all shadow-xl ${
-          isProcessing
-            ? "bg-stone-400 text-white cursor-not-allowed"
-            : "bg-red-600 text-white shadow-red-200 hover:bg-red-700 active:scale-95"
-        }`}
+        className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4 text-xs font-black uppercase tracking-[0.2em] transition-all shadow-xl ${isProcessing
+          ? "bg-stone-400 text-white cursor-not-allowed"
+          : "bg-red-600 text-white shadow-red-200 hover:bg-red-700 active:scale-95"
+          }`}
       >
         {isProcessing ? (
           "Processing..."
@@ -205,6 +207,10 @@ const CheckoutPage = () => {
   const [updateSalesOrder] = useUpdateSalesOrderMutation();
   const [deleteAddress] = useDeleteAddressMutation();
   const [disableAddress] = useDisableAddressMutation();
+
+
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("card_online");
+
   const hasInitializedPaymentRef = useRef(false);
   const noteSaveTimerRef = useRef<ReturnType<
     typeof globalThis.setTimeout
@@ -319,14 +325,14 @@ const CheckoutPage = () => {
     );
     const storedDeliveryAddresses = storedDeliveryAddressesRaw
       ? (() => {
-          try {
-            return JSON.parse(
-              storedDeliveryAddressesRaw
-            ) as DeliveryAddressItem[];
-          } catch {
-            return form.deliveryAddresses;
-          }
-        })()
+        try {
+          return JSON.parse(
+            storedDeliveryAddressesRaw
+          ) as DeliveryAddressItem[];
+        } catch {
+          return form.deliveryAddresses;
+        }
+      })()
       : form.deliveryAddresses;
 
     const currentSnapshot = JSON.stringify(
@@ -629,84 +635,152 @@ const CheckoutPage = () => {
     0
   );
 
+
+  const handleCodConfirmation = async () => {
+  // TODO: Add backend API call to process Cash on Delivery checkout submission
+  console.log("Processing COD placement for sales order:", salesOrder);
+};
+
   let paymentSection: ReactNode = null;
 
   if (orderError) {
     paymentSection = (
-      <div className="text-center py-6 space-y-4">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-50 mb-2">
-          <svg
-            className="w-8 h-8 text-red-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-            />
-          </svg>
-        </div>
-        <p className="text-red-600 font-semibold mb-2">{orderError}</p>
-        {retryCount < 3 && (
-          <p className="text-xs text-slate-500 mb-4">
-            Retry attempt {retryCount + 1} of 3
-          </p>
-        )}
-        <div className="flex flex-col gap-2">
-          <button
-            onClick={() => {
-              hasInitializedPaymentRef.current = false;
-              setOrderError(null);
-              handleAutoProceed();
-            }}
-            disabled={isInitializing}
-            className="px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-slate-300 text-white rounded-xl text-sm font-bold uppercase tracking-wide transition-all active:scale-95 disabled:cursor-not-allowed"
-          >
-            {isInitializing ? "Retrying..." : "Retry Payment Setup"}
-          </button>
-          <button
-            onClick={() => router.push("/home")}
-            className="px-6 py-3 bg-white border-2 border-slate-200 text-slate-700 rounded-xl text-sm font-semibold uppercase tracking-wide hover:bg-slate-50 transition-all active:scale-95"
-          >
-            Return to Menu
-          </button>
-        </div>
-      </div>
-    );
-  } else if (isInitializing || !clientSecret) {
-    paymentSection = (
-      <div className="flex flex-col items-center py-10">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-stone-100 border-t-red-600 mb-4" />
-        <p className="text-stone-400 font-bold uppercase text-[10px] tracking-widest">
-          Securing Payment Line...
-        </p>
-      </div>
-    );
-  } else if (stripePromise && clientSecret) {
-    paymentSection = (
-      <Elements
-        stripe={stripePromise}
-        options={{
-          clientSecret,
-          appearance: {
-            theme: "stripe",
-            variables: {
-              colorPrimary: "#dc2626",
-              borderRadius: "16px",
-            },
-          },
-          // Optimize for wallet payments (Apple Pay, Google Pay, Link)
-          loader: "auto",
+      <PaymentErrorSection
+        errorMessage={orderError}
+        isInitializing={isInitializing}
+        onRetry={() => {
+          hasInitializedPaymentRef.current = false;
+          setOrderError(null);
+          handleAutoProceed();
         }}
-        key={clientSecret}
-      >
-        <PaymentForm total={total} salesOrder={salesOrder} />
-      </Elements>
+      />
+    );
+  } else {
+    paymentSection = (
+      <div className="space-y-8">
+        {/* 1. Selector Module */}
+        <PaymentMethodSelector
+          currentMethod={paymentMethod}
+          onChange={setPaymentMethod}
+        />
+
+        <hr className="border-stone-100" />
+
+        {/* 2. Conditional Payment Methods */}
+        {paymentMethod === "cod" ? (
+          <CashOnDeliverySection
+            total={total}
+            onConfirm={handleCodConfirmation}
+          />
+        ) : isInitializing || !clientSecret ? (
+          <div className="flex flex-col items-center py-6">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-stone-100 border-t-red-600 mb-3" />
+            <p className="text-stone-400 font-bold uppercase text-[9px] tracking-widest">
+              Securing Payment Line...
+            </p>
+          </div>
+        ) : (
+          <div className="animate-in fade-in duration-500">
+            {stripePromise && clientSecret && (
+              <Elements
+                stripe={stripePromise}
+                options={{
+                  clientSecret,
+                  appearance: {
+                    theme: "stripe",
+                    variables: { colorPrimary: "#dc2626", borderRadius: "16px" },
+                  },
+                  loader: "auto",
+                }}
+                key={clientSecret}
+              >
+                <PaymentForm total={total} salesOrder={salesOrder} />
+              </Elements>
+            )}
+          </div>
+        )}
+      </div>
     );
   }
+
+  // let paymentSection: ReactNode = null;
+
+  // if (orderError) {
+  //   paymentSection = (
+  //     <div className="text-center py-6 space-y-4">
+  //       <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-50 mb-2">
+  //         <svg
+  //           className="w-8 h-8 text-red-500"
+  //           fill="none"
+  //           viewBox="0 0 24 24"
+  //           stroke="currentColor"
+  //         >
+  //           <path
+  //             strokeLinecap="round"
+  //             strokeLinejoin="round"
+  //             strokeWidth={2}
+  //             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+  //           />
+  //         </svg>
+  //       </div>
+  //       <p className="text-red-600 font-semibold mb-2">{orderError}</p>
+  //       {retryCount < 3 && (
+  //         <p className="text-xs text-slate-500 mb-4">
+  //           Retry attempt {retryCount + 1} of 3
+  //         </p>
+  //       )}
+  //       <div className="flex flex-col gap-2">
+  //         <button
+  //           onClick={() => {
+  //             hasInitializedPaymentRef.current = false;
+  //             setOrderError(null);
+  //             handleAutoProceed();
+  //           }}
+  //           disabled={isInitializing}
+  //           className="px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-slate-300 text-white rounded-xl text-sm font-bold uppercase tracking-wide transition-all active:scale-95 disabled:cursor-not-allowed"
+  //         >
+  //           {isInitializing ? "Retrying..." : "Retry Payment Setup"}
+  //         </button>
+  //         <button
+  //           onClick={() => router.push("/home")}
+  //           className="px-6 py-3 bg-white border-2 border-slate-200 text-slate-700 rounded-xl text-sm font-semibold uppercase tracking-wide hover:bg-slate-50 transition-all active:scale-95"
+  //         >
+  //           Return to Menu
+  //         </button>
+  //       </div>
+  //     </div>
+  //   );
+  // } else if (isInitializing || !clientSecret) {
+  //   paymentSection = (
+  //     <div className="flex flex-col items-center py-10">
+  //       <div className="h-10 w-10 animate-spin rounded-full border-4 border-stone-100 border-t-red-600 mb-4" />
+  //       <p className="text-stone-400 font-bold uppercase text-[10px] tracking-widest">
+  //         Securing Payment Line...
+  //       </p>
+  //     </div>
+  //   );
+  // } else if (stripePromise && clientSecret) {
+  //   paymentSection = (
+  //     <Elements
+  //       stripe={stripePromise}
+  //       options={{
+  //         clientSecret,
+  //         appearance: {
+  //           theme: "stripe",
+  //           variables: {
+  //             colorPrimary: "#dc2626",
+  //             borderRadius: "16px",
+  //           },
+  //         },
+  //         // Optimize for wallet payments (Apple Pay, Google Pay, Link)
+  //         loader: "auto",
+  //       }}
+  //       key={clientSecret}
+  //     >
+  //       <PaymentForm total={total} salesOrder={salesOrder} />
+  //     </Elements>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen bg-white">
@@ -733,8 +807,8 @@ const CheckoutPage = () => {
           onClick={
             step === 3
               ? () => {
-                  setShowBackConfirm(true);
-                }
+                setShowBackConfirm(true);
+              }
               : undefined
           }
         />
@@ -776,7 +850,7 @@ const CheckoutPage = () => {
           </div>
         </div>
 
-       
+
       </main>
 
       {/* Address Warning Dialog */}
