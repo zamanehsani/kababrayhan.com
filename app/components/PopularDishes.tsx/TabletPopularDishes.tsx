@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Dish } from "@/app/types/type";
 import { TabletItemDetailModal } from "../home/modal/ItemDetail/TabletItemDetailModal";
-import { ERP_API_BASE_URL, useGetItemsQuery } from "../../redux/api";
+import { baseUrl, useGetItemsQuery } from "../../redux/api";
 import DirhamIcon from "../icon/DirhamIcon";
 import { TabletDishFallback } from "../FallBacks/TabletDishFallback";
 import { TabletDishSkeleton } from "../FallBacks/TabletDishSkeleton";
@@ -35,7 +35,7 @@ export default function TabletPopularDishes() {
       return normalizedValue;
     }
 
-    return `${ERP_API_BASE_URL}${
+    return `${baseUrl}${
       normalizedValue.startsWith("/") ? normalizedValue : `/${normalizedValue}`
     }`;
   };

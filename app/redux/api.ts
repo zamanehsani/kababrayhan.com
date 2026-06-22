@@ -1,6 +1,3 @@
-// export const ERP_API_BASE_URL = "http://localhost:8000";
-// export const ERP_API_BASE_URL = "http://57.131.47.176:8000";
-export const ERP_API_BASE_URL = "https://portal.kababrayhan.com";
 export type { Customer, Item, OrderCartItem, SalesOrder } from "./apiType";
 // src/redux/api.ts
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
@@ -40,10 +37,13 @@ import type {
 // Add SendOtp types
 export type { SendOtpRequest, SendOtpResponse } from "./apiType";
 
-export const ERP_API_METHOD_URL = `${ERP_API_BASE_URL}/api/method/`;
+export const baseUrl = process.env.NEXT_PUBLIC_ERP_API_BASE_URL || "";
+export const ERP_API_METHOD_URL = `${baseUrl}/api/method/`;
 
 // Read token from environment variable (more secure than hardcoding)
+
 // TODO: Replace with proper session-based auth (see AUTHENTICATION_IMPROVEMENT_PLAN.md)
+
 const ERP_API_AUTHORIZATION = `token ${
   process.env.NEXT_PUBLIC_ERP_API_TOKEN || ""
 }`;
@@ -53,14 +53,14 @@ export const toErpAbsoluteUrl = (value: string) => {
     return value;
   }
 
-  return `${ERP_API_BASE_URL}${value.startsWith("/") ? value : `/${value}`}`;
+  return `${baseUrl}${value.startsWith("/") ? value : `/${value}`}`;
 };
 
 export const erpApi = createApi({
   reducerPath: "erpApi",
   tagTypes: ["CustomerAddresses"],
   baseQuery: fetchBaseQuery({
-    baseUrl: `${ERP_API_BASE_URL}/api/resource/`,
+    baseUrl: `${baseUrl}/api/resource/`,
     prepareHeaders: (headers) => {
       headers.set("Authorization", ERP_API_AUTHORIZATION);
       headers.set("X-Frappe-Site-Name", "kababrayhan.com");
@@ -293,7 +293,7 @@ export const erpApi = createApi({
         fetchWithBQ
       ) => {
         const result = await fetchWithBQ({
-          url: `${ERP_API_BASE_URL}/api/method/erpnext.selling.page.point_of_sale.point_of_sale.set_customer_info`,
+          url: `${baseUrl}/api/method/erpnext.selling.page.point_of_sale.point_of_sale.set_customer_info`,
           method: "POST",
           body: {
             fieldname,
@@ -358,7 +358,7 @@ export const erpApi = createApi({
         }
 
         const result = await fetchWithBQ({
-          url: `${ERP_API_BASE_URL}/api/method/frappe.client.attach_file`,
+          url: `${baseUrl}/api/method/frappe.client.attach_file`,
           method: "POST",
           body: {
             filename: file.name,
@@ -451,7 +451,7 @@ export const erpApi = createApi({
       UpdateSalesOrderRequest
     >({
       query: ({ salesOrderName, ...body }) => ({
-        url: `${ERP_API_BASE_URL}/api/resource/Sales Order/${encodeURIComponent(
+        url: `${baseUrl}/api/resource/Sales Order/${encodeURIComponent(
           salesOrderName
         )}`,
         method: "PUT",
@@ -476,7 +476,7 @@ export const erpApi = createApi({
         formData.append("sales_order", body.sales_order);
 
         const result = await fetchWithBQ({
-          url: `${ERP_API_BASE_URL}/api/method/get_stripe_intent`,
+          url: `${baseUrl}/api/method/get_stripe_intent`,
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: formData.toString(),
@@ -492,7 +492,7 @@ export const erpApi = createApi({
       CreateAddressRequest
     >({
       query: (body) => ({
-        url: `${ERP_API_BASE_URL}/api/resource/Address`,
+        url: `${baseUrl}/api/resource/Address`,
         method: "POST",
         body,
         headers: {
@@ -515,7 +515,7 @@ export const erpApi = createApi({
       UpdateAddressRequest
     >({
       query: ({ addressName, ...body }) => ({
-        url: `${ERP_API_BASE_URL}/api/resource/Address/${encodeURIComponent(
+        url: `${baseUrl}/api/resource/Address/${encodeURIComponent(
           addressName
         )}`,
         method: "PUT",

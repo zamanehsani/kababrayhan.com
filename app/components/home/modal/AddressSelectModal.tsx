@@ -10,7 +10,7 @@ import {
   useCreateAddressMutation,
   useUpdateAddressMutation,
   useSetCustomerInfoMutation,
-  ERP_API_BASE_URL,
+  baseUrl,
 } from "../../../redux/api";
 import ConfirmDialog from "../../shared/ConfirmDialog";
 import {
@@ -94,7 +94,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
     const token = process.env.NEXT_PUBLIC_ERP_API_TOKEN || "";
 
     const response = await fetch(
-      `${ERP_API_BASE_URL}/api/resource/Customer?filters=${filters}&fields=${fields}&limit_page_length=20`,
+      `${baseUrl}/Customer?filters=${filters}&fields=${fields}&limit_page_length=20`,
       {
         headers: {
           Authorization: `token ${token}`,

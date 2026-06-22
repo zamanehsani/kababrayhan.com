@@ -1,11 +1,13 @@
 "use client";
-import { Flame, Heart } from "lucide-react";
+import {
+  Flame
+} from "lucide-react";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Dish } from "@/app/types/type";
 import {
-  ERP_API_BASE_URL,
+
   useGetItemByCodeQuery,
   useGetItemsQuery,
 } from "../../redux/api";
@@ -21,9 +23,10 @@ export default function DesktopPopularDishes() {
   const searchValue = searchParams.get("search") ?? "";
   const normalizedSearchValue = searchValue.trim().toLowerCase();
 
-  const {data: itembycode}= useGetItemByCodeQuery("RYH-MIX-001-With Fries");
+  const { data: itembycode } = useGetItemByCodeQuery("RYH-MIX-001-With Fries");
 
-
+  console.log("Item by code data:", itembycode);
+  console.log("Items data:", items);
   const slugify = (value: string) =>
     value
       .toLowerCase()
@@ -41,9 +44,11 @@ export default function DesktopPopularDishes() {
       return normalizedValue;
     }
 
-    return `${ERP_API_BASE_URL}${
-      normalizedValue.startsWith("/") ? normalizedValue : `/${normalizedValue}`
-    }`;
+    const baseUrl = process.env.NEXT_PUBLIC_ERP_API_BASE_URL || "";
+
+  return `${baseUrl}${
+    normalizedValue.startsWith("/") ? normalizedValue : `/${normalizedValue}`
+  }`;
   };
 
   const dishes: Dish[] = useMemo(
@@ -81,11 +86,11 @@ export default function DesktopPopularDishes() {
 
     const sourceDishes = normalizedSearchValue
       ? dishes.filter((dish) =>
-          [dish.name, dish.restaurant, dish.tags, dish.description]
-            .join(" ")
-            .toLowerCase()
-            .includes(normalizedSearchValue)
-        )
+        [dish.name, dish.restaurant, dish.tags, dish.description]
+          .join(" ")
+          .toLowerCase()
+          .includes(normalizedSearchValue)
+      )
       : dishes;
 
     sourceDishes.forEach((dish) => {
@@ -128,7 +133,7 @@ export default function DesktopPopularDishes() {
 
       {/* HEADER SECTION */}
       <div className=" flex items-center justify-between">
-        
+
         {/* <button className="text-sm font-semibold tracking-wide text-slate-500 hover:text-slate-800 transition-colors active:opacity-70">
           See all
         </button> */}
@@ -252,7 +257,7 @@ export default function DesktopPopularDishes() {
                         />
                         {dish.price}
                       </span>
-                  
+
                     )}
                   </div>
                 </div>

@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ItemDetailModal } from "../home/modal/ItemDetail/ItemDetailModal";
 import { Dish } from "@/app/types/type";
-import { ERP_API_BASE_URL, useGetItemsQuery } from "../../redux/api";
+import { baseUrl, useGetItemsQuery } from "../../redux/api";
 import DirhamIcon from "../icon/DirhamIcon";
 import { MobileDishFallback } from "../FallBacks/MobileDishFallback";
 import { MobileDishSkeleton } from "../FallBacks/MobileDishSkeleton";
@@ -38,7 +38,7 @@ export default function PopularDishes() {
       return normalizedValue;
     }
 
-    return `${ERP_API_BASE_URL}${
+    return `${baseUrl}${
       normalizedValue.startsWith("/") ? normalizedValue : `/${normalizedValue}`
     }`;
   };
