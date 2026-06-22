@@ -45,7 +45,7 @@ import Footer from "../components/Footer/Footer";
 import CustomerNote from "../components/Checkout/CustomerNote";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import DirhamIcon from "../components/icon/DirhamIcon";
-import PaymentMethodSelector from "../components/Checkout/PaymentMethodSelector";
+import PaymentMethodSelector, { PaymentMethodType } from "../components/Checkout/PaymentMethodSelector";
 import PaymentErrorSection from "../components/Checkout/PaymentErrorSection";
 import CashOnDeliverySection from "../components/Checkout/CashOnDeliverySection";
 
