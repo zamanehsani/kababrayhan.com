@@ -33,23 +33,50 @@ export default function DesktopPopularDishes() {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
 
-  const resolveDishImage = (value?: string) => {
-    const normalizedValue = value?.trim();
 
-    if (!normalizedValue) {
-      return "/popular-dishes/burger.png";
-    }
+      const resolveDishImage = (value?: string) => {
+  const normalizedValue = value?.trim();
 
-    if (/^https?:\/\//i.test(normalizedValue)) {
-      return normalizedValue;
-    }
+  if (!normalizedValue) {
+    return "/popular-dishes/burger.png";
+  }
 
-    const baseUrl = process.env.NEXT_PUBLIC_ERP_API_BASE_URL || "";
+  // If it's already a full URL, encode the path section safely
+  if (/^https?:\/\//i.test(normalizedValue)) {
+    return encodeURI(normalizedValue);
+  }
 
-  return `${baseUrl}${
-    normalizedValue.startsWith("/") ? normalizedValue : `/${normalizedValue}`
-  }`;
-  };
+  const baseUrl = process.env.NEXT_PUBLIC_ERP_API_BASE_URL || "";
+
+  // Split the path to isolate the filename so we don't accidentally encode the "/" characters
+  const pathParts = normalizedValue.split("/");
+  const encodedParts = pathParts.map(part => 
+    // Only encode if the part isn't empty, to preserve structure
+    part ? encodeURIComponent(part) : ""
+  );
+  
+  const cleanPath = encodedParts.join("/");
+
+  // Construct the final safe URL
+  return `${baseUrl}${cleanPath.startsWith("/") ? cleanPath : `/${cleanPath}`}`;
+};
+  // const resolveDishImage = (value?: string) => {
+  //   const normalizedValue = value?.trim();
+
+  //   if (!normalizedValue) {
+  //     return "/popular-dishes/burger.png";
+  //   }
+
+  //   if (/^https?:\/\//i.test(normalizedValue)) {
+  //     return normalizedValue;
+  //   }
+
+  //   const baseUrl = process.env.NEXT_PUBLIC_ERP_API_BASE_URL || "";
+
+  // return `${baseUrl}${
+  //   normalizedValue.startsWith("/") ? normalizedValue : `/${normalizedValue}`
+  // }`;
+  // };
 
   const dishes: Dish[] = useMemo(
     () =>
