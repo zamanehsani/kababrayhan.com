@@ -460,7 +460,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
       )}
 
       <section
-        className="rounded-[2rem] bg-white p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-stone-100"
+        className=" bg-white p-2"
         data-address-section
       >
         <h2 className="mb-8 flex items-center gap-3 text-xl font-medium tracking-wide text-stone-900">

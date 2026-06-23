@@ -21,7 +21,7 @@ interface OrderSummaryProps {
 
 const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total }) => {
   return (
-    <section className="rounded-3xl bg-white p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+    <section className=" bg-white px-2 py-6 transition-all ">
       {/* Header with Red Accent */}
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -86,7 +86,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total }) => {
         </div>
         
         {/* Total Highlight */}
-        <div className="mt-6 flex items-center justify-between rounded-[2rem] bg-stone-900 p-6 shadow-xl shadow-stone-200">
+        {/* <div className="mt-6 flex items-center justify-between rounded-[2rem] bg-stone-900 p-6 shadow-xl shadow-stone-200">
           <span className="text-base font-medium text-white uppercase tracking-widest">Total</span>
           <div className="text-right">
             <span className="flex items-center gap-0.5 text-2xl font-medium text-red-500 leading-none">
@@ -97,7 +97,21 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total }) => {
               VAT Included
             </span>
           </div>
-        </div>
+        </div> */}
+        <div className="mt-6 flex items-center justify-between rounded-xl p-4 bg-stone-900 shadow-xl shadow-stone-200/50 md:rounded-2xl md:p-6">
+  <span className="text-sm font-medium tracking-widest text-white uppercase md:text-base">
+    Total
+  </span>
+  <div className="text-right">
+    <span className="flex items-center gap-0.5 text-xl font-medium leading-none text-red-500 md:text-2xl">
+      <DirhamIcon size={16} className="text-red-500 md:w-[18px] md:h-[18px]" />
+      {total.toFixed(2)}
+    </span>
+    <span className="mt-0.5 block text-[10px] font-medium tracking-tighter text-stone-500 uppercase md:mt-1 md:text-[11px]">
+      VAT Included
+    </span>
+  </div>
+</div>
       </div>
     </section>
   );

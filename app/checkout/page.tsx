@@ -139,7 +139,7 @@ const PaymentForm = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="rounded-2xl bg-stone-50 p-5 ring-1 ring-stone-200">
+      <div className="rounded-xl bg-stone-50 p-5 ring-1 ring-stone-200">
         <PaymentElement
           options={{
             layout: "tabs",
@@ -819,14 +819,14 @@ const CheckoutPage = () => {
             <CheckoutForm form={form} setForm={setForm} error={null} />
 
             {(isInitializing || clientSecret || orderError) && (
-              <section className="overflow-hidden rounded-[2.5rem] bg-white shadow-[0_30px_60px_rgba(0,0,0,0.12)] ring-1 ring-stone-100 animate-in fade-in zoom-in-95 duration-700">
-                <div className="border-b border-stone-50 px-8 py-6 bg-stone-50/50">
+              <section className="overflow-hidden bg-white   animate-in fade-in zoom-in-95 duration-700">
+                <div className=" px-2 py-6">
                   <h2 className="text-xl font-medium tracking-wide text-stone-900">
                     Payment
                   </h2>
                 </div>
 
-                <div className="px-8 py-10">{paymentSection}</div>
+                <div className="px-2 py-10">{paymentSection}</div>
               </section>
             )}
           </div>
