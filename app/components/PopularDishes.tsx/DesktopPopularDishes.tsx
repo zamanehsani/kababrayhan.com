@@ -25,8 +25,6 @@ export default function DesktopPopularDishes() {
 
   const { data: itembycode } = useGetItemByCodeQuery("RYH-MIX-001-With Fries");
 
-  console.log("Item by code data:", itembycode);
-  console.log("Items data:", items);
   const slugify = (value: string) =>
     value
       .toLowerCase()

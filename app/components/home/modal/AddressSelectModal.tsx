@@ -94,7 +94,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
     const token = process.env.NEXT_PUBLIC_ERP_API_TOKEN || "";
 
     const response = await fetch(
-      `${baseUrl}/Customer?filters=${filters}&fields=${fields}&limit_page_length=20`,
+      `${baseUrl}/api/resource/Customer?filters=${filters}&fields=${fields}&limit_page_length=20`,
       {
         headers: {
           Authorization: `token ${token}`,
@@ -366,6 +366,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                           territory: "United Arab Emirates",
                           email_id: "example@example.com",
                         }).unwrap();
+                        console.log("the create customer payload: ", createdCustomer);
 
                         customerName = createdCustomer.name;
                         saveCustomerName(customerName);
