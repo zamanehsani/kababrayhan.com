@@ -16,7 +16,7 @@ interface CashOnDeliverySectionProps {
 }
 
 const CashOnDeliverySection: React.FC<CashOnDeliverySectionProps> = ({
-  total,
+  total = 0,
   currency = "AED",
   onConfirm,
 }) => {

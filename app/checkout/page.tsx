@@ -47,7 +47,7 @@ import ConfirmDialog from "../components/shared/ConfirmDialog";
 import DirhamIcon from "../components/icon/DirhamIcon";
 import PaymentMethodSelector, { PaymentMethodType } from "../components/Checkout/PaymentMethodSelector";
 import PaymentErrorSection from "../components/Checkout/PaymentErrorSection";
-import CashOnDeliverySection from "../components/Checkout/CashOnDeliverySection";
+import DoorstepPaymentWrapper from "../components/Checkout/DoorstepPaymentWrapper";
 
 const toDisplayAddressTitle = (
   rawTitle: string,
@@ -636,11 +636,6 @@ const CheckoutPage = () => {
   );
 
 
-  const handleCodConfirmation = async () => {
-  // TODO: Add backend API call to process Cash on Delivery checkout submission
-  console.log("Processing COD placement for sales order:", salesOrder);
-};
-
   let paymentSection: ReactNode = null;
 
   if (orderError) {
@@ -657,22 +652,10 @@ const CheckoutPage = () => {
     );
   } else {
     paymentSection = (
-      <div className="space-y-8">
-        {/* 1. Selector Module */}
-        <PaymentMethodSelector
-          currentMethod={paymentMethod}
-          onChange={setPaymentMethod}
-        />
-
-        <hr className="border-stone-100" />
+      <div className="space-y-2">
 
         {/* 2. Conditional Payment Methods */}
-        {paymentMethod === "cod" ? (
-          <CashOnDeliverySection
-            total={total}
-            onConfirm={handleCodConfirmation}
-          />
-        ) : isInitializing || !clientSecret ? (
+        {isInitializing || (!clientSecret && paymentMethod === "card_online") ? (
           <div className="flex flex-col items-center py-6">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-stone-100 border-t-red-600 mb-3" />
             <p className="text-stone-400 font-bold uppercase text-[9px] tracking-widest">
@@ -681,20 +664,49 @@ const CheckoutPage = () => {
           </div>
         ) : (
           <div className="animate-in fade-in duration-500">
-            {stripePromise && clientSecret && (
+            {stripePromise && (
               <Elements
                 stripe={stripePromise}
                 options={{
-                  clientSecret,
+                  clientSecret: clientSecret || undefined,
                   appearance: {
                     theme: "stripe",
                     variables: { colorPrimary: "#dc2626", borderRadius: "16px" },
                   },
                   loader: "auto",
                 }}
-                key={clientSecret}
+                key={clientSecret || "doorstep-active"}
               >
-                <PaymentForm total={total} salesOrder={salesOrder} />
+                <DoorstepPaymentWrapper
+                  clientSecret={clientSecret || ""}
+                  total={total}
+                  salesOrder={salesOrder}
+                  onBack={() => setStep(2)}
+                  onSuccess={() => {
+                    clearPendingCheckout();
+                    clearPendingSalesOrder();
+                    router.push("/thank-you");
+                  }}
+                  onCodSubmit={async (methodType, details) => {
+                    try {
+                      const orderName = salesOrder?.name;
+                      if (!orderName) throw new Error("Missing sales order name");
+
+                      // Update the sales order with selected fulfillment options in ERPNext
+                      await updateSalesOrder({
+                        salesOrderName: orderName,
+                        payment_method: methodType === "cod" ? "Cash" : "Card on Delivery",
+                        custom_delivery_notes: details?.changeRequired || "",
+                      }).unwrap();
+
+                      clearPendingCheckout();
+                      clearPendingSalesOrder();
+                      router.push("/thank-you");
+                    } catch (err) {
+                      console.error("Fulfillment selection update failed:", err);
+                    }
+                  }}
+                />
               </Elements>
             )}
           </div>
@@ -702,6 +714,89 @@ const CheckoutPage = () => {
       </div>
     );
   }
+
+
+  // let paymentSection: ReactNode = null;
+
+  // if (orderError) {
+  //   paymentSection = (
+  //     <PaymentErrorSection
+  //       errorMessage={orderError}
+  //       isInitializing={isInitializing}
+  //       onRetry={() => {
+  //         hasInitializedPaymentRef.current = false;
+  //         setOrderError(null);
+  //         handleAutoProceed();
+  //       }}
+  //     />
+  //   );
+  // } else {
+  //   paymentSection = (
+  //     <div className="space-y-8">
+  //       {/* 1. Selector Module */}
+  //       <PaymentMethodSelector
+  //         currentMethod={paymentMethod}
+  //         onChange={setPaymentMethod}
+  //       />
+
+  //       <hr className="border-stone-100" />
+
+  //       {/* 2. Conditional Payment Methods */}
+  //      {isInitializing || (!clientSecret && paymentMethod === "card_online") ? (
+  //         <div className="flex flex-col items-center py-6">
+  //           <div className="h-8 w-8 animate-spin rounded-full border-4 border-stone-100 border-t-red-600 mb-3" />
+  //           <p className="text-stone-400 font-bold uppercase text-[9px] tracking-widest">
+  //             Securing Payment Line...
+  //           </p>
+  //         </div>
+  //       ) : (
+  //         <div className="animate-in fade-in duration-500">
+  //           {stripePromise && (
+  //             <Elements
+  //               stripe={stripePromise}
+  //               options={{
+  //                 clientSecret: clientSecret || undefined,
+  //                 appearance: {
+  //                   theme: "stripe",
+  //                   variables: { colorPrimary: "#dc2626", borderRadius: "16px" },
+  //                 },
+  //                 loader: "auto",
+  //               }}
+  //               key={clientSecret || "doorstep-active"}
+  //             >
+  //               <DoorstepPaymentWrapper
+  //                 clientSecret={clientSecret || ""}
+  //                 total={total}
+  //                 salesOrder={salesOrder}
+  //                 onBack={() => setStep(2)}
+  //                 onSuccess={() => {
+  //                   clearPendingCheckout();
+  //                   clearPendingSalesOrder();
+  //                   router.push("/thank-you");
+  //                 }}
+  //                 onCodSubmit={async (methodType, details) => {
+  //                   const salesOrderName = salesOrder?.name?.trim() || globalThis.localStorage.getItem("pending_sales_order") || "";
+  //                   if (!salesOrderName) return;
+
+  //                   try {
+  //                     await updateSalesOrder({
+  //                       salesOrderName,
+  //                       custom_payment_method: methodType === "cod" ? "Cash" : "Card on Delivery",
+  //                       custom_change_required: details?.changeRequired || "Not Applicable",
+  //                       custom_requires_pos_terminal: methodType === "card_on_delivery" ? 1 : 0
+  //                     }).unwrap();
+  //                   } catch (err) {
+  //                     console.error("Failed to sync structural doorstep options to ERPNext:", err);
+  //                   }
+  //                 }}
+  //               />
+  //             </Elements>
+  //           )}
+  //         </div>
+  //       )}
+  //     </div>
+  //   );
+  // }
 
   // let paymentSection: ReactNode = null;
 
@@ -820,7 +915,7 @@ const CheckoutPage = () => {
 
             {(isInitializing || clientSecret || orderError) && (
               <section className="overflow-hidden bg-white   animate-in fade-in zoom-in-95 duration-700">
-                <div className=" px-2 py-6">
+                <div className=" px-2">
                   <h2 className="text-xl font-medium tracking-wide text-stone-900">
                     Payment
                   </h2>
