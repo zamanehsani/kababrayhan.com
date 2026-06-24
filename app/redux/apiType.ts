@@ -184,8 +184,11 @@ export interface CreateSalesOrderRequest {
 export interface UpdateSalesOrderRequest {
   salesOrderName: string;
   custom_customer_note?: string;
-  payment_method?: string; 
+  payment_method?: string;
   custom_delivery_notes?: string;
+  custom_change_required?: string; 
+  custom_requires_pos_terminal?: number;
+  custom_requires_doorstep_pos_terminal?: number;
 }
 
 export interface UpdateSalesOrderResponse {
