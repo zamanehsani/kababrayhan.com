@@ -565,6 +565,31 @@ export const erpApi = createApi({
       },
       invalidatesTags: () => [{ type: "CustomerAddresses", id: "LIST" }],
     }),
+
+    completeDoorstepOrder: builder.mutation<
+      { status: string; kot_name?: string; invoice_name?: string },
+      {
+        salesOrderName: string;
+        paymentMethod: "cod" | "card_on_delivery";
+        changeRequired?: string;
+      }
+    >({
+      query: ({ salesOrderName, paymentMethod, changeRequired }) => {
+        
+        const targetUrl = `${ERP_API_METHOD_URL}pizza_app.api.complete_doorstep_order`;
+
+        return {
+          // By using an absolute URL string, RTK Query bypasses prepending the baseQuery url
+          url: targetUrl,
+          method: "POST",
+          body: {
+            sales_order_name: salesOrderName,
+            payment_method: paymentMethod,
+            change_required: changeRequired,
+          },
+        };
+      },
+    }),
   }),
 });
 
@@ -593,4 +618,5 @@ export const {
   useGetItemsQuery,
   useSendOtpMutation,
   useGetItemByCodeQuery,
+  useCompleteDoorstepOrderMutation,
 } = erpApi;

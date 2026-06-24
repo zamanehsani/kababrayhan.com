@@ -19,6 +19,7 @@ import {
   useDisableAddressMutation,
   type Customer,
   type SalesOrder,
+  useCompleteDoorstepOrderMutation,
 } from "../redux/api";
 import type { CreateSalesOrderRequest } from "../redux/apiType";
 import { readStoredCustomer } from "@/app/components/customerStorage";
@@ -205,6 +206,7 @@ const CheckoutPage = () => {
   const [createSalesOrder] = useCreateSalesOrderMutation();
   const [createPaymentIntent] = useCreatePaymentIntentMutation();
   const [updateSalesOrder] = useUpdateSalesOrderMutation();
+  const [completeDoorstepOrder] = useCompleteDoorstepOrderMutation();
   const [deleteAddress] = useDeleteAddressMutation();
   const [disableAddress] = useDisableAddressMutation();
 
@@ -693,12 +695,18 @@ const CheckoutPage = () => {
                       if (!orderName) throw new Error("Missing sales order name");
 
                       // Update the sales order with selected fulfillment options in ERPNext
-                      await updateSalesOrder({
+                      await completeDoorstepOrder({
                         salesOrderName: orderName,
-                        payment_method: methodType === "cod" ? "Cash" : "Card on Delivery",
-                        custom_change_required: methodType === "cod" ? (details?.changeRequired || "Exact Amount") : "N/A",
-                        custom_requires_doorstep_pos_terminal: methodType === "card_on_delivery" ? 1 : 0
+                        paymentMethod: methodType, // passes "cod" or "card_on_delivery"
+                        changeRequired: details?.changeRequired || "Exact Amount"
                       }).unwrap();
+                      
+                      // await updateSalesOrder({
+                      //   salesOrderName: orderName,
+                      //   payment_method: methodType === "cod" ? "Cash" : "Card on Delivery",
+                      //   custom_change_required: methodType === "cod" ? (details?.changeRequired || "Exact Amount") : "N/A",
+                      //   custom_requires_doorstep_pos_terminal: methodType === "card_on_delivery" ? 1 : 0
+                      // }).unwrap();
 
                       clearPendingCheckout();
                       clearPendingSalesOrder();
