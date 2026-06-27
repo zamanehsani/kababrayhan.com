@@ -11,7 +11,7 @@ const ContactPhoneCard: React.FC<ContactPhoneCardProps> = ({
 }) => {
   return (
     <div className="group">
-      <label className="mb-3 ml-1 block text-[13px] font-medium uppercase tracking-wide text-stone-400">
+      <label className="mb-3 ml-1 block text-[13px] font-medium tracking-wide text-stone-400">
         Contact Phone
       </label>
 
@@ -21,10 +21,6 @@ const ContactPhoneCard: React.FC<ContactPhoneCardProps> = ({
         </div>
 
         <div className="flex flex-1 flex-col">
-          <span className="text-xs font-medium uppercase tracking-wide text-green-600">
-            Verified
-          </span>
-
           <span className="font-medium text-stone-900">
             {phone}
           </span>

@@ -482,18 +482,18 @@ export default function AccountProfilePage() {
                 Profile & Preferences
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px]">
-                Manage your verified phone and delivery details for smoother
+                Manage your phone number and delivery details for smoother
                 checkout.
               </p>
             </div>
 
-            <Link
+            {/* <Link
               href="/home"
               className="inline-flex w-fit items-center gap-1 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-slate-700 transition-colors hover:bg-slate-50"
             >
               <ChevronLeft size={14} />
               Back To Home
-            </Link>
+            </Link> */}
           </div>
 
           <div className="mt-8 flow-root">
@@ -506,9 +506,6 @@ export default function AccountProfilePage() {
                       <Phone size={20} />
                     </div>
                     <div className="min-w-0 pt-0.5">
-                      <p className="text-sm font-semibold text-slate-900">
-                        Verified Phone
-                      </p>
                       <p className="mt-1 text-sm leading-6 text-slate-600">
                         {phoneLabel}
                       </p>

@@ -180,12 +180,12 @@ const CashOnDeliverySection: React.FC<CashOnDeliverySectionProps> = ({
         type="button"
         disabled={isSubmitting || (changeMode === "custom" && (!customAmount || parseFloat(customAmount) <= total))}
         onClick={handleSubmit}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-red-600 py-4 text-xs font-black tracking-[0.2em] text-white shadow-xl transition-all hover:bg-stone-800 active:scale-95 disabled:bg-stone-300 disabled:scale-100 disabled:cursor-not-allowed"
+        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-red-600 py-4 text-xs font-black tracking-[0.2em] text-white shadow-xl transition-all hover:bg-red-700 active:scale-95 disabled:bg-stone-300 disabled:scale-100 disabled:cursor-not-allowed"
       >
         {isSubmitting ? (
           <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-stone-400 border-t-white" />
         ) : (
-          `Confirm & Place COD Order (${total.toFixed(2)} ${currency})`
+          `Confirm & Continue (${total.toFixed(2)} ${currency})`
         )}
       </button>
     </div>

@@ -22,7 +22,6 @@ import type { SalesOrderSummary } from "../redux/apiType";
 import Footer from "../components/Footer/Footer";
 
 
-
 // kot?.status -> "Pending" | "Preparing" | "Ready" | "Completed"
 const getKitchenStatusDisplay = (kotStatus?: string) => {
   switch (kotStatus?.toLowerCase()) {

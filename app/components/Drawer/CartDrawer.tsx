@@ -374,17 +374,11 @@ export default function CartDrawer() {
               setShowSavedAddressesModal(true);
             }}
           />
-          // <AddressSelectModal
-          //   open={showAddressModal}
-          //   onClose={() => setShowAddressModal(false)}
-          //   onSelect={() => setShowAddressModal(false)}
-          //   redirectTo={null}
-          // />
         )}
         <UpdateDecisionModal
           open={showPhoneUpdatePrompt}
-          title="Phone number verified"
-          description="We found a verified number on your account. Use it to continue, or change it before checkout."
+          title="Phone number"
+          description="We found a phone number on your account. Use it to continue, or change it before checkout."
           detail={phone}
           confirmLabel="Change Number"
           skipLabel="Use This Number"

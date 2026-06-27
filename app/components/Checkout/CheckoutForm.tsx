@@ -485,7 +485,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
             return (
               <div key={address.name || index} className="group">
                 <div className="mb-3 ml-1 flex items-center gap-1">
-                  <span className="text-[13px] font-medium uppercase tracking-wide text-stone-400 group-hover:text-red-600 transition-colors">
+                  <span className="text-[13px] font-medium  tracking-wide text-stone-400 group-hover:text-red-600 transition-colors">
                     Delivery To&nbsp;(
                   </span>
 
@@ -602,7 +602,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
               );
               setActiveDeliveryIndex(updated.length - 1);
             }}
-            className="ml-1 flex items-center gap-2 text-[13px] font-medium uppercase tracking-wide text-stone-400 transition-colors hover:text-red-600"
+            className="ml-1 flex items-center gap-2 text-[13px] font-medium tracking-wide text-stone-400 transition-colors hover:text-red-600"
           >
             <span className="text-base leading-none">+</span> Add Delivery
             Address

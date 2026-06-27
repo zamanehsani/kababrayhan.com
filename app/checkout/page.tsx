@@ -735,20 +735,6 @@ const CheckoutPage = () => {
       <main className="mx-auto max-w-7xl px-6 py-10 md:py-14 lg:py-16">
         <CheckoutStepper currentStep={step} />
 
-        {/* <CheckoutHeader
-          title={step === 2 ? "Delivery Details" : "Secure Payment"}
-          subtitle="Confirm your delivery details and complete the payment securely."
-          backLabel={step === 3 ? "Change Address" : "Back to Plate"}
-          backLink="/"
-          onClick={
-            step === 3
-              ? () => {
-                setShowBackConfirm(true);
-              }
-              : undefined
-          }
-        /> */}
-
         <div className="grid gap-12 lg:grid-cols-2 lg:items-start flex flex-col md:flex-col lg:flex-row">
           {/* Left Section (Form & Payment) - Appears SECOND on mobile/tablet, FIRST on desktop */}
           <div className="space-y-8 order-2 lg:order-1">
