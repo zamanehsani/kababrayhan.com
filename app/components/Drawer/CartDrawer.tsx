@@ -126,19 +126,17 @@ export default function CartDrawer() {
     proceedAfterPhoneDecision();
   };
 
-  // const handleAddressUpdateConfirm = () => {
-  //   setShowAddressUpdatePrompt(false);
-  //   setShowAddressModal(true);
-  // };
-
-  // const handleAddressUpdateSkip = () => {
-  //   setShowAddressUpdatePrompt(false);
-  //   setOpen(false);
-  //   router.push("/checkout");
-  // };
 
   const handlePhoneModalClose = (phoneJustSaved?: string) => {
     setShowPhoneModal(false);
+
+    // If there is no phone just saved (user clicked X / cancelled close)
+    if (!phoneJustSaved) {
+      setAllowExistingPhoneInput(false);
+      // Stop execution here so it stays on the open CartDrawer 
+      // instead of moving forward to the delivery modals.
+      return;
+    }
 
     const savedPhone = phoneJustSaved || localStorage.getItem(PHONE_KEY) || "";
     const status = localStorage.getItem(PHONE_STATUS_KEY);
@@ -150,9 +148,9 @@ export default function CartDrawer() {
 
     setPhone(savedPhone);
 
-    // If user was in explicit update flow and closed without changing,
+    // If user was in explicit update flow and completed changing it,
     // continue checkout with existing verified session.
-    if (allowExistingPhoneInput && !phoneJustSaved && status === "verified") {
+    if (allowExistingPhoneInput && status === "verified") {
       setAllowExistingPhoneInput(false);
       proceedAfterPhoneDecision();
       return;
