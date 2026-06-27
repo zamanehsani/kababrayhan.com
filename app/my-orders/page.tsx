@@ -21,27 +21,25 @@ import {
 import type { SalesOrderSummary } from "../redux/apiType";
 import Footer from "../components/Footer/Footer";
 
+
+
 // kot?.status -> "Pending" | "Preparing" | "Ready" | "Completed"
 const getKitchenStatusDisplay = (kotStatus?: string) => {
   switch (kotStatus?.toLowerCase()) {
     case "pending":
       return {
-
         color: "bg-blue-50 border-blue-200 text-blue-700",
       };
     case "preparing":
       return {
-
         color: "bg-yellow-50 border-red-200 text-red-700",
       };
     case "ready":
       return {
-
         color: "bg-green-50 border-green-200 text-green-700",
       };
     case "completed":
       return {
-
         color: "bg-slate-50 border-slate-200 text-slate-700",
       };
     default:
@@ -96,50 +94,13 @@ function OrderKitchenStatus({ kotId }: Readonly<{ kotId?: string }>) {
       <div className="flex justify-start sm:justify-end">
       </div>
 
-      <div className="mt-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-3 py-3 sm:px-4">
-        <ol className="space-y-3 sm:hidden">
-          {KITCHEN_PROGRESS_STEPS.map((step, index) => {
-            const isReached = index <= activeStepIndex;
-            const isCurrent = index === activeStepIndex;
-            const isLast = index === KITCHEN_PROGRESS_STEPS.length - 1;
-
-            return (
-              <li key={step.key} className="relative pl-7">
-                {!isLast && (
-                  <span
-                    className={`absolute left-2 top-4 h-6 w-0.5 ${index < activeStepIndex ? "bg-red-300" : "bg-slate-200"
-                      }`}
-                  />
-                )}
-
-                <span
-                  className={`absolute left-0 top-0.5 inline-flex h-4 w-4 rounded-full border-2 transition-colors ${isReached
-                    ? "border-red-600 bg-red-600"
-                    : "border-slate-300 bg-white"
-                    } ${isCurrent ? "ring-2 ring-red-100" : ""}`}
-                />
-
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`text-[10px] font-semibold uppercase tracking-wide ${isReached ? "text-slate-800" : "text-slate-400"
-                      }`}
-                  >
-                    {step.label}
-                  </span>
-
-                  {isCurrent && (
-                    <span className="rounded-full bg-red-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-red-700">
-                      Current
-                    </span>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ol>
-
-        <div className="relative hidden sm:block">
+      <div className="mt-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-3 py-4 sm:px-4">
+        {/* Unified Horizontal Layout for both Mobile and Desktop */}
+        <div className="relative w-full">
+          {/* Background Track Line */}
           <div className="absolute left-3 right-3 top-2 h-1 rounded-full bg-slate-200" />
+          
+          {/* Animated Progress Line */}
           <div
             className="absolute left-3 top-2 h-1 rounded-full bg-red-600 transition-all duration-500"
             style={{
@@ -147,7 +108,8 @@ function OrderKitchenStatus({ kotId }: Readonly<{ kotId?: string }>) {
             }}
           />
 
-          <div className="relative grid grid-cols-4 gap-2">
+          {/* Steps Grid */}
+          <div className="relative grid grid-cols-4 gap-1 sm:gap-2">
             {KITCHEN_PROGRESS_STEPS.map((step, index) => {
               const isReached = index <= activeStepIndex;
               const isCurrent = index === activeStepIndex;
@@ -157,15 +119,20 @@ function OrderKitchenStatus({ kotId }: Readonly<{ kotId?: string }>) {
                   key={step.key}
                   className="flex min-w-0 flex-col items-center text-center"
                 >
+                  {/* Step Dot */}
                   <span
-                    className={`inline-flex h-4 w-4 items-center justify-center rounded-full border-2 transition-colors ${isReached
-                      ? "border-red-600 bg-red-600"
-                      : "border-slate-300 bg-white"
-                      } ${isCurrent ? "scale-110 ring-2 ring-red-100" : ""}`}
+                    className={`inline-flex h-4 w-4 items-center justify-center rounded-full border-2 transition-colors ${
+                      isReached
+                        ? "border-red-600 bg-red-600"
+                        : "border-slate-300 bg-white"
+                    } ${isCurrent ? "scale-110 ring-2 ring-red-100" : ""}`}
                   />
+                  
+                  {/* Step Label */}
                   <span
-                    className={`mt-2 text-[9px] font-semibold uppercase tracking-wide ${isReached ? "text-slate-800" : "text-slate-400"
-                      }`}
+                    className={`mt-2 text-[9px] font-semibold uppercase tracking-wide break-words w-full ${
+                      isReached ? "text-slate-800" : "text-slate-400"
+                    }`}
                   >
                     {step.label}
                   </span>
@@ -336,7 +303,7 @@ export default function MyOrdersPage() {
                   >
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div className="flex-1">
-                        <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+                        <p className="text-xs font-semibold tracking-widest text-slate-500">
                           Order ID
                         </p>
                         <p className="mt-1 text-sm font-semibold text-slate-900">
