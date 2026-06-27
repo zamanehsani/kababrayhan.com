@@ -34,7 +34,7 @@ export const CardOnDeliverySection: React.FC<CardOnDeliverySectionProps> = ({
       </div>
 
       <div className="flex items-center justify-between rounded-xl bg-stone-900 p-4 text-white">
-        <span className="text-xs font-semibold uppercase tracking-wider text-stone-400">
+        <span className="text-xs font-semibold tracking-wider text-stone-400">
           Amount Due at Door
         </span>
         <span className="text-base font-bold tracking-tight">

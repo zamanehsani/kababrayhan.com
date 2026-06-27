@@ -26,27 +26,26 @@ const getKitchenStatusDisplay = (kotStatus?: string) => {
   switch (kotStatus?.toLowerCase()) {
     case "pending":
       return {
-        label: "Order Received",
+
         color: "bg-blue-50 border-blue-200 text-blue-700",
       };
     case "preparing":
       return {
-        label: "Being Prepared",
+
         color: "bg-yellow-50 border-red-200 text-red-700",
       };
     case "ready":
       return {
-        label: "Ready",
+
         color: "bg-green-50 border-green-200 text-green-700",
       };
     case "completed":
       return {
-        label: "Delivered",
+
         color: "bg-slate-50 border-slate-200 text-slate-700",
       };
     default:
       return {
-        label: "Processing",
         color: "bg-slate-50 border-slate-200 text-slate-700",
       };
   }
@@ -95,11 +94,6 @@ function OrderKitchenStatus({ kotId }: Readonly<{ kotId?: string }>) {
   return (
     <div className="w-full max-w-full sm:ml-auto sm:max-w-88">
       <div className="flex justify-start sm:justify-end">
-        <span
-          className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-wider ${statusDisplay.color}`}
-        >
-          {statusDisplay.label}
-        </span>
       </div>
 
       <div className="mt-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-3 py-3 sm:px-4">
@@ -113,25 +107,22 @@ function OrderKitchenStatus({ kotId }: Readonly<{ kotId?: string }>) {
               <li key={step.key} className="relative pl-7">
                 {!isLast && (
                   <span
-                    className={`absolute left-2 top-4 h-6 w-0.5 ${
-                      index < activeStepIndex ? "bg-red-300" : "bg-slate-200"
-                    }`}
+                    className={`absolute left-2 top-4 h-6 w-0.5 ${index < activeStepIndex ? "bg-red-300" : "bg-slate-200"
+                      }`}
                   />
                 )}
 
                 <span
-                  className={`absolute left-0 top-0.5 inline-flex h-4 w-4 rounded-full border-2 transition-colors ${
-                    isReached
-                      ? "border-red-600 bg-red-600"
-                      : "border-slate-300 bg-white"
-                  } ${isCurrent ? "ring-2 ring-red-100" : ""}`}
+                  className={`absolute left-0 top-0.5 inline-flex h-4 w-4 rounded-full border-2 transition-colors ${isReached
+                    ? "border-red-600 bg-red-600"
+                    : "border-slate-300 bg-white"
+                    } ${isCurrent ? "ring-2 ring-red-100" : ""}`}
                 />
 
                 <div className="flex items-center gap-2">
                   <span
-                    className={`text-[10px] font-semibold uppercase tracking-wide ${
-                      isReached ? "text-slate-800" : "text-slate-400"
-                    }`}
+                    className={`text-[10px] font-semibold uppercase tracking-wide ${isReached ? "text-slate-800" : "text-slate-400"
+                      }`}
                   >
                     {step.label}
                   </span>
@@ -167,16 +158,14 @@ function OrderKitchenStatus({ kotId }: Readonly<{ kotId?: string }>) {
                   className="flex min-w-0 flex-col items-center text-center"
                 >
                   <span
-                    className={`inline-flex h-4 w-4 items-center justify-center rounded-full border-2 transition-colors ${
-                      isReached
-                        ? "border-red-600 bg-red-600"
-                        : "border-slate-300 bg-white"
-                    } ${isCurrent ? "scale-110 ring-2 ring-red-100" : ""}`}
+                    className={`inline-flex h-4 w-4 items-center justify-center rounded-full border-2 transition-colors ${isReached
+                      ? "border-red-600 bg-red-600"
+                      : "border-slate-300 bg-white"
+                      } ${isCurrent ? "scale-110 ring-2 ring-red-100" : ""}`}
                   />
                   <span
-                    className={`mt-2 text-[9px] font-semibold uppercase tracking-wide ${
-                      isReached ? "text-slate-800" : "text-slate-400"
-                    }`}
+                    className={`mt-2 text-[9px] font-semibold uppercase tracking-wide ${isReached ? "text-slate-800" : "text-slate-400"
+                      }`}
                   >
                     {step.label}
                   </span>

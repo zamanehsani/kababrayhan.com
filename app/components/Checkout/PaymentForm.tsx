@@ -51,6 +51,9 @@ const PaymentForm = ({
       }
 
       if (paymentIntent?.status === "succeeded") {
+        localStorage.removeItem("cart");
+        localStorage.removeItem("pending_sales_order");
+        localStorage.removeItem("sales_order");
         router.push("/thank-you");
       }
     } catch {
@@ -78,17 +81,16 @@ const PaymentForm = ({
       <button
         type="submit"
         disabled={!stripe || !elements || isProcessing}
-        className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4 text-xs font-black uppercase tracking-[0.2em] transition-all shadow-xl ${
-          !stripe || !elements || isProcessing
-            ? "cursor-not-allowed bg-stone-400 text-white"
-            : "bg-red-600 text-white shadow-red-200 hover:bg-red-700 active:scale-95"
-        }`}
+        className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4 text-xs font-black uppercase tracking-[0.2em] transition-all shadow-xl ${!stripe || !elements || isProcessing
+          ? "cursor-not-allowed bg-stone-400 text-white"
+          : "bg-red-600 text-white shadow-red-200 hover:bg-red-700 active:scale-95"
+          }`}
       >
         {isProcessing ? (
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
         ) : (
           <span className="flex items-center justify-center gap-0.5 normal-case">
-            <span className="uppercase tracking-[0.2em] mr-1">Pay</span>
+            <span className="tracking-[0.2em] mr-1">Pay</span>
             <DirhamIcon size={14} className="text-white" />
             {total.toFixed(2)}
           </span>

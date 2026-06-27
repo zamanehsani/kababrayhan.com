@@ -162,7 +162,7 @@ const PaymentForm = ({
       <button
         type="submit"
         disabled={!stripe || !elements || isProcessing}
-        className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4 text-xs font-black uppercase tracking-[0.2em] transition-all shadow-xl ${isProcessing
+        className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4 text-xs font-black tracking-[0.2em] transition-all shadow-xl ${isProcessing
           ? "bg-stone-400 text-white cursor-not-allowed"
           : "bg-red-600 text-white shadow-red-200 hover:bg-red-700 active:scale-95"
           }`}
@@ -171,7 +171,7 @@ const PaymentForm = ({
           "Processing..."
         ) : (
           <span className="flex items-center justify-center gap-0.5 normal-case">
-            <span className="uppercase tracking-[0.2em] mr-1">Pay</span>
+            <span className="tracking-[0.2em] mr-1">Pay</span>
             <DirhamIcon size={14} className="text-white" />
             {total.toFixed(2)}
           </span>
@@ -660,7 +660,7 @@ const CheckoutPage = () => {
         {isInitializing || (!clientSecret && paymentMethod === "card_online") ? (
           <div className="flex flex-col items-center py-6">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-stone-100 border-t-red-600 mb-3" />
-            <p className="text-stone-400 font-bold uppercase text-[9px] tracking-widest">
+            <p className="text-stone-400 font-bold text-[9px] tracking-widest">
               Securing Payment Line...
             </p>
           </div>
@@ -700,14 +700,6 @@ const CheckoutPage = () => {
                         paymentMethod: methodType, // passes "cod" or "card_on_delivery"
                         changeRequired: details?.changeRequired || "Exact Amount"
                       }).unwrap();
-                      
-                      // await updateSalesOrder({
-                      //   salesOrderName: orderName,
-                      //   payment_method: methodType === "cod" ? "Cash" : "Card on Delivery",
-                      //   custom_change_required: methodType === "cod" ? (details?.changeRequired || "Exact Amount") : "N/A",
-                      //   custom_requires_doorstep_pos_terminal: methodType === "card_on_delivery" ? 1 : 0
-                      // }).unwrap();
-
                       clearPendingCheckout();
                       clearPendingSalesOrder();
                       router.push("/thank-you");
@@ -743,7 +735,7 @@ const CheckoutPage = () => {
       <main className="mx-auto max-w-7xl px-6 py-10 md:py-14 lg:py-16">
         <CheckoutStepper currentStep={step} />
 
-        <CheckoutHeader
+        {/* <CheckoutHeader
           title={step === 2 ? "Delivery Details" : "Secure Payment"}
           subtitle="Confirm your delivery details and complete the payment securely."
           backLabel={step === 3 ? "Change Address" : "Back to Plate"}
@@ -755,7 +747,7 @@ const CheckoutPage = () => {
               }
               : undefined
           }
-        />
+        /> */}
 
         <div className="grid gap-12 lg:grid-cols-2 lg:items-start flex flex-col md:flex-col lg:flex-row">
           {/* Left Section (Form & Payment) - Appears SECOND on mobile/tablet, FIRST on desktop */}
@@ -822,7 +814,7 @@ const CheckoutPage = () => {
       )}
 
       {/* Back Confirmation Dialog */}
-      {showBackConfirm && (
+      {/* {showBackConfirm && (
         <ConfirmDialog
           open={true}
           onClose={() => setShowBackConfirm(false)}
@@ -842,7 +834,7 @@ const CheckoutPage = () => {
           cancelText="Stay Here"
           variant="warning"
         />
-      )}
+      )} */}
 
       <Footer />
     </div>

@@ -4,17 +4,24 @@ import Link from "next/link";
 import {
   CheckCircle2,
   ChevronRight,
-  ClipboardList,
   ArrowLeft,
-  ReceiptText,
 } from "lucide-react";
 import MobileHeader from "../components/Header/MobileHeader";
 import TabletHeader from "../components/Header/TabletHeader";
 import DesktopHeader from "../components/Header/DesktopHeader";
 import BottomNav from "../components/home/BottomNav";
 import Footer from "../components/Footer/Footer";
+import { useEffect } from "react";
 
 export default function ThankYouPage() {
+
+  useEffect(() => {
+    localStorage.removeItem("cart");
+    localStorage.removeItem("pending_sales_order");
+    localStorage.removeItem("sales_order");
+    localStorage.removeItem("stripe_client_secret"); // If you save the secret directly
+  }, []);
+
   return (
     <main className="min-h-screen bg-slate-50/50 font-sans antialiased text-slate-800 flex flex-col">
       {/* ── Headers Track ───────────────────────────────── */}
@@ -48,22 +55,13 @@ export default function ThankYouPage() {
               </div>
             </div>
 
-            {/* Elegant Calm Status Badge */}
-            <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-red-100 bg-emerald-50/60 px-3.5 py-1 text-xs font-semibold text-red-700 tracking-wide">
-              <span
-                className="h-1.5 w-1.5 rounded-full bg-red-500"
-                aria-hidden="true"
-              />
-              Payment Successful
-            </span>
-
             {/* Clean Balanced Typography Hierarchy */}
             <h1 className="text-3xl font-medium tracking-wide text-slate-900 lg:text-4xl">
-              You're all set!
+              You&apos;re all set!
             </h1>
 
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-slate-500 font-medium">
-              Your order has been successfully. Our kitchen is
+              Your order has been successfully placed. Our kitchen is
               preparing your items and will have them ready shortly.
             </p>
 
