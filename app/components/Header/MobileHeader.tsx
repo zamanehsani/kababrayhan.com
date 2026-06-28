@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, User,  ClipboardList } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -172,31 +172,31 @@ export default function MobileHeader() {
             onClick={handleProfileClick}
             className="flex min-w-0 w-full items-center gap-3 text-left"
           >
-          {/* Profile Image - Kept at 48px, perfect for mobile */}
-          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-red-100 bg-slate-50 shadow-sm">
-            {customerAvatar ? (
-              <Image
-                src={customerAvatar}
-                alt="Profile"
-                width={48}
-                height={48}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <User size={20} className="text-slate-500" />
-            )}
-          </div>
+            {/* Profile Image - Kept at 48px, perfect for mobile */}
+            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-red-100 bg-slate-50 shadow-sm">
+              {customerAvatar ? (
+                <Image
+                  src={customerAvatar}
+                  alt="Profile"
+                  width={48}
+                  height={48}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <User size={20} className="text-slate-500" />
+              )}
+            </div>
 
-          <div className="min-w-0">
-            {/* Increased weight for better recognition */}
-            <h1 className="truncate text-[17px] font-semibold tracking-wide text-slate-900">
-              {portalState.isVerified ? portalState.phone : "Guest"}
-            </h1>
-            {/* Bumped to text-sm (14px) for readability; slate-500 is the standard for secondary info */}
-            <p className="truncate text-sm font-normal text-slate-500">
-              {secondaryText}
-            </p>
-          </div>
+            <div className="min-w-0">
+              {/* Increased weight for better recognition */}
+              <h1 className="truncate text-[17px] font-semibold tracking-wide text-slate-900">
+                {portalState.isVerified ? portalState.phone : "Guest"}
+              </h1>
+              {/* Bumped to text-sm (14px) for readability; slate-500 is the standard for secondary info */}
+              <p className="truncate text-sm font-normal text-slate-500">
+                {secondaryText}
+              </p>
+            </div>
           </button>
 
           {portalState.isVerified && isProfileOpen && (
@@ -227,19 +227,10 @@ export default function MobileHeader() {
           )}
         </div>
 
-      {/* Increased padding (p-2.5) for a better thumb tap target */}
-      
-      {portalState?.isVerified && (
-        <button
-          type="button"
-          onClick={() => router.push("/my-orders")}
-          className="mr-2 flex h-11 w-11 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-600 shadow-sm transition-all active:scale-90"
-        >
-          <ClipboardList size={22} />
-        </button>
-      )}
+        {/* Increased padding (p-2.5) for a better thumb tap target */}
 
-      
+     
+
       </header>
 
       {showPhoneModal && (

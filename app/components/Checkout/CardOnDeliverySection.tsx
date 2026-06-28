@@ -2,6 +2,7 @@
 
 import React from "react";
 import { SmartphoneNfc, ShieldCheck } from "lucide-react";
+import DirhamIcon from "../icon/DirhamIcon";
 
 interface CardOnDeliverySectionProps {
   totalAmount: number;
@@ -18,7 +19,7 @@ export const CardOnDeliverySection: React.FC<CardOnDeliverySectionProps> = ({
             <SmartphoneNfc size={20} />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-stone-900">
+            <h4 className="text-sm font-medium tracking-wide text-stone-800">
               Pay at Doorstep via Card Reader
             </h4>
             <p className="mt-1 text-xs leading-relaxed text-stone-500">
@@ -37,8 +38,9 @@ export const CardOnDeliverySection: React.FC<CardOnDeliverySectionProps> = ({
         <span className="text-xs font-semibold tracking-wider text-stone-400">
           Amount Due at Door
         </span>
-        <span className="text-base font-bold tracking-tight">
-          {totalAmount.toFixed(2)} AED
+        <span className="flex items-center gap-1 text-base font-bold tracking-tight">
+          <DirhamIcon size={14} className="text-white" />
+          {totalAmount.toFixed(2)}
         </span>
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import DirhamIcon from "../icon/DirhamIcon";
 
 interface CodDetails {
   changeRequested: boolean;
@@ -80,7 +81,7 @@ const CashOnDeliverySection: React.FC<CashOnDeliverySectionProps> = ({
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Step Label */}
       <div className="space-y-1">
-        <label className="text-[14px] font-bold tracking-wider text-stone-400">
+        <label className="text-[14px] font-medium tracking-wide text-stone-900">
           How will you pay the driver?
         </label>
         <p className="text-xs text-stone-500">
@@ -95,11 +96,11 @@ const CashOnDeliverySection: React.FC<CashOnDeliverySectionProps> = ({
           type="button"
           onClick={() => setChangeMode("exact")}
           className={`flex flex-col items-start justify-between rounded-xl border-2 p-3 text-left transition-all ${changeMode === "exact"
-              ? "border-red-600 bg-red-50/20 text-stone-900"
-              : "border-stone-100 bg-white text-stone-600 hover:border-stone-200"
+            ? "border-red-600 bg-red-50/20 text-stone-900"
+            : "border-stone-100 bg-white text-stone-600 hover:border-stone-200"
             }`}
         >
-          <span className="text-sm font-bold">Exact Amount</span>
+          <span className="text-sm font-medium">Exact Amount</span>
           <span className="text-[10px] opacity-70 mt-1">No change needed</span>
         </button>
 
@@ -110,11 +111,14 @@ const CashOnDeliverySection: React.FC<CashOnDeliverySectionProps> = ({
             key={note}
             onClick={() => setChangeMode(note.toString())}
             className={`flex flex-col items-start justify-between rounded-xl border-2 p-3 text-left transition-all ${changeMode === note.toString()
-                ? "border-red-600 bg-red-50/20 text-stone-900"
-                : "border-stone-100 bg-white text-stone-600 hover:border-stone-200"
+              ? "border-red-600 bg-red-50/20 text-stone-900"
+              : "border-stone-100 bg-white text-stone-900 hover:border-stone-200"
               }`}
           >
-            <span className="text-sm font-bold">{note} {currency}</span>
+            <span className="flex items-center gap-0.5 text-sm font-medium">
+              {note}
+              <DirhamIcon size={12} className={changeMode === note.toString() ? "text-red-600" : "text-stone-900"} />
+            </span>
             <span className="text-[10px] opacity-70 mt-1">Pay with bill</span>
           </button>
         ))}
@@ -124,11 +128,11 @@ const CashOnDeliverySection: React.FC<CashOnDeliverySectionProps> = ({
           type="button"
           onClick={() => setChangeMode("custom")}
           className={`flex flex-col items-start justify-between rounded-xl border-2 p-3 text-left transition-all ${changeMode === "custom"
-              ? "border-red-600 bg-red-50/20 text-stone-900"
-              : "border-stone-100 bg-white text-stone-600 hover:border-stone-200"
+            ? "border-red-600 bg-red-50/20 text-stone-900"
+            : "border-stone-100 bg-white text-stone-600 hover:border-stone-200"
             }`}
         >
-          <span className="text-sm font-bold">Other Note</span>
+          <span className="text-sm font-medium">Other Note</span>
           <span className="text-[10px] opacity-70 mt-1">Specify cash size</span>
         </button>
       </div>
@@ -136,10 +140,10 @@ const CashOnDeliverySection: React.FC<CashOnDeliverySectionProps> = ({
       {/* Custom Amount Form Element */}
       {changeMode === "custom" && (
         <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
-          <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wide">
+          <label className="text-[14px] font-normal text-slate-600 tracking-wide">
             Enter the amount you will hand to the courier
           </label>
-          <div className="relative rounded-xl border border-stone-200 bg-white px-3 py-2.5 shadow-inner">
+          <div className="relative rounded-xl border border-stone-200 bg-white px-3 py-2.5">
             <input
               type="number"
               inputMode="decimal"
@@ -148,8 +152,8 @@ const CashOnDeliverySection: React.FC<CashOnDeliverySectionProps> = ({
               onChange={(e) => setCustomAmount(e.target.value)}
               className="w-full bg-transparent text-sm font-semibold text-stone-900 placeholder-stone-300 outline-none pr-12"
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400">
-              {currency}
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
+              <DirhamIcon size={14} className="text-stone-900" />
             </span>
           </div>
         </div>
@@ -164,8 +168,9 @@ const CashOnDeliverySection: React.FC<CashOnDeliverySectionProps> = ({
               Handing {details.payingWith.toFixed(2)} - Order {total.toFixed(2)}
             </p>
           </div>
-          <p className="text-base font-black text-stone-900">
-            {details.changeNeeded.toFixed(2)} <span className="text-xs font-bold">{currency}</span>
+          <p className="flex items-center gap-1 text-base font-medium text-stone-900">
+            {details.changeNeeded.toFixed(2)}
+            <DirhamIcon size={14} className="text-stone-700" />
           </p>
         </div>
       )}
@@ -180,14 +185,20 @@ const CashOnDeliverySection: React.FC<CashOnDeliverySectionProps> = ({
         type="button"
         disabled={isSubmitting || (changeMode === "custom" && (!customAmount || parseFloat(customAmount) <= total))}
         onClick={handleSubmit}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-red-600 py-4 text-xs font-black tracking-[0.2em] text-white shadow-xl transition-all hover:bg-red-700 active:scale-95 disabled:bg-stone-300 disabled:scale-100 disabled:cursor-not-allowed"
+        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-red-600 py-4 text-sm font-medium tracking-wide text-white shadow-xl transition-all hover:bg-red-700 active:scale-95 disabled:bg-stone-300 disabled:scale-100 disabled:cursor-not-allowed"
       >
         {isSubmitting ? (
           <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-stone-400 border-t-white" />
         ) : (
-          `Confirm & Continue (${total.toFixed(2)} ${currency})`
+          <span className="flex items-center justify-center gap-1 normal-case">
+            <span className="tracking-[0.2em]">Confirm & Continue (</span>
+            <DirhamIcon size={12} className="text-white" />
+            <span className="font-medium">{total.toFixed(2)}</span>
+            <span className="tracking-[0.2em]">)</span>
+          </span>
         )}
       </button>
+
     </div>
   );
 };

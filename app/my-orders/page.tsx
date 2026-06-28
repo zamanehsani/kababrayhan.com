@@ -83,7 +83,6 @@ function OrderKitchenStatus({ kotId }: Readonly<{ kotId?: string }>) {
     pollingInterval: 30000, // Auto-refresh every 30 seconds
   });
 
-  const statusDisplay = getKitchenStatusDisplay(kotDetails?.status);
   const activeStepIndex = getKitchenProgressIndex(kotDetails?.status);
   const progressPercent =
     (activeStepIndex / (KITCHEN_PROGRESS_STEPS.length - 1)) * 100;
@@ -93,7 +92,7 @@ function OrderKitchenStatus({ kotId }: Readonly<{ kotId?: string }>) {
       <div className="flex justify-start sm:justify-end">
       </div>
 
-      <div className="mt-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-3 py-4 sm:px-4">
+      <div className="mt-3 rounded-2xl px-3 py-4 sm:px-4">
         {/* Unified Horizontal Layout for both Mobile and Desktop */}
         <div className="relative w-full">
           {/* Background Track Line */}
@@ -298,7 +297,7 @@ export default function MyOrdersPage() {
                 {orders.map((order) => (
                   <article
                     key={order.name}
-                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
+                    className="rounded-2xl border border-slate-200 bg-white p-4  sm:p-5"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div className="flex-1">

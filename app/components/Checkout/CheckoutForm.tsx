@@ -494,7 +494,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
             return (
               <div key={localAddressItem.addressId || index} className="group">
                 <div className="mb-3 ml-1 flex items-center gap-1">
-                  <span className="text-[13px] font-medium tracking-wide text-stone-400">
+                  <span className="text-[13px] font-medium tracking-wide text-stone-700">
                     Delivery To&nbsp;(
                   </span>
 
@@ -511,8 +511,8 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
                       }
                     }}
                     disabled={updatingTitleIndex === index}
-                    placeholder={index === 0 ? "Home" : `Address ${index + 1}`}
-                    className="w-40 border-b border-dashed border-stone-300 bg-transparent text-center text-[13px] font-medium uppercase tracking-wide text-stone-600 focus:border-red-600 focus:outline-none"
+                    placeholder={index === 0 ? "Home" : `Office`}
+                    className="w-40 border-b border-dashed border-stone-300 bg-transparent text-center text-[13px] font-medium  tracking-wide text-stone-600 focus:border-red-600 focus:outline-none"
                   />
 
                   {updatingTitleIndex === index && (
@@ -525,10 +525,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
                 </div>
 
                 <div
-                  className={`flex flex-col gap-4 rounded-2xl border-2 p-5 transition-all sm:flex-row sm:items-center ${resolvedAddress
-                      ? "border-stone-100 bg-white shadow-xl shadow-stone-200/40"
-                      : "border-dashed border-stone-200 bg-stone-50"
-                    }`}
+                  className={`flex flex-col gap-4 rounded-2xl border-2 p-5 transition-all sm:flex-row sm:items-center`}
                 >
                   <div className="flex min-w-0 flex-1 items-center gap-4">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-50 text-red-600">
@@ -552,7 +549,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
                   <button
                     type="button"
                     onClick={() => setActiveDeliveryIndex(index)}
-                    className="w-full shrink-0 rounded-xl px-4 py-2 text-[13px] font-medium uppercase tracking-widest bg-stone-100 text-stone-600 hover:bg-red-600 hover:text-white sm:w-auto"
+                    className="w-full shrink-0 rounded-xl px-4 py-2 text-[13px] font-medium tracking-widest bg-stone-100 text-stone-600 hover:bg-red-600 hover:text-white sm:w-auto"
                   >
                     Edit
                   </button>

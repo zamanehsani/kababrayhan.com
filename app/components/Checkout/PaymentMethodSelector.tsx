@@ -16,7 +16,7 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
 }) => {
   return (
     /* Changed grid-cols-1 to grid-cols-3 so it stays on one row, and adjusted gap sizes */
-    <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full">
+    <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full mt-4">
       
       {/* 1. Pay Online */}
       <button
