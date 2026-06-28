@@ -36,12 +36,14 @@ interface CheckoutFormProps {
     }>
   >;
   error: string | null;
+  selectedAddressId?: string;
 }
 
 const CheckoutForm: React.FC<CheckoutFormProps> = ({
   form,
   setForm,
   error,
+  selectedAddressId,
 }) => {
   const [activeDeliveryIndex, setActiveDeliveryIndex] = useState<number | null>(
     null
@@ -136,6 +138,32 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
       }));
     }
   }, [setForm]);
+
+
+  const extractFriendlyTitle = (addressTitle?: string, phone?: string) => {
+    if (!addressTitle) return "";
+
+    let clean = addressTitle.trim();
+
+    // Recursively strip out the phone number prefix if it exists
+    if (phone) {
+      const formattedPhone = phone.trim();
+      // This will catch "+97156..." or "97156..." prefixes followed by a dash
+      while (clean.startsWith(formattedPhone)) {
+        clean = clean.slice(formattedPhone.length).replace(/^-/, "");
+      }
+      // Also try stripping it without the '+' character just in case
+      const phoneNoPlus = formattedPhone.replace("+", "");
+      while (clean.startsWith(phoneNoPlus)) {
+        clean = clean.slice(phoneNoPlus.length).replace(/^-/, "");
+      }
+    }
+
+    // Replace lingering dashes with spaces
+    clean = clean.replace(/-/g, " ").trim();
+
+    return clean;
+  };
 
   useEffect(() => {
     if (!customerAddresses?.length) return;
@@ -272,13 +300,13 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
         const errorData =
           typeof err === "object" && err !== null && "data" in err
             ? (
-                err as {
-                  data?: {
-                    _server_messages?: unknown;
-                    exception?: unknown;
-                  };
-                }
-              ).data
+              err as {
+                data?: {
+                  _server_messages?: unknown;
+                  exception?: unknown;
+                };
+              }
+            ).data
             : undefined;
 
         const serverMessages = String(
@@ -406,30 +434,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     }
   };
 
-  const extractFriendlyTitle = (addressTitle?: string, phone?: string) => {
-    if (!addressTitle) return "";
 
-    let clean = addressTitle.trim();
-
-    // Recursively strip out the phone number prefix if it exists
-    if (phone) {
-      const formattedPhone = phone.trim();
-      // This will catch "+97156..." or "97156..." prefixes followed by a dash
-      while (clean.startsWith(formattedPhone)) {
-        clean = clean.slice(formattedPhone.length).replace(/^-/, "");
-      }
-      // Also try stripping it without the '+' character just in case
-      const phoneNoPlus = formattedPhone.replace("+", "");
-      while (clean.startsWith(phoneNoPlus)) {
-        clean = clean.slice(phoneNoPlus.length).replace(/^-/, "");
-      }
-    }
-
-    // Replace lingering dashes with spaces
-    clean = clean.replace(/-/g, " ").trim();
-
-    return clean;
-  };
 
   const buildBackendTitle = (label: string, phone?: string) => {
     const slug = label
@@ -447,11 +452,10 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
       {/* Feedback Toast */}
       {feedback && (
         <div
-          className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 min-w-80 max-w-md rounded-2xl border-2 px-6 py-4 shadow-2xl animate-in slide-in-from-top-4 duration-300 ${
-            feedback.type === "success"
-              ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-              : "bg-red-50 border-red-200 text-red-800"
-          }`}
+          className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 min-w-80 max-w-md rounded-2xl border-2 px-6 py-4 shadow-2xl animate-in slide-in-from-top-4 duration-300 ${feedback.type === "success"
+            ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+            : "bg-red-50 border-red-200 text-red-800"
+            }`}
         >
           <p className="text-sm font-semibold text-center">
             {feedback.message}
@@ -471,25 +475,29 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
         <div className="space-y-8">
           <ContactPhoneCard phone={form.phone} />
 
-          {customerAddresses?.map((address, index) => {
-            const isDeliveryChecked = address.is_shipping_address === 1;
-            const isBillingChecked = address.is_primary_address === 1;
-            const resolvedAddress = address.address_line1 || "";
+          {/* FIX: Map over form.deliveryAddresses instead of customerAddresses */}
+          {form.deliveryAddresses?.map((localAddressItem, index) => {
+            const targetId = selectedAddressId || (globalThis.localStorage ? localStorage.getItem("uae_delivery_address_id") : "");
 
-            // 1. CRITICAL: Read directly from your local state array instead of the raw API cache!
-            const localAddressItem = form.deliveryAddresses[index];
+            // ONLY show the single selected card on the checkout page
+            if (targetId && localAddressItem.addressId !== targetId) {
+              return null;
+            }
 
-            // 2. Fall back cleanly if the local array item isn't ready yet
-            const displayTitle = localAddressItem?.title || "";
+            const resolvedAddress = localAddressItem.address || "";
+            const displayTitle = localAddressItem.title || "";
+
+            // Force flags to true since this is our active choice
+            const isDeliveryChecked = true;
+            const isBillingChecked = true;
 
             return (
-              <div key={address.name || index} className="group">
+              <div key={localAddressItem.addressId || index} className="group">
                 <div className="mb-3 ml-1 flex items-center gap-1">
-                  <span className="text-[13px] font-medium  tracking-wide text-stone-400 group-hover:text-red-600 transition-colors">
+                  <span className="text-[13px] font-medium tracking-wide text-stone-400">
                     Delivery To&nbsp;(
                   </span>
 
-                  {/* 3. Bind the input value to our tracked state value */}
                   <input
                     type="text"
                     value={displayTitle}
@@ -504,56 +512,32 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
                     }}
                     disabled={updatingTitleIndex === index}
                     placeholder={index === 0 ? "Home" : `Address ${index + 1}`}
-                    className="w-40 border-b border-dashed border-stone-300 bg-transparent text-center text-[13px] font-medium uppercase tracking-wide text-stone-600 placeholder:text-stone-300 focus:border-red-600 focus:outline-none disabled:opacity-50"
+                    className="w-40 border-b border-dashed border-stone-300 bg-transparent text-center text-[13px] font-medium uppercase tracking-wide text-stone-600 focus:border-red-600 focus:outline-none"
                   />
 
                   {updatingTitleIndex === index && (
                     <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
                   )}
 
-                  <span className="text-[13px] font-medium uppercase tracking-wide text-stone-400 group-hover:text-red-600 transition-colors">
+                  <span className="text-[13px] font-medium uppercase tracking-wide text-stone-400">
                     )
                   </span>
-
-                  {index > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => showDeleteConfirmation(index)}
-                      disabled={deletingIndex === index}
-                      className="ml-auto text-[11px] font-medium uppercase tracking-wide text-stone-300 transition-colors hover:text-red-400 disabled:opacity-50 disabled:cursor-wait"
-                    >
-                      {deletingIndex === index ? "Removing..." : "Remove"}
-                    </button>
-                  )}
                 </div>
 
                 <div
-                  className={`flex flex-col gap-4 rounded-2xl border-2 p-5 transition-all sm:flex-row sm:items-center ${
-                    resolvedAddress
+                  className={`flex flex-col gap-4 rounded-2xl border-2 p-5 transition-all sm:flex-row sm:items-center ${resolvedAddress
                       ? "border-stone-100 bg-white shadow-xl shadow-stone-200/40"
                       : "border-dashed border-stone-200 bg-stone-50"
-                  }`}
+                    }`}
                 >
                   <div className="flex min-w-0 flex-1 items-center gap-4">
-                    <div
-                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-colors ${
-                        resolvedAddress
-                          ? "bg-red-50 text-red-600"
-                          : "bg-stone-200 text-stone-400"
-                      }`}
-                    >
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-50 text-red-600">
                       <LocationPinIcon />
                     </div>
 
                     <div className="flex-1 overflow-hidden">
-                      <p
-                        className={`text-sm font-medium leading-snug ${
-                          resolvedAddress
-                            ? "text-stone-900"
-                            : "text-stone-400 italic"
-                        }`}
-                      >
-                        {resolvedAddress || "Select your delivery location..."}
+                      <p className="text-sm font-medium leading-snug text-stone-900">
+                        {resolvedAddress}
                       </p>
 
                       <AddressRoles
@@ -568,45 +552,44 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
                   <button
                     type="button"
                     onClick={() => setActiveDeliveryIndex(index)}
-                    className={`w-full shrink-0 rounded-xl px-4 py-2 text-[13px] font-medium uppercase tracking-widest transition-all active:scale-95 sm:w-auto ${
-                      resolvedAddress
-                        ? "bg-stone-100 text-stone-600 hover:bg-red-600 hover:text-white"
-                        : "bg-red-600 text-white shadow-lg shadow-red-200"
-                    }`}
+                    className="w-full shrink-0 rounded-xl px-4 py-2 text-[13px] font-medium uppercase tracking-widest bg-stone-100 text-stone-600 hover:bg-red-600 hover:text-white sm:w-auto"
                   >
-                    {resolvedAddress ? "Edit" : "Select"}
+                    Edit
                   </button>
                 </div>
               </div>
             );
           })}
 
-          <button
-            type="button"
-            onClick={() => {
-              const updated = [
-                ...form.deliveryAddresses,
-                {
-                  id: String(Date.now()),
-                  title: "",
-                  address: "",
-                  addressId: "",
-                  isDelivery: false,
-                  isBilling: false,
-                },
-              ];
-              setForm((prev) => ({ ...prev, deliveryAddresses: updated }));
-              localStorage.setItem(
-                "uae_delivery_addresses",
-                JSON.stringify(updated)
-              );
-              setActiveDeliveryIndex(updated.length - 1);
-            }}
-            className="ml-1 flex items-center gap-2 text-[13px] font-medium tracking-wide text-stone-400 transition-colors hover:text-red-600"
-          >
-            <span className="text-base leading-none">+</span> Add Delivery
-            Address
-          </button>
+
+          {!selectedAddressId && (
+            <button
+              type="button"
+              onClick={() => {
+                const updated = [
+                  ...form.deliveryAddresses,
+                  {
+                    id: String(Date.now()),
+                    title: "",
+                    address: "",
+                    addressId: "",
+                    isDelivery: false,
+                    isBilling: false,
+                  },
+                ];
+                setForm((prev) => ({ ...prev, deliveryAddresses: updated }));
+                localStorage.setItem(
+                  "uae_delivery_addresses",
+                  JSON.stringify(updated)
+                );
+                setActiveDeliveryIndex(updated.length - 1);
+              }}
+              className="ml-1 flex items-center gap-2 text-[13px] font-medium tracking-wide text-stone-400 transition-colors hover:text-red-600"
+            >
+              <span className="text-base leading-none">+</span> Add Delivery
+              Address
+            </button>
+          )}
         </div>
 
         {error && (
@@ -652,9 +635,9 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
                   ...(i === activeDeliveryIndex
                     ? {
-                        address: resolvedAddress,
-                        addressId,
-                      }
+                      address: resolvedAddress,
+                      addressId,
+                    }
                     : {}),
 
                   // only selected becomes delivery

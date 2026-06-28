@@ -51,7 +51,7 @@ const CheckoutStepper: React.FC<CheckoutStepperProps> = ({ currentStep }) => {
 
               {/* Label */}
               <span
-                className={`absolute -bottom-8 whitespace-nowrap text-[10px] font-black tracking-[0.2em] transition-colors duration-300 ${
+                className={`absolute -bottom-8 whitespace-nowrap text-[14px] font-medium tracking-wide transition-colors duration-300 ${
                   isActive ? "text-stone-900" : "text-stone-400"
                 }`}
               >

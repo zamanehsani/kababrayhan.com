@@ -302,11 +302,14 @@ const CheckoutPage = () => {
     });
   }, []);
 
+
+
   useEffect(() => {
     if (!backendAddresses) {
       return;
     }
 
+    // 1. Map ALL backend addresses completely
     const syncedAddresses: DeliveryAddressItem[] = backendAddresses.map(
       (address, index) => ({
         id: address.name,
@@ -321,6 +324,16 @@ const CheckoutPage = () => {
         addressId: address.name,
       })
     );
+
+    // CRITICAL FIX: Sort the chosen shipping address to index 0 so it's prioritized for order building
+    const currentSelectedId = globalThis.localStorage?.getItem("uae_delivery_address_id") || "";
+    if (currentSelectedId) {
+      syncedAddresses.sort((a, b) => {
+        if (a.addressId === currentSelectedId) return -1;
+        if (b.addressId === currentSelectedId) return 1;
+        return 0;
+      });
+    }
 
     const storedDeliveryAddressesRaw = globalThis.localStorage.getItem(
       "uae_delivery_addresses"
@@ -377,6 +390,7 @@ const CheckoutPage = () => {
 
     return () => cancelAnimationFrame(frameId);
   }, [backendAddresses]);
+
 
   useEffect(() => {
     return () => {
@@ -441,7 +455,9 @@ const CheckoutPage = () => {
     }
 
     // Validate address before proceeding
-    const primaryAddress = form.deliveryAddresses[0]?.address?.trim();
+    const currentSelectedId = globalThis.localStorage?.getItem("uae_delivery_address_id") || "";
+    const selectedAddressObj = form.deliveryAddresses.find(a => a.addressId === currentSelectedId) || form.deliveryAddresses[0];
+    const primaryAddress = selectedAddressObj?.address?.trim();
     if (!primaryAddress) {
       setOrderError("Please select a delivery address before proceeding.");
       setIsInitializing(false);
@@ -454,11 +470,13 @@ const CheckoutPage = () => {
       // getCustomerName() falls back to form.phone for legacy sessions.
       const customerName = customer?.name || getCustomerName() || form.phone;
       const deliveryDate = new Date().toISOString().split("T")[0];
-      const primaryDeliveryAddressId =
-        form.deliveryAddresses[0]?.addressId ||
-        globalThis.localStorage.getItem("uae_delivery_address_id") ||
-        globalThis.localStorage.getItem("uae_address_id") ||
+      const explicitSelectedId =
+        globalThis.localStorage?.getItem("uae_delivery_address_id") ||
+        globalThis.localStorage?.getItem("uae_address_id") ||
         "";
+
+      const primaryDeliveryAddressId = explicitSelectedId || form.deliveryAddresses[0]?.addressId || "";
+
 
       const items = cart
         .map((cartEntry: any) => {
@@ -716,7 +734,9 @@ const CheckoutPage = () => {
     );
   }
 
-
+  const selectedAddressId = globalThis.localStorage?.getItem("uae_delivery_address_id") ||
+    globalThis.localStorage?.getItem("uae_address_id") ||
+    "";
 
   return (
     <div className="min-h-screen bg-white">
@@ -738,7 +758,7 @@ const CheckoutPage = () => {
         <div className="grid gap-12 lg:grid-cols-2 lg:items-start flex flex-col md:flex-col lg:flex-row">
           {/* Left Section (Form & Payment) - Appears SECOND on mobile/tablet, FIRST on desktop */}
           <div className="space-y-8 order-2 lg:order-1">
-            <CheckoutForm form={form} setForm={setForm} error={null} />
+            <CheckoutForm form={form} setForm={setForm} error={null} selectedAddressId={selectedAddressId} />
 
             {(isInitializing || clientSecret || orderError) && (
               <section className="overflow-hidden bg-white   animate-in fade-in zoom-in-95 duration-700">
