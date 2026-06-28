@@ -14,7 +14,7 @@ export default function MobileFooter() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-slate-900 text-slate-100 pt-8 pb-20">
+    <footer className="bg-red-600 text-slate-100 pt-8 pb-20">
       <div className="px-4">
         {/* Brand Section */}
         <div className="mb-6 text-center">
@@ -29,7 +29,7 @@ export default function MobileFooter() {
             />
           </div>
 
-          <p className="text-sm text-slate-400 tracking-wide">
+          <p className="text-sm text-white tracking-wide">
             Authentic Persian & Iranian grill experience in the heart of Ajman.
             From our signature Qabuli polou to the legendary Tikka Masti, we
             bring tradition to your table.
