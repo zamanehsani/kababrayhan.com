@@ -739,7 +739,7 @@ const CheckoutPage = () => {
           <div className="space-y-4 order-2 lg:order-1">
 
             {/* COLLAPSIBLE DELIVERY ADDRESS BLOCK */}
-            <div className=" bg-white overflow-hidden pr-4">
+            <div className="bg-white overflow-hidden pr-4">
               <button
                 type="button"
                 onClick={() => setIsAddressCollapsed(!isAddressCollapsed)}
@@ -758,13 +758,23 @@ const CheckoutPage = () => {
                     </>
                   )}
                 </span>
+
                 <span className="text-xs font-normal text-stone-400">
                   {form.deliveryAddresses[0]?.title || "Active Address"}
                 </span>
               </button>
 
-              <div className={`${isAddressCollapsed ? "hidden lg:block" : "block"} px-2 py-4 lg:p-0`}>
-                <CheckoutForm form={form} setForm={setForm} error={null} selectedAddressId={selectedAddressId} />
+              {/* Outer Grid Wrapper (Controls the animation) */}
+              <div
+                className={`grid transition-all duration-700 ease-in-out lg:block ${isAddressCollapsed
+                  ? "grid-rows-[0fr] opacity-0 pointer-events-none lg:opacity-100 lg:pointer-events-auto"
+                  : "grid-rows-[1fr] opacity-100"
+                  }`}
+              >
+                {/* Inner Child Wrapper (Must use unconditional block/overflow-hidden for grid track calculation) */}
+                <div className="block overflow-hidden min-h-0 px-2 py-4 lg:p-0">
+                  <CheckoutForm form={form} setForm={setForm} error={null} selectedAddressId={selectedAddressId} />
+                </div>
               </div>
             </div>
 
@@ -787,7 +797,7 @@ const CheckoutPage = () => {
           <div className="lg:sticky lg:top-6 order-1 lg:order-2">
 
             {/* COLLAPSIBLE ORDER SUMMARY & NOTES BLOCK */}
-            <div className=" bg-white overflow-hidden">
+            <div className="bg-white overflow-hidden">
               <button
                 type="button"
                 onClick={() => setIsSummaryCollapsed(!isSummaryCollapsed)}
@@ -812,19 +822,27 @@ const CheckoutPage = () => {
                 </span>
               </button>
 
-              <div className={`${isSummaryCollapsed ? "hidden lg:block" : "block"}`}>
-                <OrderSummary cart={cart} total={total} />
+              {/* Smooth Height Transition Wrapper */}
+              <div
+                className={`grid transition-all duration-700 ease-in-out lg:block ${isSummaryCollapsed
+                    ? "grid-rows-[0fr] opacity-0 pointer-events-none lg:opacity-100 lg:pointer-events-auto"
+                    : "grid-rows-[1fr] opacity-100"
+                  }`}
+              >
+                <div className="overflow-hidden min-h-0">
+                  <OrderSummary cart={cart} total={total} />
 
-                <CustomerNote
-                  note={customerNote}
-                  onNoteChange={(value) => {
-                    setCustomerNote(value);
-                    scheduleCustomerNoteSave(value);
-                  }}
-                  onBlurSave={() => {
-                    void handleCustomerNoteSave(customerNote);
-                  }}
-                />
+                  <CustomerNote
+                    note={customerNote}
+                    onNoteChange={(value) => {
+                      setCustomerNote(value);
+                      scheduleCustomerNoteSave(value);
+                    }}
+                    onBlurSave={() => {
+                      void handleCustomerNoteSave(customerNote);
+                    }}
+                  />
+                </div>
               </div>
             </div>
 
