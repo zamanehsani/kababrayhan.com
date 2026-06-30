@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import PaymentMethodSelector, { PaymentMethodType } from "./PaymentMethodSelector";
 import OriginalPaymentForm from "./PaymentForm"; // This leaves your current form completely intact
 import { CardOnDeliverySection } from "./CardOnDeliverySection";
-import { ShoppingBag, ArrowLeft } from "lucide-react";
 import type { SalesOrder } from "@/app/redux/apiType";
 import CashOnDeliverySection from "./CashOnDeliverySection";
 
@@ -21,43 +20,12 @@ interface DoorstepPaymentWrapperProps {
 }
 
 export const DoorstepPaymentWrapper: React.FC<DoorstepPaymentWrapperProps> = ({
-    clientSecret,
     total,
     salesOrder,
-    onBack,
-    onSuccess,
     onCodSubmit,
 }) => {
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("card_online");
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    // Doorstep-specific states
-    const [cashChangeOption, setCashChangeOption] = useState<string>("exact");
-    const [customChangeAmount, setCustomChangeAmount] = useState<string>("");
-
-    const handleDoorstepOrderSubmit = async () => {
-        try {
-            setIsSubmitting(true);
-
-            let changeDetail = "Exact amount";
-            if (paymentMethod === "cod") {
-                if (cashChangeOption === "100") changeDetail = "Need change for 100 AED";
-                else if (cashChangeOption === "200") changeDetail = "Need change for 200 AED";
-                else if (cashChangeOption === "custom") changeDetail = `Need change for ${customChangeAmount} AED`;
-            }
-
-            // Hand off the payload directly to the orchestration tier for ERPNext
-            await onCodSubmit(paymentMethod as "cod" | "card_on_delivery", {
-                changeRequired: paymentMethod === "cod" ? changeDetail : undefined,
-            });
-
-            onSuccess();
-        } catch (error) {
-            console.error("Doorstep processing error:", error);
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
 
     return (
         <div className="space-y-6">
@@ -67,8 +35,9 @@ export const DoorstepPaymentWrapper: React.FC<DoorstepPaymentWrapperProps> = ({
                     Select Payment Method
                 </label>
                 <PaymentMethodSelector
-                    currentMethod={paymentMethod}
                     onChange={(method) => setPaymentMethod(method)}
+                    currentMethod={paymentMethod}
+                    salesOrderName={salesOrder?.name}
                 />
             </div>
 

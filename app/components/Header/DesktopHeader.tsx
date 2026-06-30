@@ -194,7 +194,7 @@ export default function DesktopHeader() {
             className={`flex items-center gap-1.5 px-3.5 h-9 rounded-lg text-[13px] font-semibold tracking-wide transition-all duration-200 ${
               (item.href === "/home" && isHomeRoute) ||
               (item.href !== "/home" && pathname.startsWith(item.href))
-                ? "bg-slate-900 text-white shadow-sm scale-100"
+                ? "bg-red-600 text-white shadow-sm scale-100"
                 : "text-slate-500 hover:bg-white hover:text-slate-800 hover:shadow-sm"
             }`}
           >

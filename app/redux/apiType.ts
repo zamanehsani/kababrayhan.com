@@ -188,6 +188,8 @@ export interface UpdateSalesOrderRequest {
   custom_delivery_notes?: string;
   custom_change_required?: string; 
   custom_requires_pos_terminal?: number;
+  custom_payment_status?: string;
+  custom_payment_method?: string;
   custom_requires_doorstep_pos_terminal?: number;
 }
 
@@ -195,6 +197,8 @@ export interface UpdateSalesOrderResponse {
   data: {
     name: string;
     custom_customer_note?: string;
+    custom_payment_status?: string;
+    custom_payment_method?: string;
     [key: string]: any;
   };
 }
