@@ -118,6 +118,47 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
     return payload.data ?? [];
   };
 
+
+  /* * NEW * REUSABLE CURRENT LOCATION GEOLOCATION LOGIC FUNCTION */
+  const requestCurrentLocation = (mapInstance: any, L: any, showAlertOnFail: boolean = false) => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+
+          // Move map and set zoom close
+          mapInstance?.setView([latitude, longitude], 17);
+
+          // Update tracking state and trigger address lookups
+          setSelectedLatLng({ lat: latitude, lng: longitude });
+          fetchAddress(latitude, longitude);
+
+          if (L) {
+            if (markerRef.current) {
+              markerRef.current.setLatLng([latitude, longitude]);
+            } else {
+              markerRef.current = L.marker([latitude, longitude], {
+                bounceOnAdd: true,
+              }).addTo(mapInstance);
+            }
+          }
+        },
+        (error) => {
+          console.error("Auto Geolocation error:", error);
+          if (showAlertOnFail) {
+            setShowLocationAlert(true);
+          }
+          // Fallback map position if block/error occurs
+          mapInstance?.setView([25.2048, 55.2708], 13);
+        }
+      );
+    } else if (showAlertOnFail) {
+      mapInstance?.setView([25.2048, 55.2708], 13);
+    }
+  };
+  /* * END NEW * */
+
+
   useEffect(() => {
     if (!open) return;
 
@@ -180,6 +221,8 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
 
         mapInstanceRef.current = map;
 
+        requestCurrentLocation(map, L, false);
+
         // Force resize recalculation for Modals
         setTimeout(() => {
           map.invalidateSize();
@@ -219,43 +262,10 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
           <div className="pointer-events-auto flex flex-col gap-2">
             <button
               onClick={() => {
-                if (navigator.geolocation) {
-                  navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                      const { latitude, longitude } = position.coords;
-                      mapInstanceRef.current?.setView(
-                        [latitude, longitude],
-                        20
-                      );
-
-                      // Also set the marker and fetch address
-                      setSelectedLatLng({ lat: latitude, lng: longitude });
-
-                      const L = (globalThis as typeof globalThis & { L?: any })
-                        .L;
-                      if (L) {
-                        if (markerRef.current) {
-                          markerRef.current.setLatLng([latitude, longitude]);
-                        } else {
-                          markerRef.current = L.marker([latitude, longitude], {
-                            bounceOnAdd: true,
-                          }).addTo(mapInstanceRef.current);
-                        }
-                      }
-
-                      fetchAddress(latitude, longitude);
-                    },
-                    (error) => {
-                      console.error("Geolocation error:", error);
-                      setShowLocationAlert(true);
-                      // Fallback to Dubai if geolocation fails
-                      mapInstanceRef.current?.setView([25.2048, 55.2708], 13);
-                    }
-                  );
-                } else {
-                  // Fallback to Dubai if geolocation not supported
-                  mapInstanceRef.current?.setView([25.2048, 55.2708], 13);
-                }
+                /* * NEW * TRIGGER THE EXTRACTED FUNCTION VIA THE MANUAL RE-CENTER BUTTON CLICK */
+                const L = (globalThis as typeof globalThis & { L?: any }).L;
+                requestCurrentLocation(mapInstanceRef.current, L, true);
+                /* * END NEW * */
               }}
               className="bg-white/90 backdrop-blur shadow-xl border border-gray-100 px-4 py-2 rounded-2xl font-normal text-gray-800 flex items-center gap-2 hover:bg-white transition-all active:scale-95"
             >
@@ -379,38 +389,38 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
 
                   const addressResponse = hasExistingAddress
                     ? await updateAddress({
-                        addressName: existingAddressId!,
-                        address_line1: addressLine,
-                        ...(customTitle
-                          ? {
-                              address_title: `${phone}-${customTitle
-                                .trim()
-                                .toLowerCase()
-                                .replace(/\s+/g, "-")}`,
-                            }
-                          : {}),
-                      }).unwrap()
+                      addressName: existingAddressId!,
+                      address_line1: addressLine,
+                      ...(customTitle
+                        ? {
+                          address_title: `${phone}-${customTitle
+                            .trim()
+                            .toLowerCase()
+                            .replace(/\s+/g, "-")}`,
+                        }
+                        : {}),
+                    }).unwrap()
                     : await createAddress({
-                        address_title: customTitle
-                          ? `${phone}-${customTitle
-                              .trim()
-                              .toLowerCase()
-                              .replace(/\s+/g, "-")}`
-                          : addressType === "Billing"
+                      address_title: customTitle
+                        ? `${phone}-${customTitle
+                          .trim()
+                          .toLowerCase()
+                          .replace(/\s+/g, "-")}`
+                        : addressType === "Billing"
                           ? `${phone}-delivery`
                           : phone,
-                        address_type: addressType,
-                        address_line1: addressLine,
-                        city: "Dubai",
-                        country: "United Arab Emirates",
-                        links: [
-                          {
-                            link_doctype: "Customer",
-                            // Always link to the original ERPNext customer record
-                            link_name: customerName,
-                          },
-                        ],
-                      }).unwrap();
+                      address_type: addressType,
+                      address_line1: addressLine,
+                      city: "Dubai",
+                      country: "United Arab Emirates",
+                      links: [
+                        {
+                          link_doctype: "Customer",
+                          // Always link to the original ERPNext customer record
+                          link_name: customerName,
+                        },
+                      ],
+                    }).unwrap();
 
                   // 3. Save to localStorage — Billing type is handled by the parent via onSelect
                   if (addressType !== "Billing") {
