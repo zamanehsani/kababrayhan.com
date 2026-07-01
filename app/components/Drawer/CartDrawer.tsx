@@ -9,6 +9,7 @@ import PhoneVerifyModal from "../home/modal/PhoneVerifyModal";
 import DeliveryTakeawayModal from "../home/modal/DeliveryTakeawayModal";
 import AddressSelectModal from "../home/modal/AddressSelectModal";
 import UpdateDecisionModal from "../home/modal/UpdateDecisionModal";
+import GlobalLoader from "../home/modal/shared/GlobalLoader";
 import { getCart, saveCart, type CartEntry } from "@/app/lib/cart";
 import {
   PHONE_KEY,
@@ -35,6 +36,7 @@ export default function CartDrawer() {
   // const [showAddressUpdatePrompt, setShowAddressUpdatePrompt] = useState(false);
   const [allowExistingPhoneInput, setAllowExistingPhoneInput] = useState(false);
   const [showSavedAddressesModal, setShowSavedAddressesModal] = useState(false);
+  const [isNavigatingToCheckout, setIsNavigatingToCheckout] = useState(false);
 
   const [snapshot, setSnapshot] = useState(readCustomerPortalSnapshot());
   const [selectedDeliveryAddressId, setSelectedDeliveryAddressId] = useState<
@@ -47,6 +49,7 @@ export default function CartDrawer() {
     const handleOpen = () => {
       setCart(getCart());
       setOpen(true);
+      setIsNavigatingToCheckout(false); // Reset navigation state when drawer opens
     };
     globalThis.addEventListener("openCartDrawer", handleOpen);
     return () => globalThis.removeEventListener("openCartDrawer", handleOpen);
@@ -64,12 +67,20 @@ export default function CartDrawer() {
     };
   }, [open]);
 
-  if (!open) return null;
-
   const totalPrice = cart.reduce(
     (sum, entry) => sum + (entry.item.discountedPrice || 0) * (entry.qty || 1),
     0
   );
+
+  if (!open) {
+    return (
+      <>
+        {isNavigatingToCheckout && (
+          <GlobalLoader message="Preparing checkout..." />
+        )}
+      </>
+    );
+  }
 
   const updateCartStorage = (updatedCart: CartEntry[]) => {
     setCart(updatedCart);
@@ -165,6 +176,7 @@ export default function CartDrawer() {
 
     if (option !== "delivery") {
       setOpen(false);
+      setIsNavigatingToCheckout(true);
       router.push("/checkout");
       return;
     }
@@ -418,7 +430,7 @@ export default function CartDrawer() {
           onContinue={() => {
             setShowSavedAddressesModal(false);
             setOpen(false);
-
+            setIsNavigatingToCheckout(true);
             router.push("/checkout");
           }}
         />
