@@ -542,7 +542,7 @@ export const erpApi = createApi({
 
         return { data: (result.data as { message?: unknown } | null) ?? null };
       },
-      invalidatesTags: () => [{ type: "CustomerAddresses", id: "LIST" }],
+      invalidatesTags: [{ type: "CustomerAddresses", id: "LIST" }],
     }),
     disableAddress: builder.mutation<{ message?: unknown } | null, string>({
       queryFn: async (addressName, _api, _extraOptions, fetchWithBQ) => {
@@ -563,7 +563,7 @@ export const erpApi = createApi({
 
         return { data: (result.data as { message?: unknown } | null) ?? null };
       },
-      invalidatesTags: () => [{ type: "CustomerAddresses", id: "LIST" }],
+      invalidatesTags: [{ type: "CustomerAddresses", id: "LIST" }],
     }),
 
     completeDoorstepOrder: builder.mutation<

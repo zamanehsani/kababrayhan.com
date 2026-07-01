@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, MapPin, Pencil, Phone, ShieldCheck } from "lucide-react";
 import MobileHeader from "../components/Header/MobileHeader";
@@ -76,7 +76,7 @@ export default function AccountProfilePage() {
   );
   const [phoneForVerify, setPhoneForVerify] = useState("");
   const [previousVerifiedPhone, setPreviousVerifiedPhone] = useState("");
-  const [isSyncingFromBackend, setIsSyncingFromBackend] = useState(false);
+  const isSyncingFromBackendRef = useRef(false);
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
   const [updatingTitleIndex, setUpdatingTitleIndex] = useState<number | null>(
     null
@@ -109,7 +109,7 @@ export default function AccountProfilePage() {
   }, []);
 
   useEffect(() => {
-    if (!backendAddresses || isSyncingFromBackend) {
+    if (!backendAddresses || isSyncingFromBackendRef.current) {
       return;
     }
 
@@ -159,7 +159,8 @@ export default function AccountProfilePage() {
       return;
     }
 
-    setIsSyncingFromBackend(true);
+    isSyncingFromBackendRef.current = true;
+    
     writeDeliveryAddresses(syncedAddresses);
 
     if (syncedAddresses[0]) {
@@ -171,10 +172,9 @@ export default function AccountProfilePage() {
       saveDeliveryAddress("", "");
     }
 
-    setTimeout(() => setIsSyncingFromBackend(false), 100);
+    setTimeout(() => { isSyncingFromBackendRef.current = false; }, 100);
   }, [
     backendAddresses,
-    isSyncingFromBackend,
     deletingIndex,
     updatingTitleIndex,
     portalState.phone,
@@ -307,41 +307,57 @@ export default function AccountProfilePage() {
     setConfirmDelete(null);
     setDeletingIndex(indexToRemove);
 
+
+    let isFallbackDisable = false;
+
     if (addressToRemove.addressId) {
       try {
         await deleteAddress(addressToRemove.addressId).unwrap();
       } catch (err: unknown) {
+        // Extract error message from various ERPNext error structures
         const errorData =
           typeof err === "object" && err !== null && "data" in err
-            ? (
-                err as {
-                  data?: { _server_messages?: unknown; exception?: unknown };
-                }
-              ).data
+            ? (err as { data?: any }).data
             : undefined;
 
+        // Check multiple potential error locations and patterns
         const serverMessages = String(
-          errorData?._server_messages || errorData?.exception || ""
-        );
+          errorData?._server_messages ||
+          errorData?.exception ||
+          errorData?.message ||
+          (typeof err === "object" && err !== null && "message" in err
+            ? (err as { message?: unknown }).message
+            : "") ||
+          ""
+        ).toLowerCase();
 
-        if (serverMessages.includes("LinkExistsError")) {
+        // Detect if address is linked to other documents (sales order, etc.)
+        const isLinkedError =
+          serverMessages.includes("linkexistserror") ||
+          serverMessages.includes("link exists") ||
+          serverMessages.includes("linked") ||
+          serverMessages.includes("cannot delete");
+
+        if (isLinkedError) {
+          // Address is linked to other documents, disable instead of delete
           try {
             await disableAddress(addressToRemove.addressId).unwrap();
+            isFallbackDisable = true;
           } catch (disableErr) {
             console.warn(
-              "Failed to disable linked backend address:",
+              "Failed to disable linked address:",
               disableErr
             );
             setFeedback({
               type: "error",
-              message: "Failed to remove address. Please try again.",
+              message: "Address is in use and cannot be removed. Please try again.",
             });
             setTimeout(() => setFeedback(null), 4000);
             setDeletingIndex(null);
             return;
           }
         } else {
-          console.warn("Failed to delete backend address:", err);
+          console.warn("Failed to delete address:", err);
           setFeedback({
             type: "error",
             message: "Failed to remove address. Please try again.",
@@ -369,10 +385,17 @@ export default function AccountProfilePage() {
       }
     }
 
-    setFeedback({ type: "success", message: "Address removed successfully" });
+    setFeedback({
+      type: "success",
+      message: isFallbackDisable
+        ? "Address is linked to orders and has been hidden"
+        : "Address removed successfully"
+    });
+
     setTimeout(() => setFeedback(null), 3000);
 
-    refetchAddresses();
+    // Refetch to ensure disabled addresses are filtered out
+    await refetchAddresses();
     refreshPortalState();
     setDeletingIndex(null);
   };
@@ -460,11 +483,10 @@ export default function AccountProfilePage() {
       <section className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
         {feedback && (
           <div
-            className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 min-w-80 max-w-md rounded-2xl border-2 px-6 py-4 shadow-2xl animate-in slide-in-from-top-4 duration-300 ${
-              feedback.type === "success"
+            className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 min-w-80 max-w-md rounded-2xl border-2 px-6 py-4 shadow-2xl animate-in slide-in-from-top-4 duration-300 ${feedback.type === "success"
                 ? "bg-emerald-50 border-emerald-200 text-emerald-800"
                 : "bg-red-50 border-red-200 text-red-800"
-            }`}
+              }`}
           >
             <p className="text-sm font-semibold text-center">
               {feedback.message}
@@ -630,11 +652,10 @@ export default function AccountProfilePage() {
                         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                           <div className="flex-1 min-w-0">
                             <p
-                              className={`text-sm leading-relaxed ${
-                                delivery.address
+                              className={`text-sm leading-relaxed ${delivery.address
                                   ? "text-slate-700"
                                   : "text-slate-400 italic"
-                              }`}
+                                }`}
                             >
                               {delivery.address || "No address selected yet"}
                             </p>
@@ -642,11 +663,10 @@ export default function AccountProfilePage() {
                           <button
                             type="button"
                             onClick={() => setActiveDeliveryIndex(index)}
-                            className={`shrink-0 rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
-                              delivery.address
+                            className={`shrink-0 rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${delivery.address
                                 ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
                                 : "bg-red-600 text-white shadow-lg shadow-red-200 hover:bg-red-700"
-                            }`}
+                              }`}
                           >
                             <Pencil size={12} className="inline mr-1.5" />
                             {delivery.address ? "Update" : "Select"}
