@@ -188,7 +188,9 @@ const CheckoutPage = () => {
   const [customerNote, setCustomerNote] = useState<string>("");
   const [retryCount, setRetryCount] = useState(0);
   const [showAddressWarning, setShowAddressWarning] = useState(false);
-  const [showBackConfirm, setShowBackConfirm] = useState(false);
+  const [orderType, setOrderType] = useState<"delivery" | "takeaway">("delivery");
+  const [deliveryZone, setDeliveryZone] = useState<string>("");
+const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
 
   // UX Toggle features for smaller layouts
   const [isAddressCollapsed, setIsAddressCollapsed] = useState(true);
@@ -246,6 +248,9 @@ const CheckoutPage = () => {
   useEffect(() => {
     if (!("window" in globalThis)) return;
 
+
+    const savedOrderType = (globalThis.localStorage.getItem("order_type") as "delivery" | "takeaway") || "delivery";
+    setOrderType(savedOrderType);
     const storedCustomer = readStoredCustomer();
     const cartRaw = globalThis.localStorage.getItem("cart");
     const savedPhone = globalThis.localStorage.getItem("uae_phone") || "";
@@ -318,6 +323,16 @@ const CheckoutPage = () => {
       });
     });
   }, []);
+
+
+  useEffect(() => {
+  if (typeof window !== "undefined") {
+    const savedZone = localStorage.getItem("uae_delivery_zone") || "";
+    const savedCharge = parseFloat(localStorage.getItem("uae_delivery_charge") || "0");
+    setDeliveryZone(savedZone);
+    setDeliveryCharge(savedCharge);
+  }
+}, []);
 
   useEffect(() => {
     if (!backendAddresses) {
@@ -466,12 +481,12 @@ const CheckoutPage = () => {
     const currentSelectedId = globalThis.localStorage?.getItem("uae_delivery_address_id") || "";
     const selectedAddressObj = form.deliveryAddresses.find(a => a.addressId === currentSelectedId) || form.deliveryAddresses[0];
     const primaryAddress = selectedAddressObj?.address?.trim();
-    if (!primaryAddress) {
-      setOrderError("Please select a delivery address before proceeding.");
-      setIsInitializing(false);
-      setShowAddressWarning(true);
-      return;
-    }
+  if (orderType === "delivery" && !primaryAddress) {
+    setOrderError("Please select a delivery address before proceeding.");
+    setIsInitializing(false);
+    setShowAddressWarning(true);
+    return;
+  }
 
     try {
       const customerName = customer?.name || getCustomerName() || form.phone;
@@ -548,6 +563,14 @@ const CheckoutPage = () => {
         return;
       }
 
+      // Read the latest zone/charge from localStorage at order time in case
+      // the user changed their address after the initial component mount.
+      const latestDeliveryZone =
+        globalThis.localStorage?.getItem("uae_delivery_zone") || deliveryZone;
+      const latestDeliveryCharge =
+        parseFloat(globalThis.localStorage?.getItem("uae_delivery_charge") ?? "0") || deliveryCharge;
+      const latestGrandTotal = total + latestDeliveryCharge;
+
       const orderPayload = {
         doctype: "Sales Order",
         customer: customerName,
@@ -562,6 +585,8 @@ const CheckoutPage = () => {
         customer_address: primaryDeliveryAddressId || undefined,
         shipping_address_name: primaryDeliveryAddressId || undefined,
         custom_customer_note: customerNote,
+        custom_delivery_zone: latestDeliveryZone || undefined,
+        custom_delivery_charge: latestDeliveryCharge || undefined,
         taxes_and_charges: "Food Tax 5%",
         taxes: [
           {
@@ -591,7 +616,7 @@ const CheckoutPage = () => {
       }
 
       const intentResult = await createPaymentIntent({
-        amount: total,
+        amount: latestGrandTotal,
         currency: "aed",
         sales_order: salesOrderName,
       }).unwrap();
@@ -636,6 +661,7 @@ const CheckoutPage = () => {
       sum + (entry.item?.discountedPrice || 0) * (entry.qty || 1),
     0
   );
+  const grandTotal = total + deliveryCharge;
 
   let paymentSection: ReactNode = null;
 
@@ -678,7 +704,7 @@ const CheckoutPage = () => {
               >
                 <DoorstepPaymentWrapper
                   clientSecret={clientSecret || ""}
-                  total={total}
+                  total={grandTotal}
                   salesOrder={salesOrder}
                   onBack={() => setStep(2)}
                   onSuccess={() => {
@@ -818,19 +844,19 @@ const CheckoutPage = () => {
                 </span>
                 <span className="flex items-center gap-0.5 text-sm font-medium text-red-600">
                   <DirhamIcon size={12} className="text-red-600" />
-                  {total.toFixed(2)}
+                  {grandTotal.toFixed(2)}
                 </span>
               </button>
 
               {/* Smooth Height Transition Wrapper */}
               <div
                 className={`grid transition-all duration-700 ease-in-out lg:block ${isSummaryCollapsed
-                    ? "grid-rows-[0fr] opacity-0 pointer-events-none lg:opacity-100 lg:pointer-events-auto"
-                    : "grid-rows-[1fr] opacity-100"
+                  ? "grid-rows-[0fr] opacity-0 pointer-events-none lg:opacity-100 lg:pointer-events-auto"
+                  : "grid-rows-[1fr] opacity-100"
                   }`}
               >
                 <div className="overflow-hidden min-h-0">
-                  <OrderSummary cart={cart} total={total} />
+                  <OrderSummary cart={cart} total={total} deliveryCharge={deliveryCharge} />
 
                   <CustomerNote
                     note={customerNote}

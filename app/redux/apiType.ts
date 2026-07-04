@@ -19,6 +19,9 @@ export interface CreateAddressRequest {
     link_doctype: string;
     link_name: string;
   }>;
+  custom_latitude?: string;
+  custom_longitude?: string;
+  custom_delivery_zone?: string;
 }
 
 export interface CreateAddressResponse {
@@ -52,6 +55,9 @@ export interface UpdateAddressRequest {
   // ADD THESE
   is_primary_address?: number;
   is_shipping_address?: number;
+  custom_latitude?: string;
+  custom_longitude?: string;
+  custom_delivery_zone?: string;
 }
 
 export interface UpdateAddressResponse {
@@ -177,6 +183,8 @@ export interface CreateSalesOrderRequest {
   shipping_address_name?: string;
   taxes_and_charges?: string;
   custom_customer_note?: string;
+  custom_delivery_zone?: string;
+  custom_delivery_charge?: number;
   taxes?: CreateSalesOrderTaxLine[];
   items: CreateSalesOrderItem[];
 }

@@ -174,6 +174,8 @@ export default function CartDrawer() {
   const handleDeliverySelection = (option: "delivery" | "takeaway") => {
     setShowDeliveryTakeaway(false);
 
+    globalThis.localStorage?.setItem("order_type", option);
+    
     if (option !== "delivery") {
       setOpen(false);
       setIsNavigatingToCheckout(true);

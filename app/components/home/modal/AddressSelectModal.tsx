@@ -24,6 +24,8 @@ export type SelectedAddress = {
   name: string;
   lat: number;
   lng: number;
+  delivery_zone?: string;  
+  delivery_charge?: number;
 };
 
 export type AddressSelectModalProps = {
@@ -64,25 +66,79 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
+  const [deliveryZone, setDeliveryZone] = useState<string>("");
+const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
+const [isOutOfRange, setIsOutOfRange] = useState<boolean>(false);
 
-  const fetchAddress = async (lat: number, lng: number) => {
+
+
+const fetchAddress = async (lat: number, lng: number) => {
     setIsLoading(true);
+    setIsOutOfRange(false);
+    setError("");
     try {
-      const response = await fetch(
+      // 1. Run standard OpenStreetMap text lookup
+      const geoResponse = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
       );
-      const data = await response.json();
-      // Use short name or full address
-      const name =
-        data.display_name || `Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+      const geoData = await geoResponse.json();
+      const name = geoData.display_name || `Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
       setAddressText(name);
+
+      // 2. Query your live custom Frappe Spatial engine
+      const token = process.env.NEXT_PUBLIC_ERP_API_TOKEN || "";
+      const zoneResponse = await fetch(
+        `${baseUrl}/api/method/pizza_app.api.validate_coordinate_zone?lat=${lat}&lng=${lng}`,
+        {
+          headers: {
+            Authorization: `token ${token}`,
+            "X-Frappe-Site-Name": "kababrayhan.com",
+          },
+        }
+      );
+
+      if (zoneResponse.ok) {
+        const zoneData = await zoneResponse.json();
+        if (zoneData.message?.status === "success") {
+          const res = zoneData.message;
+          if (res.zone_found) {
+            setDeliveryZone(res.zone_name);
+            setDeliveryCharge(res.delivery_charge);
+          } else {
+            setIsOutOfRange(true);
+            setDeliveryZone("");
+            setDeliveryCharge(0);
+            setError("Selected point is out of our active delivery boundaries.");
+          }
+        }
+      }
     } catch (error) {
-      console.error("Address reverse-geocode failed", error);
+      console.error("Address or Zone lookup failed", error);
       setAddressText(`Dropped Pin at ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
     } finally {
       setIsLoading(false);
     }
   };
+
+  
+  // const fetchAddress = async (lat: number, lng: number) => {
+  //   setIsLoading(true);
+  //   try {
+  //     const response = await fetch(
+  //       `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
+  //     );
+  //     const data = await response.json();
+  //     // Use short name or full address
+  //     const name =
+  //       data.display_name || `Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+  //     setAddressText(name);
+  //   } catch (error) {
+  //     console.error("Address reverse-geocode failed", error);
+  //     setAddressText(`Dropped Pin at ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const lookupCustomersByMobile = async (mobileNo: string) => {
     const filters = encodeURIComponent(
@@ -322,11 +378,28 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                   </p>
                 )}
               </div>
+              {isOutOfRange && !isLoading && (
+                <div className="flex items-start gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  <span className="mt-0.5 shrink-0 text-base leading-none">⚠️</span>
+                  <span className="font-medium">
+                    This location is outside our delivery area. Please select a point within our service zone.
+                  </span>
+                </div>
+              )}
+              {!isOutOfRange && deliveryZone && !isLoading && (
+                <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+                  <span className="text-base leading-none">✓</span>
+                  <span className="font-medium">
+                    {deliveryZone}
+                    {deliveryCharge > 0 ? ` · AED ${deliveryCharge.toFixed(2)} delivery` : " · Free delivery"}
+                  </span>
+                </div>
+              )}
             </div>
 
             <button
               className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-200 disabled:text-gray-400 text-white py-5 rounded-[1.5rem] font-medium uppercase tracking-widest transition-all shadow-lg shadow-red-200 active:scale-[0.98]"
-              disabled={!selectedLatLng || isLoading || submitting}
+              disabled={!selectedLatLng || isLoading || submitting || isOutOfRange}
               onClick={async () => {
                 setSubmitting(true);
                 setError("");
@@ -391,6 +464,9 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                     ? await updateAddress({
                       addressName: existingAddressId!,
                       address_line1: addressLine,
+                      custom_latitude: String(selectedLatLng!.lat),  
+                      custom_longitude: String(selectedLatLng!.lng), 
+                      custom_delivery_zone: deliveryZone || undefined,
                       ...(customTitle
                         ? {
                           address_title: `${phone}-${customTitle
@@ -413,10 +489,12 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                       address_line1: addressLine,
                       city: "Dubai",
                       country: "United Arab Emirates",
+                      custom_latitude: String(selectedLatLng!.lat),  
+                      custom_longitude: String(selectedLatLng!.lng),
+                      custom_delivery_zone: deliveryZone || undefined,
                       links: [
                         {
                           link_doctype: "Customer",
-                          // Always link to the original ERPNext customer record
                           link_name: customerName,
                         },
                       ],
@@ -424,6 +502,8 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
 
                   // 3. Save to localStorage — Billing type is handled by the parent via onSelect
                   if (addressType !== "Billing") {
+                    globalThis.localStorage?.setItem("uae_delivery_zone", deliveryZone);
+                    globalThis.localStorage?.setItem("uae_delivery_charge", String(deliveryCharge));
                     // saveDeliveryAddress(
                     //   addressResponse.data.address_line1,
                     //   addressResponse.data.name
@@ -441,6 +521,8 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                     name: addressResponse.data.address_line1,
                     lat: selectedLatLng!.lat,
                     lng: selectedLatLng!.lng,
+                    delivery_zone: deliveryZone,
+                    delivery_charge: deliveryCharge,
                   });
 
                   onClose();

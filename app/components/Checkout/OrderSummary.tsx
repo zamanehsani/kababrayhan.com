@@ -17,10 +17,12 @@ interface CartEntry {
 interface OrderSummaryProps {
   cart: CartEntry[];
   total: number;
+  deliveryCharge?: number;
 }
 
-const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total }) => {
-  // Calculate the 5% VAT amount that is already included in the total
+const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total, deliveryCharge = 0 }) => {
+  const grandTotal = total + deliveryCharge;
+  // Calculate the 5% VAT amount that is already included in the items subtotal
   const vatIncludedAmount = total - total / 1.05;
 
   return (
@@ -89,9 +91,16 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total }) => {
         {/* Delivery Fee */}
         <div className="flex items-center justify-between text-sm">
           <span className="font-medium text-stone-500">Delivery Fee</span>
-          <span className="font-bold text-red-600 uppercase text-[10px] tracking-widest bg-emerald-50 px-2 py-0.5 rounded-md">
-            Free
-          </span>
+          {deliveryCharge > 0 ? (
+            <span className="flex items-center gap-0.5 font-bold text-stone-900">
+              <DirhamIcon size={11} className="text-stone-900" />
+              {deliveryCharge.toFixed(2)}
+            </span>
+          ) : (
+            <span className="font-bold text-red-600 uppercase text-[10px] tracking-widest bg-emerald-50 px-2 py-0.5 rounded-md">
+              Free
+            </span>
+          )}
         </div>
 
         {/* Best Practice: Explicit VAT Breakdown Row */}
@@ -116,7 +125,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total }) => {
           <div className="text-right">
             <span className="flex items-center gap-0.5 text-xl font-medium leading-none text-red-500 md:text-2xl">
               <DirhamIcon size={16} className="text-red-500 md:w-[18px] md:h-[18px]" />
-              {total.toFixed(2)}
+              {grandTotal.toFixed(2)}
             </span>
           </div>
         </div>
