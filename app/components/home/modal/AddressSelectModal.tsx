@@ -18,6 +18,8 @@ import {
   saveCustomerName,
   addDeliveryAddress,
 } from "@/app/lib/customerPortal";
+import { AlertTriangle } from 'lucide-react';
+import DirhamIcon from "../../icon/DirhamIcon";
 
 export type SelectedAddress = {
   id: string;
@@ -385,7 +387,8 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                 <>
                   {isOutOfRange ? (
                     <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
-                      <span className="mt-0.5 shrink-0 text-lg leading-none">⚠️</span>
+                      {/* <span className="mt-0.5 shrink-0 text-lg leading-none">⚠️</span> */}
+                      <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
                       <div className="flex flex-col gap-0.5">
                         <span className="font-semibold text-base">Out of Delivery Range</span>
                         <span className="font-normal opacity-90">
@@ -399,8 +402,9 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                         // PAID DELIVERY UX
                         <div className="flex items-center justify-between gap-2 px-1 text-sm font-medium text-red-600">
                           <span className="opacity-80">Delivery Charge</span>
-                          <span className="text-lg font-bold text-red-600">
-                            AED {deliveryCharge.toFixed(2)}
+                          <span className="flex items-center gap-1 text-lg font-bold text-red-600">
+                            <DirhamIcon size={18} className="text-red-600" />
+                            {deliveryCharge.toFixed(2)}
                           </span>
                         </div>
                       ) : (
