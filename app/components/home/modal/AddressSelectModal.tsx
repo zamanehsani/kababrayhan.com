@@ -24,7 +24,7 @@ export type SelectedAddress = {
   name: string;
   lat: number;
   lng: number;
-  delivery_zone?: string;  
+  delivery_zone?: string;
   delivery_charge?: number;
 };
 
@@ -67,12 +67,12 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
   const mapInstanceRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
   const [deliveryZone, setDeliveryZone] = useState<string>("");
-const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
-const [isOutOfRange, setIsOutOfRange] = useState<boolean>(false);
+  const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
+  const [isOutOfRange, setIsOutOfRange] = useState<boolean>(false);
 
 
 
-const fetchAddress = async (lat: number, lng: number) => {
+  const fetchAddress = async (lat: number, lng: number) => {
     setIsLoading(true);
     setIsOutOfRange(false);
     setError("");
@@ -120,7 +120,7 @@ const fetchAddress = async (lat: number, lng: number) => {
     }
   };
 
-  
+
   // const fetchAddress = async (lat: number, lng: number) => {
   //   setIsLoading(true);
   //   try {
@@ -362,8 +362,61 @@ const fetchAddress = async (lat: number, lng: number) => {
         {/* Bottom Selection Panel (Floating Card Style) */}
         <div className="absolute bottom-8 inset-x-0 z-1002 flex justify-center px-4 pointer-events-none">
           <div className="pointer-events-auto w-full max-w-xl bg-white/95 backdrop-blur-lg border border-white/20 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] p-6 sm:p-8 flex flex-col gap-4">
+
             <div className="space-y-1">
-              <h3 className="text-sm font-medium uppercase tracking-widest text-red-500">
+              <h3 className="text-sm font-medium  tracking-widest text-red-600">
+                Confirm Delivery Point
+              </h3>
+              <div className="min-h-12 flex items-center">
+                {isLoading ? (
+                  <div className="flex items-center gap-3 text-gray-400 italic">
+                    <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                    Fetching address details...
+                  </div>
+                ) : (
+                  <p className="text-gray-800 font-medium text-lg line-clamp-2 leading-tight tracking-wide">
+                    {addressText || "Tap the map to select your location"}
+                  </p>
+                )}
+              </div>
+
+              {/* DELIVERY FEEDBACK PANEL */}
+              {!isLoading && selectedLatLng && (
+                <>
+                  {isOutOfRange ? (
+                    <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+                      <span className="mt-0.5 shrink-0 text-lg leading-none">⚠️</span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-semibold text-base">Out of Delivery Range</span>
+                        <span className="font-normal opacity-90">
+                          This address is outside our standard delivery zone. To place an order, please contact our support team directly at +971 50 302 1317.
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2 p-3 border border-red-100 rounded-2xl bg-red-50/50">
+                      {deliveryCharge > 0 ? (
+                        // PAID DELIVERY UX
+                        <div className="flex items-center justify-between gap-2 px-1 text-sm font-medium text-red-600">
+                          <span className="opacity-80">Delivery Charge</span>
+                          <span className="text-lg font-bold text-red-600">
+                            AED {deliveryCharge.toFixed(2)}
+                          </span>
+                        </div>
+                      ) : (
+                        // FREE DELIVERY UX (Clean, warm, formal)
+                        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-100 px-4 py-2.5 text-sm font-semibold text-emerald-800">
+                          <span className="text-lg leading-none">✓</span>
+                          You qualify for Free Delivery!
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            {/* <div className="space-y-1">
+              <h3 className="text-sm font-medium tracking-wide text-red-500">
                 Confirm Delivery Point
               </h3>
               <div className="min-h-12 flex items-center">
@@ -395,10 +448,10 @@ const fetchAddress = async (lat: number, lng: number) => {
                   </span>
                 </div>
               )}
-            </div>
+            </div> */}
 
             <button
-              className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-200 disabled:text-gray-400 text-white py-5 rounded-[1.5rem] font-medium uppercase tracking-widest transition-all shadow-lg shadow-red-200 active:scale-[0.98]"
+              className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-200 disabled:text-gray-400 text-white py-5 rounded-[1.5rem] font-medium tracking-wide transition-all shadow-lg shadow-red-200 active:scale-[0.98]"
               disabled={!selectedLatLng || isLoading || submitting || isOutOfRange}
               onClick={async () => {
                 setSubmitting(true);
@@ -464,8 +517,8 @@ const fetchAddress = async (lat: number, lng: number) => {
                     ? await updateAddress({
                       addressName: existingAddressId!,
                       address_line1: addressLine,
-                      custom_latitude: String(selectedLatLng!.lat),  
-                      custom_longitude: String(selectedLatLng!.lng), 
+                      custom_latitude: String(selectedLatLng!.lat),
+                      custom_longitude: String(selectedLatLng!.lng),
                       custom_delivery_zone: deliveryZone || undefined,
                       ...(customTitle
                         ? {
@@ -489,7 +542,7 @@ const fetchAddress = async (lat: number, lng: number) => {
                       address_line1: addressLine,
                       city: "Dubai",
                       country: "United Arab Emirates",
-                      custom_latitude: String(selectedLatLng!.lat),  
+                      custom_latitude: String(selectedLatLng!.lat),
                       custom_longitude: String(selectedLatLng!.lng),
                       custom_delivery_zone: deliveryZone || undefined,
                       links: [
