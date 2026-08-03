@@ -176,12 +176,12 @@ export function DesktopItemDetailModal({
                 {variationGroups.length > 0 && (
                   <section className="rounded-2xl">
 
-                    <p className="mt-1 text-xs text-slate-600">
+                    <p className="mt-1 text-sm text-slate-600">
                       Select one to continue.
                     </p>
                     <div className="mt-4 mb-2">
                       <ModeCustomizationPanel
-                        className="flex flex-col gap-3"
+                        className="flex flex-col"
                         customizations={variationGroups}
                         selections={resolvedSelections}
                         onSingleSelect={handleSingleSelect}
