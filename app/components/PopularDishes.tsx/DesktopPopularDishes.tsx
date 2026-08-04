@@ -6,11 +6,8 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Dish } from "@/app/types/type";
-import {
-
-  useGetItemByCodeQuery,
-  useGetItemsQuery,
-} from "../../redux/api";
+import { useGetItemGroupsQuery, useGetItemsQuery } from "../../redux/api";
+import { sortGroupNamesByItemGroupPriority } from "../../lib/itemGroupOrdering";
 import { DesktopItemDetailModal } from "../home/modal/ItemDetail/DesktopItemDetailModal";
 import DirhamIcon from "../icon/DirhamIcon";
 import { DesktopDishFallback } from "../FallBacks/DesktopDishFallback";
@@ -19,11 +16,10 @@ import { DesktopDishSkeleton } from "../FallBacks/DesktopDishSkeleton";
 export default function DesktopPopularDishes() {
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const { data: items, isError, isLoading, refetch } = useGetItemsQuery();
+  const { data: itemGroups } = useGetItemGroupsQuery();
   const searchParams = useSearchParams();
   const searchValue = searchParams.get("search") ?? "";
   const normalizedSearchValue = searchValue.trim().toLowerCase();
-
-  const { data: itembycode } = useGetItemByCodeQuery("RYH-MIX-001-With Fries");
 
   const slugify = (value: string) =>
     value
@@ -107,6 +103,7 @@ export default function DesktopPopularDishes() {
   );
 
   const groupedDishes = (() => {
+    type GroupedDish = { name: string; items: Dish[] };
     const groups = new Map<string, Dish[]>();
 
     const sourceDishes = normalizedSearchValue
@@ -126,35 +123,25 @@ export default function DesktopPopularDishes() {
       groups.get(groupName)?.push(dish);
     });
 
-    const categoryOrder = [
-      "Appetizers",
-      "Main Course",
-      "Rice",
-      "Snacks",
-      "Drinks",
-      "platters",
-      "Sides",
-    ];
+    const orderedNames = sortGroupNamesByItemGroupPriority(
+      Array.from(groups.keys()),
+      itemGroups
+    );
 
-    return Array.from(groups.entries())
-      .sort((a, b) => {
-        const indexA = categoryOrder.indexOf(a[0]);
-        const indexB = categoryOrder.indexOf(b[0]);
-        const orderA = indexA === -1 ? 999 : indexA;
-        const orderB = indexB === -1 ? 999 : indexB;
-        return orderA - orderB;
-      })
-      .map(([name, items]) => ({ name, items }));
+    return orderedNames.map<GroupedDish>((name) => ({
+      name,
+      items: groups.get(name) ?? [],
+    }));
   })();
 
   return (
     /* 
       Unified layout constraints for Laptop, Desktop, and Ultra-wide tiers:
       - px-12 ensures clean padding on laptop viewports (1024px - 1279px) so elements don't hit the screen edge
-      - max-w-[1440px] establishes the wide alignment ceiling across the home page
+      - wide alignment ceiling across the home page
       - mx-auto centers the section block perfectly on screens beyond 1440px
     */
-    <section className="mt-8 max-w-[1440px] mx-auto px-12 pb-20">
+    <section className="mt-8 max-w-360 mx-auto px-12 pb-20">
 
       {/* HEADER SECTION */}
       <div className=" flex items-center justify-between">

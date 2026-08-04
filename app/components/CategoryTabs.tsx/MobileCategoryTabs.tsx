@@ -11,7 +11,8 @@ import {
   UtensilsCrossed,
   Wheat,
 } from "lucide-react";
-import { useGetItemsQuery } from "@/app/redux/api";
+import { useGetItemGroupsQuery } from "@/app/redux/api";
+import { getOrderedItemGroupNames } from "../../lib/itemGroupOrdering";
 
 const categoryIconMap: Record<string, JSX.Element> = {
   All: <LayoutGrid size={18} />,
@@ -25,7 +26,7 @@ const categoryIconMap: Record<string, JSX.Element> = {
 };
 
 export default function CategoryTabs() {
-  const { data: items } = useGetItemsQuery();
+  const { data: itemGroups } = useGetItemGroupsQuery();
   const [activeCategory, setActiveCategory] = useState("All");
   const [isPinned, setIsPinned] = useState(false);
   const [stickyBarHeight, setStickyBarHeight] = useState(0);
@@ -44,38 +45,16 @@ export default function CategoryTabs() {
       .replace(/(^-|-$)/g, "");
 
   const categories = useMemo(() => {
-    const groups = new Set<string>();
-
-    items?.forEach((item) => {
-      if (item.item_group) {
-        groups.add(item.item_group);
-      }
-    });
-
-    // Define the specific order for categories
-    const categoryOrder = [
-      "Appetizers",
-      "Main Course",
-      "Rice",
-      "Snacks",
-      "Drinks",
-      "platters",
-      "Sides",
-    ];
-
-    const orderedGroups = categoryOrder.filter((cat) => groups.has(cat));
-    const newGroups = Array.from(groups)
-      .filter((cat) => !categoryOrder.includes(cat))
-      .sort();
+    const sortedGroups = getOrderedItemGroupNames(itemGroups);
 
     return [
       { name: "All", icon: categoryIconMap.All },
-      ...[...orderedGroups, ...newGroups].map((group) => ({
+      ...sortedGroups.map((group) => ({
         name: group,
         icon: categoryIconMap[group] ?? categoryIconMap.All,
       })),
     ];
-  }, [items]);
+  }, [itemGroups]);
 
   const getVisibleCategorySections = () =>
     Array.from(
@@ -213,7 +192,7 @@ export default function CategoryTabs() {
           ref={stickyBarRef}
           className={`${
             isPinned ? "fixed inset-x-0 top-0" : "relative"
-          } z-40 px-4 pb-3 pt-2 bg-white/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/80 border-b border-slate-100/40 transition-all`}
+          } z-40 px-4 pb-3 pt-2 bg-white/95 backdrop-blur-md supports-backdrop-filter:bg-white/80 border-b border-slate-100/40 transition-all`}
         >
           <div
             ref={tabContainerRef}

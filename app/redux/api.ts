@@ -97,6 +97,7 @@ export const erpApi = createApi({
             "variant_of",
             "attributes",
             "item_group",
+            "custom_priority",
             "standard_rate",
             "image",
             "description",
@@ -109,6 +110,7 @@ export const erpApi = createApi({
       }),
       transformResponse: (response: { data: Item[] }) => response.data,
     }),
+
     getItemByCode: builder.query<ItemDetails, string>({
       query: (itemCode) => ({
         url: `Item/${encodeURIComponent(itemCode)}`,
@@ -248,6 +250,23 @@ export const erpApi = createApi({
         { type: "CustomerAddresses", id: customerName },
         { type: "CustomerAddresses", id: "LIST" },
       ],
+    }),
+
+    getItemGroups: builder.query<
+      { name: string; custom_priority: number }[],
+      void
+    >({
+      query: () => ({
+        url: "Item Group",
+        params: {
+          limit_page_length: 1000,
+          fields: JSON.stringify(["name", "custom_priority"]),
+          order_by: "custom_priority asc",
+        },
+      }),
+      transformResponse: (response: {
+        data: { name: string; custom_priority: number }[];
+      }) => response.data,
     }),
     updateCustomer: builder.mutation<CustomerDetails, UpdateCustomerRequest>({
       query: ({ customerName, ...body }) => ({
@@ -575,7 +594,6 @@ export const erpApi = createApi({
       }
     >({
       query: ({ salesOrderName, paymentMethod, changeRequired }) => {
-        
         const targetUrl = `${ERP_API_METHOD_URL}pizza_app.api.complete_doorstep_order`;
 
         return {
@@ -616,6 +634,7 @@ export const {
   useUpdateSalesOrderMutation,
   useCreatePaymentIntentMutation,
   useGetItemsQuery,
+  useGetItemGroupsQuery,
   useSendOtpMutation,
   useGetItemByCodeQuery,
   useCompleteDoorstepOrderMutation,

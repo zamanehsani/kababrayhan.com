@@ -11,7 +11,8 @@ import {
   UtensilsCrossed,
   Wheat,
 } from "lucide-react";
-import { useGetItemsQuery } from "@/app/redux/api";
+import { useGetItemGroupsQuery } from "@/app/redux/api";
+import { getOrderedItemGroupNames } from "../../lib/itemGroupOrdering";
 
 const categoryIconMap: Record<string, JSX.Element> = {
   All: <LayoutGrid size={20} />,
@@ -25,7 +26,7 @@ const categoryIconMap: Record<string, JSX.Element> = {
 };
 
 export default function TabletCategoryTabs() {
-  const { data: items } = useGetItemsQuery();
+  const { data: itemGroups } = useGetItemGroupsQuery();
   const [activeCategory, setActiveCategory] = useState("All");
   const [isPinned, setIsPinned] = useState(false);
   const [stickyBarHeight, setStickyBarHeight] = useState(0);
@@ -42,38 +43,16 @@ export default function TabletCategoryTabs() {
       .replace(/(^-|-$)/g, "");
 
   const categories = useMemo(() => {
-    const groups = new Set<string>();
-
-    items?.forEach((item) => {
-      if (item.item_group) {
-        groups.add(item.item_group);
-      }
-    });
-
-    // Define the specific order for categories
-    const categoryOrder = [
-      "Appetizers",
-      "Main Course",
-      "Rice",
-      "Snacks",
-      "Drinks",
-      "platters",
-      "Sides",
-    ];
-
-    const orderedGroups = categoryOrder.filter((cat) => groups.has(cat));
-    const newGroups = Array.from(groups)
-      .filter((cat) => !categoryOrder.includes(cat))
-      .sort();
+    const sortedGroups = getOrderedItemGroupNames(itemGroups);
 
     return [
       { name: "All", icon: categoryIconMap.All },
-      ...[...orderedGroups, ...newGroups].map((group) => ({
+      ...sortedGroups.map((group: string) => ({
         name: group,
         icon: categoryIconMap[group] ?? categoryIconMap.All,
       })),
     ];
-  }, [items]);
+  }, [itemGroups]);
 
   const getVisibleCategorySections = () =>
     Array.from(
@@ -198,7 +177,7 @@ export default function TabletCategoryTabs() {
       Tablet Mode UI Constraint (768px - 1023px):
       - Standard layout spacing at mt-10 and px-8 matching your dashboard rhythm
     */
-    <section className="px-8">
+    <section className="w-full px-4 md:px-8">
       {/* Header Layout */}
       
       <div ref={stickySentinelRef}>
@@ -209,11 +188,11 @@ export default function TabletCategoryTabs() {
           } z-40 bg-white/95 backdrop-blur supports-backdrop-filter:bg-white/70 pb-4 pt-4 left-0 right-0 w-full`}
         >
           {/* Centering Wrapper: Controls the maximum layout width matching your desktop design */}
-          <div className={`mx-auto max-w-7xl w-full ${isPinned ? "px-8" : ""}`}>
+          <div className={`mx-auto w-full ${isPinned ? "px-8" : ""}`}>
             {/* Scroll Container: Centers buttons when few, allows overflow when many */}
             <div
               ref={tabContainerRef}
-              className="flex gap-x-2 gap-y-2 items-center justify-start md:justify-center overflow-x-auto no-scrollbar scroll-smooth"
+              className="flex gap-x-2 gap-y-2 items-center justify-start overflow-x-auto no-scrollbar scroll-smooth"
             >
               {categories.map((cat) => (
                 <button

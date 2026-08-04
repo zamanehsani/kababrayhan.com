@@ -11,7 +11,8 @@ import {
   UtensilsCrossed,
   Wheat,
 } from "lucide-react";
-import { useGetItemsQuery } from "@/app/redux/api";
+import { useGetItemGroupsQuery } from "@/app/redux/api";
+import { getOrderedItemGroupNames } from "../../lib/itemGroupOrdering";
 
 const categoryIconMap: Record<string, JSX.Element> = {
   All: <LayoutGrid size={22} />,
@@ -25,7 +26,7 @@ const categoryIconMap: Record<string, JSX.Element> = {
 };
 
 export default function DesktopCategoryTabs() {
-  const { data: items } = useGetItemsQuery();
+  const { data: itemGroups } = useGetItemGroupsQuery();
   const [activeCategory, setActiveCategory] = useState("All");
   const [isPinned, setIsPinned] = useState(false);
   const [stickyBarHeight, setStickyBarHeight] = useState(0);
@@ -33,7 +34,7 @@ export default function DesktopCategoryTabs() {
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const stickySentinelRef = useRef<HTMLDivElement>(null);
   const stickyBarRef = useRef<HTMLDivElement>(null);
-
+  
   const slugify = (value: string) =>
     value
       .toLowerCase()
@@ -41,38 +42,49 @@ export default function DesktopCategoryTabs() {
       .replace(/(^-|-$)/g, "");
 
   const categories = useMemo(() => {
-    const groups = new Set<string>();
-
-    items?.forEach((item) => {
-      if (item.item_group) {
-        groups.add(item.item_group);
-      }
-    });
-
-    // Define the specific order for categories
-    const categoryOrder = [
-      "Appetizers",
-      "Main Course",
-      "Rice",
-      "Snacks",
-      "Drinks",
-      "platters",
-      "Sides",
-    ];
-
-    const orderedGroups = categoryOrder.filter((cat) => groups.has(cat));
-    const newGroups = Array.from(groups)
-      .filter((cat) => !categoryOrder.includes(cat))
-      .sort();
+    const sortedGroups = getOrderedItemGroupNames(itemGroups);
 
     return [
       { name: "All", icon: categoryIconMap.All },
-      ...[...orderedGroups, ...newGroups].map((group) => ({
+      ...sortedGroups.map((group: string) => ({
         name: group,
         icon: categoryIconMap[group] ?? categoryIconMap.All,
       })),
     ];
-  }, [items]);
+  }, [itemGroups]);
+  // const categories = useMemo(() => {
+  //   const groups = new Set<string>();
+
+  //   items?.forEach((item) => {
+  //     if (item.item_group) {
+  //       groups.add(item.item_group);
+  //     }
+  //   });
+
+  //   // Define the specific order for categories
+  //   const categoryOrder = [
+  //     "Appetizers",
+  //     "Main Course",
+  //     "Rice",
+  //     "Snacks",
+  //     "Drinks",
+  //     "platters",
+  //     "Sides",
+  //   ];
+
+  //   const orderedGroups = categoryOrder.filter((cat) => groups.has(cat));
+  //   const newGroups = Array.from(groups)
+  //     .filter((cat) => !categoryOrder.includes(cat))
+  //     .sort();
+
+  //   return [
+  //     { name: "All", icon: categoryIconMap.All },
+  //     ...[...orderedGroups, ...newGroups].map((group) => ({
+  //       name: group,
+  //       icon: categoryIconMap[group] ?? categoryIconMap.All,
+  //     })),
+  //   ];
+  // }, [items]);
 
   const getVisibleCategorySections = () =>
     Array.from(
@@ -139,23 +151,19 @@ export default function DesktopCategoryTabs() {
   const stickyPositionClass = isPinned ? "fixed inset-x-0 top-0" : "relative";
 
   return (
-    <section className="max-w-[1440px] mx-auto px-8">
+    <section className="w-full px-4 md:px-8">
       {/* Header Layout */}
-      
+
       {/* Premium Dashboard Grid Layout */}
       <div ref={stickySentinelRef}>
         <div
           ref={stickyBarRef}
-          className={`${stickyPositionClass} z-40 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/70 pb-2 pt-2 left-0 right-0 w-full`}
+          className={`${stickyPositionClass} z-40 bg-white/95 backdrop-blur supports-backdrop-filter:bg-white/70 pb-2 pt-2 left-0 right-0 w-full`}
         >
           {/* Centering Wrapper: Controls the maximum layout width */}
-          <div
-            className={`mx-auto max-w-full w-full ${
-              isPinned ? "px-2 md:px-12" : ""
-            }` }
-          >
+          <div className={`mx-auto w-full ${isPinned ? "px-2 md:px-12" : ""}`}>
             {/* Scroll Container: Centers buttons when few, allows overflow when many */}
-            <div className="flex flex-nowrap py-2 gap-6 items-center justify-start md:justify-center overflow-x-auto no-scrollbar scroll-smooth">
+            <div className="flex flex-nowrap py-2 gap-6 items-center justify-start overflow-x-auto no-scrollbar scroll-smooth">
               {categories.map((cat) => (
                 <button
                   key={cat.name}
@@ -191,19 +199,17 @@ export default function DesktopCategoryTabs() {
                       isManualScrolling.current = false;
                     }, 1000);
                   }}
-                  className={`inline-flex w-fit shrink-0 items-center gap-1 rounded-full px-3 py-2 transition-all duration-200 group relative ${
-                    activeCategory === cat.name
+                  className={`inline-flex w-fit shrink-0 items-center gap-1 rounded-full px-3 py-2 transition-all duration-200 group relative ${activeCategory === cat.name
                       ? "bg-red-600 text-white shadow-xl shadow-red-200/30"
                       : "border border-slate-200/80 bg-white text-slate-700 hover:-translate-y-1 hover:border-red-200 hover:shadow-md hover:shadow-red-100/30"
-                  }`}
+                    }`}
                 >
                   {cat.icon && (
                     <div
-                      className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors ${
-                        activeCategory === cat.name
+                      className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors ${activeCategory === cat.name
                           ? " text-white"
                           : " text-slate-400 group-hover:bg-orange-50 group-hover:text-red-500"
-                      }`}
+                        }`}
                     >
                       {cat.icon}
                     </div>

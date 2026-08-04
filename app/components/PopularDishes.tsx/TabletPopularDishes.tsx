@@ -1,11 +1,12 @@
 "use client";
-import { Heart, Flame } from "lucide-react";
+import { Flame } from "lucide-react";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Dish } from "@/app/types/type";
 import { TabletItemDetailModal } from "../home/modal/ItemDetail/TabletItemDetailModal";
-import { baseUrl, useGetItemsQuery } from "../../redux/api";
+import { baseUrl, useGetItemGroupsQuery, useGetItemsQuery } from "../../redux/api";
+import { sortGroupNamesByItemGroupPriority } from "../../lib/itemGroupOrdering";
 import DirhamIcon from "../icon/DirhamIcon";
 import { TabletDishFallback } from "../FallBacks/TabletDishFallback";
 import { TabletDishSkeleton } from "../FallBacks/TabletDishSkeleton";
@@ -14,6 +15,7 @@ import { TabletDishSkeleton } from "../FallBacks/TabletDishSkeleton";
 export default function TabletPopularDishes() {
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const { data: items, isError, isLoading, refetch } = useGetItemsQuery();
+  const { data: itemGroups } = useGetItemGroupsQuery();
   const searchParams = useSearchParams();
   const searchValue = searchParams.get("search") ?? "";
   const normalizedSearchValue = searchValue.trim().toLowerCase();
@@ -69,6 +71,7 @@ export default function TabletPopularDishes() {
   );
 
   const groupedDishes = (() => {
+    type GroupedDish = { name: string; items: Dish[] };
     const groups = new Map<string, Dish[]>();
 
     const sourceDishes = normalizedSearchValue
@@ -88,25 +91,15 @@ export default function TabletPopularDishes() {
       groups.get(groupName)?.push(dish);
     });
 
-    const categoryOrder = [
-      "Appetizers",
-      "Main Course",
-      "Rice",
-      "Snacks",
-      "Drinks",
-      "platters",
-      "Sides",
-    ];
+    const orderedNames = sortGroupNamesByItemGroupPriority(
+      Array.from(groups.keys()),
+      itemGroups
+    );
 
-    return Array.from(groups.entries())
-      .sort((a, b) => {
-        const indexA = categoryOrder.indexOf(a[0]);
-        const indexB = categoryOrder.indexOf(b[0]);
-        const orderA = indexA === -1 ? 999 : indexA;
-        const orderB = indexB === -1 ? 999 : indexB;
-        return orderA - orderB;
-      })
-      .map(([name, items]) => ({ name, items }));
+    return orderedNames.map<GroupedDish>((name) => ({
+      name,
+      items: groups.get(name) ?? [],
+    }));
   })();
 
   return (

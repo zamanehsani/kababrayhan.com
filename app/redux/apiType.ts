@@ -114,6 +114,7 @@ export interface Item {
   standard_rate: number;
   image?: string;
   description?: string;
+  custom_priority: number;
   max_discount: string;
   custom_calories?: number;
   custom_prep_time?: number;
