@@ -139,6 +139,7 @@ export function useItemCustomizationState(
       required: true,
       autoSelectFirst: false,
       options,
+      name: "",
     };
   }, [isVariantSelectionRequired, variantItems]);
 

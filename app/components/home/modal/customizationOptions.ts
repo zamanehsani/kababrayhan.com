@@ -118,6 +118,7 @@ const createVariationGroup = (
     type: "single",
     required: true,
     options,
+    name: "",
   };
 };
 
@@ -165,6 +166,7 @@ const extractAddOnGroups = (itemDetails?: ItemDetails): CustomGroup[] => {
         type: "multiple",
         required: false,
         options: allowedAddOnOptions,
+        name: ""
       } satisfies CustomGroup,
     ];
   }
@@ -194,6 +196,7 @@ const extractAddOnGroups = (itemDetails?: ItemDetails): CustomGroup[] => {
         type: "multiple",
         required: false,
         options,
+        name: "",
       } satisfies CustomGroup,
     ];
   }

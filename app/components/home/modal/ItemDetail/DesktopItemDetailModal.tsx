@@ -1,15 +1,15 @@
-import { X, Check } from "lucide-react";
+import { X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import { Dish } from "@/app/types/type";
 import { addDishToCart } from "@/app/lib/cart";
 import { useItemCustomizationState } from "../shared/useItemCustomizationState";
-import { ModeCustomizationPanel } from "../shared/ModeCustomizationPanel";
 import { DesktopItemImagePane } from "./DesktopItemImagePane";
 import { DesktopItemHeader } from "./DesktopItemHeader";
 import { DesktopItemMetaBadges } from "./DesktopItemMetaBadges";
 import { DesktopItemDescription } from "./DesktopItemDescription";
 import { DesktopItemPriceBar } from "./DesktopItemPriceBar";
+import { AddOnCarousel } from "./AddOnCarousel";
+
 
 export function DesktopItemDetailModal({
   dish,
@@ -57,9 +57,9 @@ export function DesktopItemDetailModal({
 
     const resolvedId =
       (typeof selectedVariantItem.item_code === "string" &&
-      selectedVariantItem.item_code.trim()) ||
+        selectedVariantItem.item_code.trim()) ||
       (typeof selectedVariantItem.name === "string" &&
-      selectedVariantItem.name.trim()) ||
+        selectedVariantItem.name.trim()) ||
       String(dish.id);
 
     return {
@@ -77,7 +77,7 @@ export function DesktopItemDetailModal({
           : dish.time,
       description:
         typeof selectedVariantItem.description === "string" &&
-        selectedVariantItem.description.trim()
+          selectedVariantItem.description.trim()
           ? selectedVariantItem.description
           : dish.description,
     };
@@ -149,12 +149,12 @@ export function DesktopItemDetailModal({
           <X size={18} />
         </button>
 
-        <DesktopItemImagePane src={dish.img} alt={dish.name}  />
+        <DesktopItemImagePane src={dish.img} alt={dish.name} />
 
         {/* Right Column */}
         <div className="col-span-7 flex h-full flex-col bg-white">
           <h2 id="desktop-item-detail-title" className="sr-only">
-            {dish.name} details 
+            {dish.name} details
           </h2>
 
           <DesktopItemHeader restaurant={dish.restaurant} name={dish.name} />
@@ -166,96 +166,52 @@ export function DesktopItemDetailModal({
                 cal={dish.cal}
                 time={dish.time}
                 rating={dish.rating}
-              /> 
+              />
               <DesktopItemDescription html={dish.description} />
             </div>
+          </div>
 
-            {/* Inline Customization Options */}
-            {hasCustomizationOptions && (
-              <div className="mt-auto pt-4">
+          {/* Inline Customization Options - compact/no internal spacing to save modal space */}
+          {hasCustomizationOptions && (
+            <div className="px-4 pt-2 pb-2 bg-white">
+              <div className="max-w-full mx-auto flex flex-col gap-0">
                 {variationGroups.length > 0 && (
-                  <section className="rounded-2xl">
-
-                    <p className="mt-1 text-sm text-slate-600">
-                      Select one to continue.
-                    </p>
-                    <div className="mt-4 mb-2">
-                      <ModeCustomizationPanel
-                        className="flex flex-col"
-                        customizations={variationGroups}
-                        selections={resolvedSelections}
-                        onSingleSelect={handleSingleSelect}
-                        onMultiToggle={handleMultiToggle}
-                      />
+                  <section className="p-0">
+                    <p className="m-0 text-sm font-medium text-slate-600">Select one to continue.</p>
+                    <div className="mt-1">
+                      {variationGroups.map((group) => (
+                        <div key={group.id} className="py-0">
+                          <AddOnCarousel
+                            group={group}
+                            selections={resolvedSelections[group.id] || []}
+                            onToggle={(optionId: string) => handleSingleSelect(group.id, optionId)}
+                            singleSelect
+                          />
+                        </div>
+                      ))}
                     </div>
                   </section>
                 )}
 
                 {addOnGroups.length > 0 && (
-                  <section className="rounded-2xl">
-                    <h4 className="text-sm font-semibold tracking-wide text-slate-900">
-                      Add-ons
-                    </h4>
-                    
-                    
-                    {/* Compact Add-on Grid */}
-                    {addOnGroups.map((group) => (
-                      <div key={group.id} className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-                        {group.options.map((option) => {
-                          const isSelected = (resolvedSelections[group.id] || []).includes(option.id);
-                          
-                          return (
-                            <button
-                              key={option.id}
-                              type="button"
-                              onClick={() => handleMultiToggle(group.id, option.id)}
-                              className={`group relative aspect-square overflow-hidden rounded-xl border-2 transition-all ${
-                                isSelected
-                                  ? "border-red-600 ring-2 ring-red-600/30 scale-95"
-                                  : "border-slate-200 hover:border-red-400"
-                              }`}
-                            >
-                              {option.img && (
-                                <Image
-                                  src={option.img}
-                                  alt={option.name}
-                                  fill
-                                  className="object-cover"
-                                />
-                              )}
-                              
-                              {/* Selected Overlay */}
-                              {isSelected && (
-                                <div className="absolute inset-0 bg-red-600/20 flex items-center justify-center">
-                                  <div className="h-6 w-6 rounded-full bg-red-600 flex items-center justify-center">
-                                    <Check size={14} strokeWidth={3} className="text-slate-900" />
-                                  </div>
-                                </div>
-                              )}
-                              
-                              {/* Price Badge */}
-                              {option.price > 0 && (
-                                <div className="absolute bottom-1 right-1 rounded-md bg-red-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
-                                  +{option.price.toFixed(0)}
-                                </div>
-                              )}
-                              
-                              {/* Name Tooltip on Hover */}
-                              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/80 to-transparent p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <p className="text-[10px] font-medium text-white truncate">
-                                  {option.name}
-                                </p>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ))}
+                  <section className="p-0">
+                    <h4 className="mb-1 text-xs font-semibold tracking-wide text-slate-900">Add-ons</h4>
+                    <div className="space-y-1">
+                      {addOnGroups.map((group) => (
+                        <div key={group.id} className="py-0">
+                          <AddOnCarousel
+                            group={group}
+                            selections={resolvedSelections[group.id] || []}
+                            onToggle={(optionId: string) => handleMultiToggle(group.id, optionId)}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </section>
                 )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           <DesktopItemPriceBar
             totalPrice={totalPrice}

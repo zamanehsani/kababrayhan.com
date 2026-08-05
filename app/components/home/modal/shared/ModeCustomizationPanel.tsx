@@ -20,7 +20,7 @@ export function ModeCustomizationPanel({
   return (
     <div className={className ?? "flex flex-col "}>
       {customizations.map((group) => (
-        <div key={group.id} className="w-full mb-8">
+        <div key={group.id} className="w-full">
           {/* Responsive Grid Layout */}
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
             {group.options.map((option) => {
