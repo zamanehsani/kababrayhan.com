@@ -62,7 +62,7 @@ export function ItemDetailModal({
             key={option.id}
             type="button"
             onClick={() => handleSingleSelect(group.id, option.id)}
-            className={`flex aspect-square flex-col items-center justify-center rounded-xl border px-2 text-center transition-colors ${
+            className={`flex min-h-14 flex-col items-center justify-center rounded-xl border px-2 py-1.5 text-center transition-colors ${
               isSelected
                 ? "border-red-600 bg-brand-50 text-slate-900"
                 : "border-slate-200 bg-white text-slate-700"
@@ -71,14 +71,14 @@ export function ItemDetailModal({
             <span className="text-[11px] font-medium leading-tight">
               {option.name}
             </span>
-            <span className="mt-1.5 flex items-center gap-1 text-[10px] font-semibold">
+            <span className="mt-1 flex items-center gap-1 text-[10px] font-semibold">
               {option.price > 0 && (
                 <span className="flex items-center text-red-600">
                   <DirhamIcon size={10} className="mr-0.5 text-red-600" />
                   {option.price.toFixed(2)}
                 </span>
               )}
-              {isSelected && <Check size={14} className="text-red-500" />}
+              {isSelected && <Check size={12} className="text-red-500" />}
             </span>
           </button>
         );
@@ -251,7 +251,7 @@ export function ItemDetailModal({
           <p className="text-sm font-medium text-slate-800">
             Select one to continue.
           </p>
-          <div className="mt-3 flex flex-col gap-2">
+          <div className="mt-2 flex flex-col gap-1.5">
             {variationGroups.map(renderVariationGroup)}
           </div>
         </div>

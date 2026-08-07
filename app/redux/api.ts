@@ -40,6 +40,7 @@ export type { SendOtpRequest, SendOtpResponse } from "./apiType";
 export const baseUrl = process.env.NEXT_PUBLIC_ERP_API_BASE_URL || "";
 export const ERP_API_METHOD_URL = `${baseUrl}/api/method/`;
 
+
 // Read token from environment variable (more secure than hardcoding)
 
 // TODO: Replace with proper session-based auth (see AUTHENTICATION_IMPROVEMENT_PLAN.md)

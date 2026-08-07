@@ -20,7 +20,7 @@ export function DesktopItemDetailModal({
 }>) {
   const [quantity, setQuantity] = useState(1);
   const itemCode = useMemo(() => String(dish.id ?? ""), [dish.id]);
-
+  console.log("add ons", itemCode);
   const {
     variationGroups,
     addOnGroups,
@@ -193,7 +193,7 @@ export function DesktopItemDetailModal({
                   </section>
                 )}
 
-                {addOnGroups.length > 0 && (
+                {/* {addOnGroups.length > 0 && (
                   <section className="p-0">
                     <h4 className="mb-1 text-xs font-semibold tracking-wide text-slate-900">Add-ons</h4>
                     <div className="space-y-1">
@@ -208,7 +208,7 @@ export function DesktopItemDetailModal({
                       ))}
                     </div>
                   </section>
-                )}
+                )} */}
               </div>
             </div>
           )}

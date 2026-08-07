@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
-import { Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
+import { DirhamIcon } from "@/app/components/icon/DirhamIcon";
 
 type AddOnOption = {
   id: string;
@@ -92,7 +92,7 @@ export function AddOnCarousel({
 
         <div
           ref={sliderRef}
-          className={`flex ${isOverflowing ? "gap-2 overflow-x-auto scroll-smooth px-2 pb-0" : "flex-wrap gap-1"}`}
+          className={`grid w-full ${isOverflowing ? "gap-2 overflow-x-auto scroll-smooth px-2 pb-0" : "grid-cols-1 gap-1 sm:grid-cols-2 xl:grid-cols-3"}`}
         >
           {group.options.map((option) => {
             const selected = selections.includes(option.id);
@@ -106,6 +106,7 @@ export function AddOnCarousel({
                 isOverflowing={isOverflowing}
                 selected={selected}
                 onClick={handleClick}
+                singleSelect={singleSelect}
               />
             );
           })}
@@ -120,47 +121,36 @@ function OptionCard({
   isOverflowing,
   selected,
   onClick,
+  singleSelect,
 }: {
   option: AddOnOption;
   isOverflowing: boolean;
   selected: boolean;
   onClick: () => void;
+  singleSelect: boolean;
 }) {
   // Hover-scale approach: scale the whole card and reveal the full title by removing truncate on hover.
   return (
     <button
       type="button"
       onClick={onClick}
-      // use GPU transform and avoid changing width to prevent layout jumps
-      className={`group relative overflow-visible ${isOverflowing ? "shrink-0 w-56" : "w-40"} border transition-all duration-500 ease-out transform-gpu will-change-transform ${
+      className={`group relative overflow-hidden rounded-xl border transition-all duration-300 ease-out ${isOverflowing ? "w-56 shrink-0" : "w-full"} ${
         selected
           ? "border-red-500 bg-red-50/60 shadow-sm"
           : "border-slate-200 bg-transparent hover:border-red-300 hover:bg-slate-50/40"
-      } hover:scale-105 hover:z-30`}
-      style={{ backfaceVisibility: "hidden" }}
+      } ${singleSelect ? "cursor-pointer" : "cursor-default"} active:scale-[0.98]`}
     >
-      <div className={`flex items-center gap-2 ${isOverflowing ? "p-2" : "p-1"}`}>
-        <div className={`${isOverflowing ? "h-12 w-12" : "h-10 w-10"} relative shrink-0 overflow-hidden rounded-lg bg-slate-100`}>
-          {option.img ? (
-            <Image src={option.img} alt={option.name} fill className="object-cover" />
-          ) : (
-            <div className="flex h-full items-center justify-center text-[10px] text-slate-400">N/A</div>
-          )}
-        </div>
-
+      <div className={`flex items-center ${isOverflowing ? "p-3" : "p-2"}`}>
         <div className="min-w-0 flex-1 text-left">
-          <p className={`font-semibold text-slate-900 antialiased ${isOverflowing ? "text-[13px]" : "text-[12px]"} truncate group-hover:whitespace-normal group-hover:overflow-visible transition-all duration-300 delay-200`}>{option.name}</p>
+          <p className={`font-semibold text-slate-900 antialiased ${isOverflowing ? "text-[14px]" : "text-[13px]"} whitespace-normal break-words`}>
+            {option.name}
+          </p>
           {option.price > 0 && (
-            <p className={`mt-0.5 font-semibold text-red-600 ${isOverflowing ? "text-[11px]" : "text-[10px]"}`}>
-              +{option.price.toFixed(2)}
-            </p>
+            <div className="mt-0.5 flex items-center gap-1 text-[13px] font-semibold text-red-600">
+              <DirhamIcon className="h-3.75 w-3.75" />
+              <span>{option.price.toFixed(2)}</span>
+            </div>
           )}
-        </div>
-
-        <div className={`flex ${isOverflowing ? "h-6 w-6" : "h-5 w-5"} shrink-0 items-center justify-center rounded-full border transition-all ${
-          selected ? "border-red-500 bg-red-500 text-white" : "border-slate-300 bg-transparent"
-        }`}>
-          {selected && <Check size={13} strokeWidth={3} />}
         </div>
       </div>
     </button>

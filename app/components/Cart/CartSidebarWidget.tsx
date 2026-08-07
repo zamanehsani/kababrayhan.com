@@ -1,40 +1,43 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { ShoppingCart } from "lucide-react";
+import { UtensilsCrossed } from "lucide-react";
 import CartDrawer from "../Drawer/CartDrawer";
 import { getCart, CART_UPDATED, type CartEntry } from "@/app/lib/cart";
 
 export default function CartSidebarWidget() {
-  const [itemCount, setItemCount] = useState(0);
+  const getCartItemCount = useCallback(() => {
+    if (typeof window === "undefined") return 0;
 
-  const refreshCartBadge = useCallback(() => {
-    if (typeof window === "undefined") return;
-    
     try {
       const items = getCart() || [];
-      const totalItems = items.reduce(
+      return items.reduce(
         (sum: number, entry: CartEntry) => sum + (entry.qty || 1),
         0
       );
-      setItemCount(totalItems);
     } catch (error) {
       console.error("Failed to parse cart values safely:", error);
-      setItemCount(0);
+      return 0;
     }
   }, []);
 
-  useEffect(() => {
-    refreshCartBadge();
+  const [itemCount, setItemCount] = useState(() => getCartItemCount());
 
-    window.addEventListener(CART_UPDATED, refreshCartBadge);
-    window.addEventListener("storage", refreshCartBadge);
-    window.addEventListener("openCartDrawer", refreshCartBadge);
+  const refreshCartBadge = useCallback(() => {
+    setItemCount(getCartItemCount());
+  }, [getCartItemCount]);
+
+  useEffect(() => {
+    const handleCartUpdate = () => refreshCartBadge();
+
+    window.addEventListener(CART_UPDATED, handleCartUpdate);
+    window.addEventListener("storage", handleCartUpdate);
+    window.addEventListener("openCartDrawer", handleCartUpdate);
 
     return () => {
-      window.removeEventListener(CART_UPDATED, refreshCartBadge);
-      window.removeEventListener("storage", refreshCartBadge);
-      window.removeEventListener("openCartDrawer", refreshCartBadge);
+      window.removeEventListener(CART_UPDATED, handleCartUpdate);
+      window.removeEventListener("storage", handleCartUpdate);
+      window.removeEventListener("openCartDrawer", handleCartUpdate);
     };
   }, [refreshCartBadge]);
 
@@ -56,7 +59,7 @@ export default function CartSidebarWidget() {
           aria-label={`View shopping bag summary containing ${itemCount} items`}
         >
           <div className="relative p-1">
-            <ShoppingCart
+            <UtensilsCrossed
               size={20}
               className="text-red-600 group-hover:scale-105 transition-transform"
             />
@@ -67,7 +70,7 @@ export default function CartSidebarWidget() {
             )}
           </div>
           <span className="text-[10px] font-semibold tracking-wide text-slate-300 mt-1 uppercase">
-            Cart
+            My Order
           </span>
         </button>
       </div>

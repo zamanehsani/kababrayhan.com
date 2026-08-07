@@ -40,38 +40,40 @@ export function TabletItemDetailModal({
   const totalPrice = unitPrice * quantity;
 
   const renderVariationGroup = (group: (typeof variationGroups)[number]) => (
-    <div key={group.id} className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-      {group.options.map((option) => {
-        const isSelected = (resolvedSelections[group.id] || []).includes(
-          option.id
-        );
+    <div key={group.id} className="flex justify-center">
+      <div className="grid w-full grid-cols-4 gap-2 justify-center">
+        {group.options.map((option) => {
+          const isSelected = (resolvedSelections[group.id] || []).includes(
+            option.id
+          );
 
-        return (
-          <button
-            key={option.id}
-            type="button"
-            onClick={() => handleSingleSelect(group.id, option.id)}
-            className={`flex aspect-square flex-col items-center justify-center rounded-xl border px-2 text-center transition-colors ${
-              isSelected
-                ? "border-red-600 bg-yellow-50 text-slate-900"
-                : "border-slate-200 bg-white text-slate-700"
-            }`}
-          >
-            <span className="text-[11px] font-medium leading-tight">
-              {option.name}
-            </span>
-            <span className="mt-1.5 flex items-center gap-1 text-[10px] font-semibold">
-              {option.price > 0 && (
-                <span className="flex items-center text-red-600">
-                  <DirhamIcon size={10} className="mr-0.5 text-red-600" />
-                  {option.price.toFixed(2)}
-                </span>
-              )}
-              {isSelected && <Check size={14} className="text-red-500" />}
-            </span>
-          </button>
-        );
-      })}
+          return (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => handleSingleSelect(group.id, option.id)}
+              className={`flex h-16 w-full flex-col items-center justify-center rounded-xl border px-2 py-2 text-center transition-colors ${
+                isSelected
+                  ? "border-red-600 bg-yellow-50 text-slate-900"
+                  : "border-slate-200 bg-white text-slate-700"
+              }`}
+            >
+              <span className="text-[11px] font-medium leading-tight">
+                {option.name}
+              </span>
+              <span className="mt-1 flex items-center gap-1 text-[10px] font-semibold">
+                {option.price > 0 && (
+                  <span className="flex items-center text-red-600">
+                    <DirhamIcon size={10} className="mr-0.5 text-red-600" />
+                    {option.price.toFixed(2)}
+                  </span>
+                )}
+                {isSelected && <Check size={12} className="text-red-500" />}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 
