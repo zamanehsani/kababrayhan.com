@@ -363,11 +363,11 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
 
         {/* Bottom Selection Panel (Floating Card Style) */}
         <div className="absolute bottom-8 inset-x-0 z-1002 flex justify-center px-4 pointer-events-none">
-          <div className="pointer-events-auto w-full max-w-xl bg-white/95 backdrop-blur-lg border border-white/20 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] p-6 sm:p-8 flex flex-col gap-4">
+          <div className=" pointer-events-auto w-full max-w-xl bg-white/95 backdrop-blur-lg border border-white/20 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] p-3 sm:p-6 flex flex-col gap-4">
 
-            <div className="space-y-1">
+            <div className="space-y-1 p-3">
               <h3 className="text-sm font-medium  tracking-widest text-red-600">
-                Confirm Delivery Point
+                 Delivery Point
               </h3>
               <div className="min-h-12 flex items-center">
                 {isLoading ? (
@@ -386,13 +386,13 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
               {!isLoading && selectedLatLng && (
                 <>
                   {isOutOfRange ? (
-                    <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+                    <div className="flex items-start gap-2 rounded-2xl border border-red-200 bg-red-50 px-5 py-2 text-sm text-red-700">
                       {/* <span className="mt-0.5 shrink-0 text-lg leading-none">⚠️</span> */}
-                      <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-semibold text-base">Out of Delivery Range</span>
+                      {/* <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" /> */}
+                      <div className="flex flex-col">
+                        {/* <span className="font-semibold text-base">Out of Delivery Range</span> */}
                         <span className="font-normal opacity-90">
-                          This address is outside our standard delivery zone. To place an order, please contact our support team directly at +971 50 302 1317.
+                           Outside our standard delivery zone. Contact us directly at +971 50 302 1317.
                         </span>
                       </div>
                     </div>
@@ -453,6 +453,8 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                 </div>
               )}
             </div> */}
+
+{!isOutOfRange && (
 
             <button
               className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-200 disabled:text-gray-400 text-white py-5 rounded-[1.5rem] font-medium tracking-wide transition-all shadow-lg shadow-red-200 active:scale-[0.98]"
@@ -599,10 +601,12 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
             >
               {submitting ? "Saving..." : "Confirm & Deliver Here"}
             </button>
-            {error && (
-              <div className="text-red-600 text-sm text-center mt-2">
-                {error}
-              </div>
+
+)}
+            {error && ( <></>
+              // <div className="text-red-600 text-sm text-center">
+              //   {/* {error} */}
+              // </div>
             )}
           </div>
         </div>
