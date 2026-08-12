@@ -1,11 +1,12 @@
 // --- Customer and Address Creation Types ---
+type ErpResourceRecord = Record<string, unknown>;
+
 export interface CreateCustomerResponse {
-  data: {
+  data: ErpResourceRecord & {
     name: string;
     customer_name: string;
     mobile_no: string;
     territory: string;
-    [key: string]: any;
   };
 }
 
@@ -25,15 +26,14 @@ export interface CreateAddressRequest {
 }
 
 export interface CreateAddressResponse {
-  data: {
+  data: ErpResourceRecord & {
     name: string;
     address_title: string;
     address_type: string;
     address_line1: string;
     city: string;
     country: string;
-    links: Array<any>;
-    [key: string]: any;
+    links: Array<Record<string, unknown>>;
   };
 }
 
@@ -61,10 +61,9 @@ export interface UpdateAddressRequest {
 }
 
 export interface UpdateAddressResponse {
-  data: {
+  data: ErpResourceRecord & {
     name: string;
     address_line1: string;
-    [key: string]: any;
   };
 }
 
@@ -173,6 +172,7 @@ export interface CreateSalesOrderRequest {
   doctype?: string;
   customer: string;
   transaction_date?: string;
+  order_type?: string;
   delivery_date: string;
   company?: string;
   selling_price_list?: string;
@@ -203,12 +203,11 @@ export interface UpdateSalesOrderRequest {
 }
 
 export interface UpdateSalesOrderResponse {
-  data: {
+  data: ErpResourceRecord & {
     name: string;
     custom_customer_note?: string;
     custom_payment_status?: string;
     custom_payment_method?: string;
-    [key: string]: any;
   };
 }
 

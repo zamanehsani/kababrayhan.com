@@ -181,10 +181,7 @@ export const erpApi = createApi({
       }),
       transformResponse: (response: { data: CustomerDetails }) => response.data,
     }),
-    getCustomersByMobile: builder.query<
-      Array<{ name: string; customer_name?: string; mobile_no?: string }>,
-      string
-    >({
+    getCustomersByMobile: builder.query<Array<{ name: string; customer_name?: string; mobile_no?: string }>,string>({
       query: (mobileNo) => ({
         url: "Customer",
         params: {
@@ -253,10 +250,7 @@ export const erpApi = createApi({
       ],
     }),
 
-    getItemGroups: builder.query<
-      { name: string; custom_priority: number }[],
-      void
-    >({
+    getItemGroups: builder.query<{ name: string; custom_priority: number }[],void>({
       query: () => ({
         url: "Item Group",
         params: {
@@ -302,10 +296,7 @@ export const erpApi = createApi({
       }),
       transformResponse: (response: { data: Contact }) => response.data,
     }),
-    setCustomerInfo: builder.mutation<
-      { message?: unknown },
-      SetCustomerInfoRequest
-    >({
+    setCustomerInfo: builder.mutation<{ message?: unknown },SetCustomerInfoRequest>({
       queryFn: async (
         { customerName, fieldname, value },
         _api,
@@ -329,10 +320,7 @@ export const erpApi = createApi({
         return { data: (result.data as { message?: unknown }) ?? {} };
       },
     }),
-    uploadCustomerAvatar: builder.mutation<
-      UploadedFile,
-      UploadCustomerAvatarRequest
-    >({
+    uploadCustomerAvatar: builder.mutation<UploadedFile, UploadCustomerAvatarRequest>({
       queryFn: async (
         { customerName, file },
         _api,
@@ -466,10 +454,7 @@ export const erpApi = createApi({
       }),
       transformResponse: (response: { data: SalesOrder }) => response.data,
     }),
-    updateSalesOrder: builder.mutation<
-      UpdateSalesOrderResponse,
-      UpdateSalesOrderRequest
-    >({
+    updateSalesOrder: builder.mutation<UpdateSalesOrderResponse, UpdateSalesOrderRequest>({
       query: ({ salesOrderName, ...body }) => ({
         url: `${baseUrl}/api/resource/Sales Order/${encodeURIComponent(
           salesOrderName
@@ -483,10 +468,7 @@ export const erpApi = createApi({
         data: response.data,
       }),
     }),
-    createPaymentIntent: builder.mutation<
-      PaymentIntentResponse,
-      CreatePaymentIntentRequest
-    >({
+    createPaymentIntent: builder.mutation< PaymentIntentResponse, CreatePaymentIntentRequest>({
       queryFn: async (body, _api, _extraOptions, fetchWithBQ) => {
         // ERPNext reads from frappe.form_dict, so send as form-urlencoded
         // Send raw AED amount — the ERPNext get_stripe_intent endpoint converts to fils (× 100) itself
@@ -507,10 +489,7 @@ export const erpApi = createApi({
       },
     }),
 
-    createAddress: builder.mutation<
-      CreateAddressResponse,
-      CreateAddressRequest
-    >({
+    createAddress: builder.mutation< CreateAddressResponse, CreateAddressRequest >({
       query: (body) => ({
         url: `${baseUrl}/api/resource/Address`,
         method: "POST",
@@ -530,10 +509,7 @@ export const erpApi = createApi({
         ];
       },
     }),
-    updateAddress: builder.mutation<
-      UpdateAddressResponse,
-      UpdateAddressRequest
-    >({
+    updateAddress: builder.mutation< UpdateAddressResponse, UpdateAddressRequest >({
       query: ({ addressName, ...body }) => ({
         url: `${baseUrl}/api/resource/Address/${encodeURIComponent(
           addressName
@@ -586,14 +562,7 @@ export const erpApi = createApi({
       invalidatesTags: [{ type: "CustomerAddresses", id: "LIST" }],
     }),
 
-    completeDoorstepOrder: builder.mutation<
-      { status: string; kot_name?: string; invoice_name?: string },
-      {
-        salesOrderName: string;
-        paymentMethod: "cod" | "card_on_delivery";
-        changeRequired?: string;
-      }
-    >({
+    completeDoorstepOrder: builder.mutation<{ status: string; kot_name?: string; invoice_name?: string },{salesOrderName: string; paymentMethod: "cod" | "card_on_delivery"; changeRequired?: string; } >({
       query: ({ salesOrderName, paymentMethod, changeRequired }) => {
         const targetUrl = `${ERP_API_METHOD_URL}pizza_app.api.complete_doorstep_order`;
 
