@@ -7,6 +7,7 @@ import {
   useUpdateAddressMutation,
   useGetCustomerAddressesQuery,
 } from "../../redux/api";
+import type { Address } from "../../redux/apiType";
 import { getCustomerName } from "@/app/lib/customerPortal";
 import ErrorIcon from "../icon/ErrorIcon";
 import AddressRoles from "../address/AddressRoles";
@@ -52,7 +53,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     index: number;
     label: string;
   } | null>(null);
-  const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
   const [updatingTitleIndex, setUpdatingTitleIndex] = useState<number | null>(
     null
   );
@@ -69,14 +69,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     useGetCustomerAddressesQuery(customerName, {
       skip: !customerName,
     });
-  const toAddressTitleSlug = (title: string) =>
-    title
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "");
 
   useEffect(() => {
     const savedPhone = localStorage.getItem("uae_phone");
@@ -169,24 +161,19 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     if (!customerAddresses?.length) return;
 
     const mappedAddresses: DeliveryAddressItem[] = customerAddresses.map(
-      (addr: any, index: number) => ({
+      (addr: Address, index: number) => ({
         id: addr.name || String(index),
-
-        // Strip prefixes right here during initial parse
         title:
           extractFriendlyTitle(addr.address_title, form.phone) ||
           addr.address_type ||
           `Address ${index + 1}`,
-
-        address: addr.display || addr.address || addr.address_line1 || "",
-
+        address:
+          addr.address_line1 ||
+          addr.address_line2 ||
+          "",
         addressId: addr.name,
-
-        isDelivery:
-          addr.is_shipping_address === 1 || addr.is_shipping_address === "1",
-
-        isBilling:
-          addr.is_primary_address === 1 || addr.is_primary_address === "1",
+        isDelivery: addr.is_shipping_address === 1,
+        isBilling: addr.is_primary_address === 1,
       })
     );
 
@@ -262,26 +249,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     }
   };
 
-  const showDeleteConfirmation = (index: number) => {
-    // Prevent deleting the last address
-    if (form.deliveryAddresses.length === 1) {
-      setFeedback({
-        type: "error",
-        message:
-          "You must keep at least one address. Add another before removing this one.",
-      });
-      setTimeout(() => setFeedback(null), 4000);
-      return;
-    }
-
-    const addressToRemove = form.deliveryAddresses[index];
-    if (!addressToRemove) return;
-
-    const addressLabel =
-      addressToRemove.title || addressToRemove.address || "this address";
-    setConfirmDelete({ index, label: addressLabel });
-  };
-
   const handleRemoveAddress = async () => {
     if (!confirmDelete) return;
 
@@ -290,7 +257,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     if (!addressToRemove) return;
 
     setConfirmDelete(null);
-    setDeletingIndex(indexToRemove);
 
     // Try deleting from ERPNext first
     if (addressToRemove.addressId) {
@@ -325,7 +291,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
               message: "Failed to remove address. Please try again.",
             });
             setTimeout(() => setFeedback(null), 4000);
-            setDeletingIndex(null);
             return;
           }
         } else {
@@ -335,7 +300,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
             message: "Failed to remove address. Please try again.",
           });
           setTimeout(() => setFeedback(null), 4000);
-          setDeletingIndex(null);
           return;
         }
       }
@@ -376,8 +340,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
     // Refetch to ensure consistency across devices/tabs
     refetchAddresses();
-
-    setDeletingIndex(null);
   };
 
   const handleToggleDelivery = async (index: number) => {

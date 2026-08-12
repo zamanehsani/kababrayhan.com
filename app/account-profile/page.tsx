@@ -66,6 +66,16 @@ const extractFriendlyTitle = (addressTitle?: string, phone?: string) => {
   return "";
 };
 
+type ERPNextAddress = {
+  name: string;
+  address_title?: string;
+  address_type?: string;
+  address_line1?: string;
+  address_line2?: string;
+  is_shipping_address?: number | string;
+  is_primary_address?: number | string;
+};
+
 export default function AccountProfilePage() {
   const [portalState, setPortalState] = useState(() =>
     readCustomerPortalSnapshot()
@@ -120,7 +130,7 @@ export default function AccountProfilePage() {
     }
 
     const syncedAddresses: DeliveryAddressItem[] = backendAddresses.map(
-      (address: any, index: number) => ({
+      (address: ERPNextAddress, index: number) => ({
         id: address.name,
         title:
           extractFriendlyTitle(address.address_title, portalState.phone) ||
@@ -308,6 +318,14 @@ export default function AccountProfilePage() {
     setConfirmDelete(null);
     setDeletingIndex(indexToRemove);
 
+    type AddressDeleteError = {
+      data?: {
+        _server_messages?: string;
+        exception?: string;
+        message?: string;
+      };
+      message?: string;
+    };
 
     let isFallbackDisable = false;
 
@@ -315,21 +333,19 @@ export default function AccountProfilePage() {
       try {
         await deleteAddress(addressToRemove.addressId).unwrap();
       } catch (err: unknown) {
-        // Extract error message from various ERPNext error structures
         const errorData =
           typeof err === "object" && err !== null && "data" in err
-            ? (err as { data?: any }).data
+            ? ((err as AddressDeleteError).data ?? undefined)
             : undefined;
 
-        // Check multiple potential error locations and patterns
         const serverMessages = String(
           errorData?._server_messages ||
-          errorData?.exception ||
-          errorData?.message ||
-          (typeof err === "object" && err !== null && "message" in err
-            ? (err as { message?: unknown }).message
-            : "") ||
-          ""
+            errorData?.exception ||
+            errorData?.message ||
+            (typeof err === "object" && err !== null && "message" in err
+              ? (err as AddressDeleteError).message || ""
+              : "") ||
+            ""
         ).toLowerCase();
 
         // Detect if address is linked to other documents (sales order, etc.)
@@ -624,12 +640,12 @@ export default function AccountProfilePage() {
                                 Primary Default
                               </span>
                             )}
-                            {(delivery as any).isDelivery && (
+                            {delivery.isDelivery && (
                               <span className="rounded bg-red-50 border border-red-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-red-700">
                                 Shipping
                               </span>
                             )}
-                            {(delivery as any).isBilling && (
+                            {delivery.isBilling && (
                               <span className="rounded bg-amber-50 border border-amber-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-800">
                                 Billing
                               </span>

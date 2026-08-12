@@ -50,6 +50,8 @@ export type DeliveryAddressItem = {
   title: string;
   address: string;
   addressId: string;
+  isDelivery?: boolean;
+  isBilling?: boolean;
 };
 
 const hasWindow = () => "window" in globalThis;
