@@ -5,7 +5,7 @@ import { AlertTriangle, Info, X } from "lucide-react";
 type ConfirmDialogProps = {
   open: boolean;
   onClose: () => void;
-  onConfirm?: () => void;
+onConfirm?: () => void;
   title: string;
   message: string;
   confirmText?: string;

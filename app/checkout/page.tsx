@@ -1,22 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
-import {
-  Elements,
-  PaymentElement,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
 
 import {
   useCreateSalesOrderMutation,
   useCreatePaymentIntentMutation,
   useUpdateSalesOrderMutation,
   useGetCustomerAddressesQuery,
-  useDeleteAddressMutation,
-  useDisableAddressMutation,
   type Customer,
   type SalesOrder,
   useCompleteDoorstepOrderMutation,
@@ -47,7 +40,6 @@ import ConfirmDialog from "../components/shared/ConfirmDialog";
 import DirhamIcon from "../components/icon/DirhamIcon";
 import PaymentErrorSection from "../components/Checkout/PaymentErrorSection";
 import DoorstepPaymentWrapper from "../components/Checkout/DoorstepPaymentWrapper";
-import { PaymentMethodType } from "../components/Checkout/PaymentMethodSelector";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 const toDisplayAddressTitle = (
@@ -90,107 +82,102 @@ if (stripeKey) {
   );
 }
 
-const PaymentForm = ({
-  total,
-  salesOrder,
-}: {
-  total: number;
-  salesOrder: SalesOrder | null;
-}) => {
-  const stripe = useStripe();
-  const elements = useElements();
-  const router = useRouter();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentError, setPaymentError] = useState<string | null>(null);
-
-  const handleSubmit = async (e: { preventDefault: () => void }) => {
-    e.preventDefault();
-    if (!stripe || !elements) return;
-
-    const salesOrderName = salesOrder?.name?.trim();
-    if (!salesOrderName) {
-      setPaymentError(
-        "Sales order is missing. Payment cannot continue without order tracking metadata."
-      );
-      return;
-    }
-
-    setIsProcessing(true);
-    setPaymentError(null);
-
-    try {
-      const { error, paymentIntent } = await stripe.confirmPayment({
-        elements,
-        redirect: "if_required",
-      });
-
-      if (error) {
-        setPaymentError(error.message ?? "Payment failed. Please try again.");
-        setIsProcessing(false);
-      } else if (paymentIntent?.status === "succeeded") {
-        clearPendingCheckout();
-        clearPendingSalesOrder();
-        router.push("/thank-you");
-      }
-    } catch {
-      setPaymentError("Something went wrong. Please try again.");
-      setIsProcessing(false);
-    }
+interface CartItem {
+  item: {
+    baseItemCode?: string;
+    id?: string;
+    title?: string;
+    item_name?: string;
+    discountedPrice?: number;
+    price?: number;
+    image?: string;
   };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="rounded-xl bg-stone-50 p-5 ring-1 ring-stone-200">
-        <PaymentElement
-          options={{
-            layout: "tabs",
-          }}
-        />
-      </div>
-
-      {paymentError && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-          {paymentError}
-        </div>
-      )}
-
-      <button
-        type="submit"
-        disabled={!stripe || !elements || isProcessing}
-        className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4 text-xs font-black tracking-[0.2em] transition-all shadow-xl ${isProcessing
-          ? "bg-stone-400 text-white cursor-not-allowed"
-          : "bg-red-600 text-white shadow-red-200 hover:bg-red-700 active:scale-95"
-          }`}
-      >
-        {isProcessing ? (
-          "Processing..."
-        ) : (
-          <span className="flex items-center justify-center gap-0.5 normal-case">
-            <span className="tracking-[0.2em] mr-1">Pay</span>
-            <DirhamIcon size={14} className="text-white" />
-            {total.toFixed(2)}
-          </span>
-        )}
-      </button>
-    </form>
-  );
-};
+  qty?: number;
+  name?: string;
+  price?: number;
+  addon?: {
+    selectedAddOns?: Array<{ name?: string }>;
+    title?: string;
+  };
+}
 
 const CheckoutPage = () => {
   const router = useRouter();
-  const [step, setStep] = useState<2 | 3>(2);
-  const [customer, setCustomer] = useState<Customer | null>(null);
-  const [cart, setCart] = useState<any[]>([]);
-  const [salesOrder, setSalesOrder] = useState<SalesOrder | null>(null);
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [step, setStep] = useState<2 | 3>(() => {
+    if (typeof window === "undefined") {
+      return 2;
+    }
+
+    const pendingSalesOrder = globalThis.localStorage.getItem("pending_sales_order");
+    const savedClientSecret = globalThis.sessionStorage.getItem("checkout_client_secret");
+
+    return pendingSalesOrder && savedClientSecret ? 3 : 2;
+  });
+  const [customer, setCustomer] = useState<Customer | null>(() => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    return readStoredCustomer();
+  });
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    if (typeof window === "undefined") {
+      return [];
+    }
+
+    const cartRaw = globalThis.localStorage.getItem("cart");
+    return cartRaw ? JSON.parse(cartRaw) : [];
+  });
+  const [salesOrder, setSalesOrder] = useState<SalesOrder | null>(() => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    const pendingSalesOrder = globalThis.localStorage.getItem("pending_sales_order");
+    const savedClientSecret = globalThis.sessionStorage.getItem("checkout_client_secret");
+
+    if (pendingSalesOrder && savedClientSecret) {
+      return { name: pendingSalesOrder } as SalesOrder;
+    }
+
+    return null;
+  });
+  const [clientSecret, setClientSecret] = useState<string | null>(() => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    return globalThis.sessionStorage.getItem("checkout_client_secret");
+  });
   const [orderError, setOrderError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [customerNote, setCustomerNote] = useState<string>("");
   const [retryCount, setRetryCount] = useState(0);
   const [showAddressWarning, setShowAddressWarning] = useState(false);
-  const [orderType, setOrderType] = useState<"delivery" | "takeaway">("delivery");
-  const [deliveryZone, setDeliveryZone] = useState<string>("");
-const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
+  const [orderType] = useState<"delivery" | "takeaway">(() => {
+    if (typeof window === "undefined") {
+      return "delivery";
+    }
+
+    return (
+      (globalThis.localStorage.getItem("order_type") as "delivery" | "takeaway") ||
+      "delivery"
+    );
+  });
+  const [deliveryZone] = useState<string>(() => {
+    if (typeof window === "undefined") {
+      return "";
+    }
+
+    return globalThis.localStorage.getItem("uae_delivery_zone") || "";
+  });
+  const [deliveryCharge] = useState<number>(() => {
+    if (typeof window === "undefined") {
+      return 0;
+    }
+
+    return parseFloat(globalThis.localStorage.getItem("uae_delivery_charge") || "0");
+  });
 
   // UX Toggle features for smaller layouts
   const [isAddressCollapsed, setIsAddressCollapsed] = useState(true);
@@ -208,10 +195,6 @@ const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
   const [createPaymentIntent] = useCreatePaymentIntentMutation();
   const [updateSalesOrder] = useUpdateSalesOrderMutation();
   const [completeDoorstepOrder] = useCompleteDoorstepOrderMutation();
-  const [deleteAddress] = useDeleteAddressMutation();
-  const [disableAddress] = useDisableAddressMutation();
-
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("card_online");
 
   const hasInitializedPaymentRef = useRef(false);
   const noteSaveTimerRef = useRef<ReturnType<
@@ -224,60 +207,47 @@ const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
   );
 
 
-  const handleCustomerNoteSave = async (noteToSave: string = customerNote) => {
-    const salesOrderName =
-      salesOrder?.name?.trim() ||
-      globalThis.localStorage.getItem("pending_sales_order") ||
-      globalThis.localStorage.getItem("sales_order") ||
-      "";
+  const handleCustomerNoteSave = useCallback(
+    async (noteToSave: string = customerNote) => {
+      const salesOrderName =
+        salesOrder?.name?.trim() ||
+        globalThis.localStorage.getItem("pending_sales_order") ||
+        globalThis.localStorage.getItem("sales_order") ||
+        "";
 
-    if (!salesOrderName) {
+      if (!salesOrderName) {
+        return;
+      }
+
+      try {
+        await updateSalesOrder({
+          salesOrderName,
+          custom_customer_note: noteToSave,
+        }).unwrap();
+      } catch (err) {
+        console.warn("Failed to update sales order note:", err);
+      }
+    },
+    [customerNote, salesOrder?.name, updateSalesOrder]
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
       return;
     }
 
-    try {
-      await updateSalesOrder({
-        salesOrderName,
-        custom_customer_note: noteToSave,
-      }).unwrap();
-    } catch (err) {
-      console.warn("Failed to update sales order note:", err);
-    }
-  };
-
-  useEffect(() => {
-    if (!("window" in globalThis)) return;
-
-
-    const savedOrderType = (globalThis.localStorage.getItem("order_type") as "delivery" | "takeaway") || "delivery";
-    setOrderType(savedOrderType);
-    const storedCustomer = readStoredCustomer();
     const cartRaw = globalThis.localStorage.getItem("cart");
-    const savedPhone = globalThis.localStorage.getItem("uae_phone") || "";
-    const savedAddress = globalThis.localStorage.getItem("uae_address") || "";
-
     const parsedCart = cartRaw ? JSON.parse(cartRaw) : [];
+
     if (parsedCart.length === 0) {
       router.push("/home");
       return;
     }
 
-    const pendingSalesOrder = globalThis.localStorage.getItem(
-      "pending_sales_order"
-    );
-    const savedClientSecret = globalThis.sessionStorage.getItem(
-      "checkout_client_secret"
-    );
+    const savedPhone = globalThis.localStorage.getItem("uae_phone") || "";
+    const savedAddress = globalThis.localStorage.getItem("uae_address") || "";
+    const rawDelivery = globalThis.localStorage.getItem("uae_delivery_addresses");
 
-    if (pendingSalesOrder && savedClientSecret) {
-      setClientSecret(savedClientSecret);
-      setStep(3);
-      setSalesOrder({ name: pendingSalesOrder } as SalesOrder);
-    }
-
-    const rawDelivery = globalThis.localStorage.getItem(
-      "uae_delivery_addresses"
-    );
     let savedDeliveryAddresses: DeliveryAddressItem[];
     if (rawDelivery) {
       try {
@@ -313,26 +283,18 @@ const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
       ];
     }
 
-    requestAnimationFrame(() => {
-      setCustomer(storedCustomer);
-      setCart(cartRaw ? JSON.parse(cartRaw) : []);
+    const frameId = requestAnimationFrame(() => {
+      setCustomer(readStoredCustomer());
+      setCart(parsedCart);
       setForm({
         phone: savedPhone,
         address: savedAddress,
         deliveryAddresses: savedDeliveryAddresses,
       });
     });
-  }, []);
 
-
-  useEffect(() => {
-  if (typeof window !== "undefined") {
-    const savedZone = localStorage.getItem("uae_delivery_zone") || "";
-    const savedCharge = parseFloat(localStorage.getItem("uae_delivery_charge") || "0");
-    setDeliveryZone(savedZone);
-    setDeliveryCharge(savedCharge);
-  }
-}, []);
+    return () => cancelAnimationFrame(frameId);
+  }, [router]);
 
   useEffect(() => {
     if (!backendAddresses) {
@@ -417,7 +379,7 @@ const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
     });
 
     return () => cancelAnimationFrame(frameId);
-  }, [backendAddresses]);
+  }, [backendAddresses, form.deliveryAddresses]);
 
   useEffect(() => {
     return () => {
@@ -428,44 +390,21 @@ const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
   }, []);
 
   useEffect(() => {
-    if (hasInitializedPaymentRef.current) {
-      return;
-    }
-
-    if (clientSecret && salesOrder) {
-      return;
-    }
-
-    if (!customerName || !cart.length || salesOrder || isInitializing) {
-      return;
-    }
-
-    const primaryAddress = form.deliveryAddresses[0]?.address?.trim();
-    if (!primaryAddress) {
-      setShowAddressWarning(true);
-      return;
-    }
-
-    hasInitializedPaymentRef.current = true;
-    void handleAutoProceed();
-  }, [
-    customerName,
-    cart.length,
-    salesOrder,
-    clientSecret,
-    isInitializing,
-    form.deliveryAddresses,
-  ]);
-
-  useEffect(() => {
     if (!salesOrder?.name || !customerNote.trim()) {
       return;
     }
 
     void handleCustomerNoteSave(customerNote);
-  }, [salesOrder?.name]);
+  }, [customerNote, handleCustomerNoteSave, salesOrder?.name]);
 
-  async function handleAutoProceed() {
+  const total = cart.reduce(
+    (sum: number, entry: CartItem) =>
+      sum + (entry.item?.discountedPrice || 0) * (entry.qty || 1),
+    0
+  );
+  const grandTotal = total + deliveryCharge;
+
+  const handleAutoProceed = useCallback(async () => {
     if (isInitializing || clientSecret) {
       return;
     }
@@ -481,12 +420,12 @@ const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
     const currentSelectedId = globalThis.localStorage?.getItem("uae_delivery_address_id") || "";
     const selectedAddressObj = form.deliveryAddresses.find(a => a.addressId === currentSelectedId) || form.deliveryAddresses[0];
     const primaryAddress = selectedAddressObj?.address?.trim();
-  if (orderType === "delivery" && !primaryAddress) {
-    setOrderError("Please select a delivery address before proceeding.");
-    setIsInitializing(false);
-    setShowAddressWarning(true);
-    return;
-  }
+    if (orderType === "delivery" && !primaryAddress) {
+      setOrderError("Please select a delivery address before proceeding.");
+      setIsInitializing(false);
+      setShowAddressWarning(true);
+      return;
+    }
 
     try {
       const customerName = customer?.name || getCustomerName() || form.phone;
@@ -499,7 +438,7 @@ const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
       const primaryDeliveryAddressId = explicitSelectedId || form.deliveryAddresses[0]?.addressId || "";
 
       const items = cart
-        .map((cartEntry: any) => {
+        .map((cartEntry: CartItem) => {
           const item_code = cartEntry.item?.baseItemCode || cartEntry.item?.id;
           const item_name =
             cartEntry.item?.title ||
@@ -579,6 +518,7 @@ const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
         company: "Kabab Al Rayhan",
         selling_price_list: "Standard Selling",
         currency: "AED",
+        // order_type: orderType,
         price_list_currency: "AED",
         conversion_rate: 1,
         plc_conversion_rate: 1,
@@ -630,10 +570,13 @@ const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
       }
       setStep(3);
       setRetryCount(0);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Setup Error:", err);
       const errorMessage =
-        err?.data?.message || "Failed to initialize order. Please try again.";
+        (typeof err === "object" && err !== null && "data" in err &&
+          typeof (err as { data?: { message?: string } }).data?.message === "string"
+          ? (err as { data?: { message?: string } }).data?.message
+          : undefined) || "Failed to initialize order. Please try again.";
       setOrderError(errorMessage);
 
       if (retryCount < 3) {
@@ -642,9 +585,57 @@ const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
     } finally {
       setIsInitializing(false);
     }
-  }
+  }, [
+    cart,
+    clientSecret,
+    createPaymentIntent,
+    createSalesOrder,
+    customer,
+    customerNote,
+    deliveryCharge,
+    deliveryZone,
+    form.deliveryAddresses,
+    form.phone,
+    isInitializing,
+    orderType,
+    retryCount,
+    router,
+    total,
+  ]);
 
+  useEffect(() => {
+    if (hasInitializedPaymentRef.current) {
+      return;
+    }
 
+    if (clientSecret && salesOrder) {
+      return;
+    }
+
+    if (!customerName || !cart.length || salesOrder || isInitializing) {
+      return;
+    }
+
+    const primaryAddress = form.deliveryAddresses[0]?.address?.trim();
+    if (!primaryAddress) {
+      return;
+    }
+
+    hasInitializedPaymentRef.current = true;
+    const frameId = requestAnimationFrame(() => {
+      void handleAutoProceed();
+    });
+
+    return () => cancelAnimationFrame(frameId);
+  }, [
+    customerName,
+    cart.length,
+    salesOrder,
+    clientSecret,
+    isInitializing,
+    form.deliveryAddresses,
+    handleAutoProceed,
+  ]);
 
   const scheduleCustomerNoteSave = (nextNote: string) => {
     if (noteSaveTimerRef.current) {
@@ -655,13 +646,6 @@ const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
       void handleCustomerNoteSave(nextNote);
     }, 700);
   };
-
-  const total = cart.reduce(
-    (sum: number, entry: any) =>
-      sum + (entry.item?.discountedPrice || 0) * (entry.qty || 1),
-    0
-  );
-  const grandTotal = total + deliveryCharge;
 
   let paymentSection: ReactNode = null;
 
@@ -680,7 +664,7 @@ const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
   } else {
     paymentSection = (
       <div className="space-y-2">
-        {isInitializing || (!clientSecret && paymentMethod === "card_online") ? (
+        {isInitializing || !clientSecret ? (
           <div className="flex flex-col items-center py-6">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-stone-100 border-t-red-600 mb-3" />
             <p className="text-stone-400 font-bold text-[9px] tracking-widest">
@@ -741,6 +725,17 @@ const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
   const selectedAddressId = globalThis.localStorage?.getItem("uae_delivery_address_id") ||
     globalThis.localStorage?.getItem("uae_address_id") ||
     "";
+
+  const summaryCart = cart.map((entry) => ({
+    item: {
+      id: entry.item?.id || entry.item?.baseItemCode || "",
+      title: entry.item?.title || entry.item?.item_name || entry.name || "",
+      image: entry.item?.image || "",
+      discountedPrice: entry.item?.discountedPrice || entry.price || 0,
+    },
+    qty: entry.qty || 1,
+    addon: entry.addon ? { title: entry.addon.title || "" } : undefined,
+  }));
 
   return (
     <div className="min-h-screen bg-white">
@@ -856,7 +851,7 @@ const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
                   }`}
               >
                 <div className="overflow-hidden min-h-0">
-                  <OrderSummary cart={cart} total={total} deliveryCharge={deliveryCharge} />
+                  <OrderSummary cart={summaryCart} total={total} deliveryCharge={deliveryCharge} />
 
                   <CustomerNote
                     note={customerNote}
