@@ -1,9 +1,28 @@
 import type { Dish } from "@/app/types/type";
 
+export type CartVariation = {
+  id?: string;
+  title?: string;
+  name?: string;
+  optionId?: string;
+};
+
+export type CartBaseItem = {
+  itemCode?: string;
+  id?: string | number;
+  name?: string;
+  title?: string;
+};
+
 export type CartItem = {
   id: number | string;
   baseItemCode?: string;
+  baseTitle?: string;
+  item_name?: string;
   title: string;
+  variationTitle?: string;
+  variation?: CartVariation | null;
+  baseItem?: CartBaseItem | null;
   description?: string;
   image: string;
   discountedPrice: number;
@@ -50,6 +69,28 @@ const buildCartLineId = (
   return `${baseItemCode}_${addOnKey}`;
 };
 
+const buildDisplayTitle = (baseTitle: string, variationTitle?: string) => {
+  const normalizedBase = baseTitle.trim();
+  const normalizedVariation = variationTitle?.trim();
+
+  if (!normalizedVariation) return normalizedBase;
+
+  return `${normalizedBase} - ${normalizedVariation}`;
+};
+
+const buildVariationPayload = (variationTitle?: string): CartVariation | null => {
+  const normalized = variationTitle?.trim();
+
+  if (!normalized) return null;
+
+  return {
+    id: slugify(normalized),
+    title: normalized,
+    name: normalized,
+    optionId: slugify(normalized),
+  };
+};
+
 export const getCart = (): CartEntry[] => {
   if (globalThis.window === undefined) return [];
   const stored = localStorage.getItem(CART_KEY);
@@ -71,12 +112,16 @@ export const saveCart = (cart: CartEntry[]) => {
 export const addDishToCart = (
   dish: Dish,
   qty = 1,
-  selectedAddOns: CartSelectedAddOn[] = []
+  selectedAddOns: CartSelectedAddOn[] = [],
+  baseTitleOverride?: string,
+  variationTitle?: string
 ) => {
   if (globalThis.window === undefined) return;
 
   const cart = getCart();
   const baseItemCode = String(dish.id);
+  const baseTitle = String(baseTitleOverride || dish.name || "").trim();
+  const displayTitle = buildDisplayTitle(baseTitle, variationTitle);
 
   const normalizedAddOns = selectedAddOns
     .map((addOn) => ({
@@ -116,7 +161,17 @@ export const addDishToCart = (
       item: {
         id: lineItemId,
         baseItemCode,
-        title: dish.name,
+        baseTitle,
+        item_name: baseTitle,
+        title: displayTitle,
+        variationTitle,
+        variation: buildVariationPayload(variationTitle),
+        baseItem: {
+          itemCode: baseItemCode,
+          id: baseItemCode,
+          name: baseTitle,
+          title: baseTitle,
+        },
         description: dish.description,
         image: dish.img,
         discountedPrice: unitPrice,

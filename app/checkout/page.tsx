@@ -88,6 +88,20 @@ interface CartItem {
     id?: string;
     title?: string;
     item_name?: string;
+    baseTitle?: string;
+    variationTitle?: string;
+    variation?: {
+      id?: string;
+      title?: string;
+      name?: string;
+      optionId?: string;
+    } | null;
+    baseItem?: {
+      itemCode?: string;
+      id?: string | number;
+      name?: string;
+      title?: string;
+    } | null;
     discountedPrice?: number;
     price?: number;
     image?: string;
@@ -441,9 +455,12 @@ const CheckoutPage = () => {
         .map((cartEntry: CartItem) => {
           const item_code = cartEntry.item?.baseItemCode || cartEntry.item?.id;
           const item_name =
-            cartEntry.item?.title ||
-            cartEntry.item?.item_name ||
-            cartEntry.name;
+            cartEntry.item?.variationTitle && cartEntry.item?.baseTitle
+              ? `${cartEntry.item.baseTitle} - ${cartEntry.item.variationTitle}`
+              : cartEntry.item?.title ||
+                cartEntry.item?.item_name ||
+                cartEntry.item?.baseItem?.name ||
+                cartEntry.name;
           const qty = Number(cartEntry.qty || 1);
           const rate = Number(
             cartEntry.item?.discountedPrice || cartEntry.price || 0

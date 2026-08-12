@@ -11,6 +11,8 @@ import AddressSelectModal from "../home/modal/AddressSelectModal";
 import UpdateDecisionModal from "../home/modal/UpdateDecisionModal";
 import GlobalLoader from "../home/modal/shared/GlobalLoader";
 import { getCart, saveCart, type CartEntry } from "@/app/lib/cart";
+import Image from "next/image";
+
 import {
   PHONE_KEY,
   PHONE_STATUS_KEY,
@@ -20,28 +22,30 @@ import {
 import SavedAddressesModal from "../home/modal/SavedAddressesModal";
 import { useUpdateAddressMutation } from "@/app/redux/api";
 
+type CheckoutMode = "delivery" | "takeaway";
+
 export default function CartDrawer() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [cart, setCart] = useState<CartEntry[]>([]);
 
+  console.log("CartDrawer rendered. Cart contents:", cart);
+
   // Modal Orchestration State
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [phone, setPhone] = useState("");
-  // const [address, setAddress] = useState("");
   const [showDeliveryTakeaway, setShowDeliveryTakeaway] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showPhoneUpdatePrompt, setShowPhoneUpdatePrompt] = useState(false);
-  // const [showAddressUpdatePrompt, setShowAddressUpdatePrompt] = useState(false);
   const [allowExistingPhoneInput, setAllowExistingPhoneInput] = useState(false);
   const [showSavedAddressesModal, setShowSavedAddressesModal] = useState(false);
   const [isNavigatingToCheckout, setIsNavigatingToCheckout] = useState(false);
 
-  const [snapshot, setSnapshot] = useState(readCustomerPortalSnapshot());
+  const [snapshot, setSnapshot] = useState(() => readCustomerPortalSnapshot());
   const [selectedDeliveryAddressId, setSelectedDeliveryAddressId] = useState<
     string | undefined
-  >(snapshot.addressId);
+  >(() => readCustomerPortalSnapshot().addressId);
 
   const [updateAddress] = useUpdateAddressMutation();
 
@@ -67,10 +71,11 @@ export default function CartDrawer() {
     };
   }, [open]);
 
-  const totalPrice = cart.reduce(
-    (sum, entry) => sum + (entry.item.discountedPrice || 0) * (entry.qty || 1),
-    0
-  );
+  const totalPrice = cart.reduce((sum, entry) => {
+    const quantity = entry.qty || 1;
+    return sum + (entry.item.discountedPrice || 0) * quantity;
+  }, 0);
+  const isCartEmpty = cart.length === 0;
 
   if (!open) {
     return (
@@ -104,16 +109,16 @@ export default function CartDrawer() {
   };
 
   const handleBeginCheckout = () => {
-    const snapshot = readCustomerPortalSnapshot();
+    const currentSnapshot = readCustomerPortalSnapshot();
 
-    if (snapshot.isVerified && snapshot.phone) {
-      setPhone(snapshot.phone);
+    if (currentSnapshot.isVerified && currentSnapshot.phone) {
+      setPhone(currentSnapshot.phone);
       setShowPhoneUpdatePrompt(true);
       return;
     }
 
-    if (snapshot.phoneStatus === "entered" && snapshot.phone) {
-      setPhone(snapshot.phone);
+    if (currentSnapshot.phoneStatus === "entered" && currentSnapshot.phone) {
+      setPhone(currentSnapshot.phone);
       setShowVerifyModal(true);
       return;
     }
@@ -171,11 +176,11 @@ export default function CartDrawer() {
     setShowVerifyModal(true);
   };
 
-  const handleDeliverySelection = (option: "delivery" | "takeaway") => {
+  const handleDeliverySelection = (option: CheckoutMode) => {
     setShowDeliveryTakeaway(false);
 
     globalThis.localStorage?.setItem("order_type", option);
-    
+
     if (option !== "delivery") {
       setOpen(false);
       setIsNavigatingToCheckout(true);
@@ -183,10 +188,8 @@ export default function CartDrawer() {
       return;
     }
 
-    const snapshot = readCustomerPortalSnapshot();
-
-    const addresses = snapshot.deliveryAddresses;
-
+    const currentSnapshot = readCustomerPortalSnapshot();
+    const addresses = currentSnapshot.deliveryAddresses;
 
     if (addresses.length > 0) {
       setShowSavedAddressesModal(true);
@@ -213,7 +216,7 @@ export default function CartDrawer() {
           <div className="flex items-center gap-2.5">
             <ShoppingBag size={20} className="text-red-500" />
             <h2 className="text-lg font-semibold tracking-wide text-slate-900">
-              {cart.length} item{cart.length === 1 ? "" : "s"} selected
+              {cart.length} item{cart.length === 1 ? "" : "s"} on your plate
             </h2>
           </div>
           <button
@@ -226,7 +229,7 @@ export default function CartDrawer() {
 
         {/* Scrollable Items Container */}
         <div className="flex-1 overflow-y-auto bg-slate-50/50 no-scrollbar p-4 flex flex-col gap-3">
-          {cart.length === 0 ? (
+          {isCartEmpty ? (
             <div className="flex flex-col items-center justify-center h-64 text-center p-6">
               <ShoppingBag
                 size={40}
@@ -239,78 +242,73 @@ export default function CartDrawer() {
           ) : (
             cart.map((entry, idx) => (
               <div
-                key={`${entry.item.id}-${idx}`}
-                className="bg-white rounded-2xl border border-slate-100/80 p-4 relative shadow-sm group transition-all duration-200 hover:border-slate-200/60"
+                key={`${entry.item.title}-${entry.addon.title}`}
+                className="border border-red-100 rounded-xl p-4 relative group transition-all duration-200 hover:border-slate-200/60"
               >
                 {/* Discrete Delete Callout */}
                 <button
                   onClick={() => handleRemoveItem(idx)}
-                  className="absolute top-4 right-4 text-slate-300 hover:text-red-500 transition-colors"
-                >
+                  className="absolute top-4 right-4 text-slate-300 hover:text-red-500 transition-colors">
                   <X size={16} />
                 </button>
 
-                <div className="flex gap-4">
+                <div className="flex items-start gap-4">
                   {/* Image Core */}
-                  <div className="w-16 h-16 relative bg-slate-50 rounded-xl p-1 shrink-0 flex items-center justify-center">
-                    <img
+                  <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-slate-50 p-2 ring-1 ring-slate-100">
+                    <Image
                       src={entry.item.image}
                       alt={entry.item.title}
-                      className="max-w-full max-h-full object-contain"
+                      width={96}
+                      height={96}
+                      className="h-full w-full object-contain"
                     />
                   </div>
 
                   {/* Metadata Matrix */}
-                  <div className="flex-1 pr-4">
-                    <h3 className="font-semibold text-base text-slate-900 leading-tight tracking-wide mb-0.5">
-                      {entry.item.title}
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-base font-semibold leading-snug tracking-wide text-slate-900">
+                      {entry.item.baseTitle || entry.item.title}
                     </h3>
 
-                    {/* Addon Bracket */}
-                    <div className="inline-flex flex-col">
-                      <p className="text-xs font-semibold text-slate-700 tracking-wide">
-                        {entry.addon.title}
-                      </p>
-                      <p className="text-[10px] text-slate-400 font-medium">
-                        {entry.addon.description || "Standard portion"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                    <div className="mt-2 flex flex-col gap-2">
+                      <div className="flex items-center gap-2 tracking-wide text-slate-600">
+                        {entry.item.variationTitle ? (
+                          <>
+                            <span className="flex items-center gap-0.5 text-slate-700">
+                              <DirhamIcon className="text-slate-700" />
+                              {Math.round(entry.item.discountedPrice)}
+                            </span>
+                            <span className="rounded-full bg-red-50 px-2 py-1 text-red-600">
+                              {entry.item.variationTitle}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
+                            
+                          </span>
+                        )}
+                      </div>
 
-                {/* Subfooter Actions Grid */}
-                <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="flex items-center gap-0.5 text-lg font-semibold text-slate-900 tracking-wide">
-                      <DirhamIcon size={13} className="text-slate-900" />
-                      {Math.round(
-                        entry.item.discountedPrice * (entry.qty || 1)
-                      )}
-                    </span>
-                    {/* <span className="flex items-center gap-0.5 text-xs text-slate-400 line-through font-medium">
-                      <DirhamIcon size={10} className="text-slate-400" />
-                      {Math.round(entry.item.realPrice * (entry.qty || 1))}
-                    </span> */}
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    {/* Compact Quantity Regulator */}
-                    <div className="flex items-center bg-slate-50 rounded-full p-1 border border-slate-100 gap-2">
-                      <button
-                        className="w-6 h-6 flex items-center justify-center bg-white rounded-full text-slate-600 border border-slate-100 shadow-sm active:scale-90 text-sm"
-                        onClick={() => handleAdjustQty(idx, -1)}
-                      >
-                        –
-                      </button>
-                      <span className="text-xs font-semibold text-slate-800 w-4 text-center">
-                        {entry.qty || 1}
-                      </span>
-                      <button
-                        className="w-6 h-6 flex items-center justify-center bg-red-600 rounded-full text-white shadow-sm active:scale-90 text-sm"
-                        onClick={() => handleAdjustQty(idx, 1)}
-                      >
-                        +
-                      </button>
+                      <div className="flex items-center justify-between gap-3">
+                   
+                        <div className="flex items-center gap-2 rounded-full border border-slate-100 bg-slate-50 p-1">
+                          <button
+                            className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-100 bg-white text-sm text-slate-600 shadow-sm active:scale-90"
+                            onClick={() => handleAdjustQty(idx, -1)}
+                          >
+                            –
+                          </button>
+                          <span className="w-4 text-center text-xs font-semibold text-slate-800">
+                            {entry.qty || 1}
+                          </span>
+                          <button
+                            className="flex h-7 w-7 items-center justify-center rounded-full bg-red-600 text-sm text-white shadow-sm active:scale-90"
+                            onClick={() => handleAdjustQty(idx, 1)}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -331,7 +329,7 @@ export default function CartDrawer() {
 
           <button
             onClick={handleBeginCheckout}
-            disabled={cart.length === 0}
+            disabled={isCartEmpty}
             className="w-full h-12 rounded-full bg-red-600 text-white font-semibold text-sm tracking-wide shadow-lg shadow-slate-900/10 hover:bg-slate-800 active:scale-[0.99] transition-all disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center relative group"
           >
             <span>Proceed to Checkout</span>
@@ -387,16 +385,18 @@ export default function CartDrawer() {
             }}
           />
         )}
-        <UpdateDecisionModal
-          open={showPhoneUpdatePrompt}
-          title="Phone number"
-          description="We found a phone number on your account. Use it to continue, or change it before checkout."
-          detail={phone}
-          confirmLabel="Change Number"
-          skipLabel="Use This Number"
-          onConfirm={handlePhoneUpdateConfirm}
-          onSkip={handlePhoneUpdateSkip}
-        />
+        {showPhoneUpdatePrompt && (
+          <UpdateDecisionModal
+            open={showPhoneUpdatePrompt}
+            title="Phone number"
+            description="We found a phone number on your account. Use it to continue, or change it before checkout."
+            detail={phone}
+            confirmLabel="Change Number"
+            skipLabel="Continue"
+            onConfirm={handlePhoneUpdateConfirm}
+            onSkip={handlePhoneUpdateSkip}
+          />
+        )}
         <SavedAddressesModal
           open={showSavedAddressesModal}
           addresses={snapshot.deliveryAddresses}

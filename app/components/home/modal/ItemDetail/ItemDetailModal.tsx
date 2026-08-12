@@ -135,6 +135,19 @@ export function ItemDetailModal({
     variantOptionsCount,
   ]);
 
+  const selectedVariationTitle = useMemo(() => {
+    const selectedLabels = variationGroups.flatMap((group) => {
+      const selectedIds = resolvedSelections[group.id] ?? [];
+
+      return group.options
+        .filter((option) => selectedIds.includes(option.id))
+        .map((option) => option.name.trim())
+        .filter(Boolean);
+    });
+
+    return selectedLabels.join(" - ");
+  }, [resolvedSelections, variationGroups]);
+
   const handleAddToCart = () => {
     if (!canAddToCart) return;
 
@@ -145,7 +158,9 @@ export function ItemDetailModal({
         id: addOn.id,
         name: addOn.name,
         price: addOn.price,
-      }))
+      })),
+      dish.name,
+      selectedVariationTitle
     );
     onClose();
   };

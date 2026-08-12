@@ -24,7 +24,7 @@ export default function UpdateDecisionModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-500 flex items-center justify-center bg-black/40 px-4">
+    <div className="fixed inset-0 z-500 flex items-center justify-center bg-black/80 px-4">
       <div className="w-full max-w-sm rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl">
         <h3 className="text-lg font-medium tracking-wide text-slate-900">
           {title}
@@ -34,11 +34,11 @@ export default function UpdateDecisionModal({
         </p>
 
         {detail && (
-          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">
+          <div className="mt-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-center">
+            {/* <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">
               Currently saved
-            </p>
-            <p className="text-sm font-semibold text-slate-800 tracking-wide break-all">
+            </p> */}
+            <p className="font-semibold text-slate-800 tracking-wide break-all">
               {detail}
             </p>
           </div>
@@ -47,17 +47,17 @@ export default function UpdateDecisionModal({
         <div className="mt-6 flex items-center justify-end gap-3">
           <button
             type="button"
-            onClick={onSkip}
-            className="rounded-xl bg-red-600 px-4 py-2 text-xs font-medium  tracking-widest text-white transition-colors hover:bg-red-700"
-          >
-            {skipLabel}
-          </button>
-          <button
-            type="button"
             onClick={onConfirm}
             className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-medium  tracking-widest text-slate-600 transition-colors hover:bg-slate-50"
           >
             {confirmLabel}
+          </button>
+          <button
+            type="button"
+            onClick={onSkip}
+            className="rounded-xl bg-red-600 px-4 py-2 text-xs font-medium  tracking-widest text-white transition-colors hover:bg-red-700"
+          >
+            {skipLabel}
           </button>
 
           
