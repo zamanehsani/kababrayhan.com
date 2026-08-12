@@ -29,8 +29,6 @@ export default function CartDrawer() {
   const [open, setOpen] = useState(false);
   const [cart, setCart] = useState<CartEntry[]>([]);
 
-  console.log("CartDrawer rendered. Cart contents:", cart);
-
   // Modal Orchestration State
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
@@ -243,71 +241,70 @@ export default function CartDrawer() {
             cart.map((entry, idx) => (
               <div
                 key={`${entry.item.title}-${entry.addon.title}`}
-                className="border border-red-100 rounded-xl p-4 relative group transition-all duration-200 hover:border-slate-200/60"
+                className="relative overflow-hidden rounded-2xl border border-red-100 bg-white shadow-sm transition-all duration-200 hover:border-slate-200/60"
               >
-                {/* Discrete Delete Callout */}
-                <button
-                  onClick={() => handleRemoveItem(idx)}
-                  className="absolute top-4 right-4 text-slate-300 hover:text-red-500 transition-colors">
-                  <X size={16} />
-                </button>
-
-                <div className="flex items-start gap-4">
-                  {/* Image Core */}
-                  <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-slate-50 p-2 ring-1 ring-slate-100">
-                    <Image
-                      src={entry.item.image}
-                      alt={entry.item.title}
-                      width={96}
-                      height={96}
-                      className="h-full w-full object-contain"
-                    />
+                <div className="flex items-stretch gap-0">
+                  <div className="relative h-auto w-[30%] min-w-[92px] overflow-hidden">
+                    <div className="absolute inset-0 bg-linear-to-b from-white/90 via-white/85 to-white/90 -z-10" />
+                    <div className="relative h-full w-full overflow-hidden">
+                      <Image
+                        src={entry.item.image}
+                        alt={entry.item.title}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
                   </div>
 
-                  {/* Metadata Matrix */}
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-base font-semibold leading-snug tracking-wide text-slate-900">
-                      {entry.item.baseTitle || entry.item.title}
-                    </h3>
+                  <div className="flex min-w-0 flex-1 flex-col justify-between px-3 py-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-base font-semibold leading-snug tracking-wide text-slate-900">
+                          {entry.item.baseTitle || entry.item.title}
+                        </h3>
 
-                    <div className="mt-2 flex flex-col gap-2">
-                      <div className="flex items-center gap-2 tracking-wide text-slate-600">
-                        {entry.item.variationTitle ? (
-                          <>
-                            <span className="flex items-center gap-0.5 text-slate-700">
-                              <DirhamIcon className="text-slate-700" />
-                              {Math.round(entry.item.discountedPrice)}
-                            </span>
-                            <span className="rounded-full bg-red-50 px-2 py-1 text-red-600">
-                              {entry.item.variationTitle}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
-                            
-                          </span>
-                        )}
+                        <div className="mt-2 flex items-center gap-2 text-[11px] font-medium tracking-wide text-slate-600">
+                          {entry.item.variationTitle ? (
+                            <>
+                              <span className="rounded-full bg-red-50 px-2 py-1 text-red-600">
+                                {entry.item.variationTitle}
+                              </span>
+                        
+                            </>
+                          ) : (<></> )}
+                        </div>
                       </div>
 
-                      <div className="flex items-center justify-between gap-3">
-                   
-                        <div className="flex items-center gap-2 rounded-full border border-slate-100 bg-slate-50 p-1">
-                          <button
-                            className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-100 bg-white text-sm text-slate-600 shadow-sm active:scale-90"
-                            onClick={() => handleAdjustQty(idx, -1)}
-                          >
-                            –
-                          </button>
-                          <span className="w-4 text-center text-xs font-semibold text-slate-800">
-                            {entry.qty || 1}
-                          </span>
-                          <button
-                            className="flex h-7 w-7 items-center justify-center rounded-full bg-red-600 text-sm text-white shadow-sm active:scale-90"
-                            onClick={() => handleAdjustQty(idx, 1)}
-                          >
-                            +
-                          </button>
-                        </div>
+                      <button
+                        onClick={() => handleRemoveItem(idx)}
+                        className="flex h-8 w-8 items-center justify-center rounded-full text-slate-300 transition-colors hover:text-red-500"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+
+                    <div className="mt-1 flex items-center justify-between gap-3">
+                      <span className="flex items-center gap-0.5 text-lg font-semibold text-slate-900 tracking-wide">
+                        <DirhamIcon size={13} className="text-slate-900" />
+                        {Math.round(entry.item.discountedPrice * (entry.qty || 1))}
+                      </span>
+
+                      <div className="flex items-center gap-2 rounded-full border border-slate-100 bg-slate-50 p-1">
+                        <button
+                          className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-100 bg-white text-sm text-slate-600 shadow-sm active:scale-90"
+                          onClick={() => handleAdjustQty(idx, -1)}
+                        >
+                          –
+                        </button>
+                        <span className="w-4 text-center text-xs font-semibold text-slate-800">
+                          {entry.qty || 1}
+                        </span>
+                        <button
+                          className="flex h-7 w-7 items-center justify-center rounded-full bg-red-600 text-sm text-white shadow-sm active:scale-90"
+                          onClick={() => handleAdjustQty(idx, 1)}
+                        >
+                          +
+                        </button>
                       </div>
                     </div>
                   </div>
