@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 
 import {
@@ -312,8 +313,8 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
 
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/70 backdrop-blur-md p-0 sm:p-4">
+  const modalContent = (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 backdrop-blur-md p-0 sm:p-4">
       <div className="bg-white w-full max-w-6xl h-full sm:h-[90vh] sm:rounded-3xl shadow-2xl relative flex flex-col overflow-hidden">
         {/* Header Overlay */}
         <div className="absolute top-6 inset-x-6 z-1001 pointer-events-none flex justify-between items-start">
@@ -626,6 +627,8 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
       )}
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default AddressSelectModal;
