@@ -1,5 +1,6 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import { MapPin, Plus, Check, X } from "lucide-react";
 import type { DeliveryAddressItem } from "@/app/lib/customerPortal";
 
@@ -19,8 +20,8 @@ type SavedAddressesModalProps = {
 
 export default function SavedAddressesModal({
   open,
-  title = "Saved addresses",
-  description = "Choose where you want your order delivered.",
+  title = "Saved Addresses",
+  description = "Confirm your delivery address or add a new one.",
   addresses,
   selectedAddressId,
   onSelect,
@@ -30,8 +31,8 @@ export default function SavedAddressesModal({
 }: Readonly<SavedAddressesModalProps>) {
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md p-0 sm:p-4 md:p-6 animate-fade-in">
+  const modalContent = (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-md p-0 sm:p-4 md:p-6 animate-fade-in">
       {/* Main Container: 
         - Full screen dimensions (`w-full h-full`) on mobile to handle device toolbars.
         - Structured layout constraints (`max-w-xl sm:h-auto sm:max-h-[85vh] sm:rounded-3xl`) on wider screens.
@@ -40,15 +41,15 @@ export default function SavedAddressesModal({
 
         {/* Header Section */}
         <div className="relative flex items-start gap-4 border-b border-slate-100 bg-white px-5 pb-5 pt-6 shrink-0 sm:px-8 sm:pt-8">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-50">
-            <MapPin size={22} className="text-red-500" />
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-50">
+            <MapPin size={20} className="text-red-500" />
           </div>
 
           <div className="flex-1 pr-8">
-            <h3 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+            <h3 className="text-xl font-bold tracking-tight text-slate-900 sm:text-xl">
               {title}
             </h3>
-            <p className="mt-1 text-xs leading-relaxed text-slate-500 sm:text-sm">
+            <p className=" text-xs leading-relaxed text-slate-500 sm:text-sm">
               {description}
             </p>
           </div>
@@ -57,9 +58,9 @@ export default function SavedAddressesModal({
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-5 top-6 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition-all hover:scale-105 hover:bg-slate-50 hover:text-slate-700 active:scale-95"
+            className="absolute right-5 top-6 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition-all hover:scale-105 hover:bg-red-600 hover:text-white active:scale-95"
           >
-            <X size={16} />
+            <X size={20} />
           </button>
         </div>
 
@@ -74,7 +75,7 @@ export default function SavedAddressesModal({
                 type="button"
                 onClick={() => onSelect(item)}
                 className={`
-                  group relative w-full overflow-hidden rounded-2xl border p-4 text-left transition-all duration-200 sm:p-5
+                  group relative w-full overflow-hidden rounded-2xl border p-2 text-left transition-all duration-200 sm:p-3
                   ${isSelected
                     ? "border-red-500 bg-gradient-to-br from-red-50/60 to-white shadow-lg shadow-red-100/40"
                     : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-md"
@@ -89,7 +90,7 @@ export default function SavedAddressesModal({
                   <div className="flex gap-3 sm:gap-4">
                     <div
                       className={`
-                        mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11 sm:rounded-2xl
+                        mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full sm:h-11 sm:w-11
                         ${isSelected
                           ? "bg-red-100/70"
                           : "bg-slate-50 group-hover:bg-slate-100"
@@ -97,7 +98,7 @@ export default function SavedAddressesModal({
                       `}
                     >
                       <MapPin
-                        size={18}
+                        size={20}
                         className={isSelected ? "text-red-500" : "text-slate-400 group-hover:text-slate-600"}
                       />
                     </div>
@@ -137,36 +138,38 @@ export default function SavedAddressesModal({
           <button
             type="button"
             onClick={onAddNew}
-            className="group flex w-full items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 px-5 py-4 text-sm font-semibold text-slate-600 transition-all hover:border-red-300 hover:bg-red-50/30 hover:text-red-600 sm:rounded-3xl sm:py-5"
+            className="group flex w-full items-center justify-center gap-3 rounded-full border border-dashed border-slate-300 bg-slate-50/50 px-5 py-2 text-sm font-semibold text-slate-600 transition-all hover:border-red-300 hover:bg-red-50/30 hover:text-red-600 sm:py-2"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm border border-slate-100 transition-transform group-hover:scale-105 sm:h-9 sm:w-9">
-              <Plus size={14} className="sm:w-4 sm:h-4" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white border border-slate-100 transition-transform group-hover:scale-105 sm:h-9 sm:w-9">
+              <Plus size={12} className="sm:w-4 sm:h-4" />
             </div>
             <span>Add New Address</span>
           </button>
         </div>
 
         {/* Action Controls Footer */}
-        <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/80 px-5 py-4 shrink-0 gap-4 sm:px-8 sm:py-5">
+        <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/80 px-5 py-4 shrink-0 gap-4 sm:px-4 sm:py-3">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-xs font-bold tracking-widest text-slate-500 transition-all hover:bg-slate-50 hover:text-slate-700 active:scale-95 sm:rounded-2xl"
+            className="rounded-full border border-red-200 bg-white p-2 px-3 text-xs font-bold tracking-widest text-slate-600 transition-all hover:bg-red-600 hover:text-white active:scale-95"
           >
-            CLOSE
+            Close
           </button>
 
           <button
             type="button"
             onClick={onContinue}
             disabled={!selectedAddressId}
-            className="flex-1 sm:flex-none rounded-xl bg-red-600 px-6 py-3 text-sm font-bold tracking-wide text-white shadow-lg shadow-red-500/10 transition-all hover:bg-red-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-30 disabled:shadow-none sm:rounded-2xl sm:px-8"
+            className="flex-1 sm:flex-none rounded-full bg-red-600 px-6 py-3 text-sm font-bold tracking-wide text-white shadow-lg shadow-red-500/10 transition-all hover:bg-red-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-30 disabled:shadow-none sm:px-8"
           >
             <span className="sm:hidden">Continue</span>
-            <span className="hidden sm:inline">Continue to Checkout</span>
+            <span className="hidden sm:inline">Continue to payment</span>
           </button>
         </div>
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
