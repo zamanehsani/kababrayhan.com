@@ -19,8 +19,9 @@ import {
   saveCustomerName,
   addDeliveryAddress,
 } from "@/app/lib/customerPortal";
-import { AlertTriangle } from 'lucide-react';
+import { Search } from "lucide-react";
 import DirhamIcon from "../../icon/DirhamIcon";
+import { MapPin, CircleX } from "lucide-react";
 
 export type SelectedAddress = {
   id: string;
@@ -72,8 +73,60 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
   const [deliveryZone, setDeliveryZone] = useState<string>("");
   const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
   const [isOutOfRange, setIsOutOfRange] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
 
+  const focusMapAtLocation = (lat: number, lng: number, zoom: number = 16) => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
 
+    map.flyTo([lat, lng], zoom, { animate: true, duration: 0.8 });
+
+    if (markerRef.current) {
+      markerRef.current.setLatLng([lat, lng]);
+    } else {
+      const L = (globalThis as typeof globalThis & { L?: any }).L;
+      if (L) {
+        markerRef.current = L.marker([lat, lng], {
+          bounceOnAdd: true,
+        }).addTo(map);
+      }
+    }
+  };
+
+  const handleSearchLocation = async () => {
+    const trimmed = searchQuery.trim();
+    if (!trimmed) return;
+
+    setIsSearchingLocation(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(trimmed)}&limit=1`
+      );
+      const results = await response.json();
+
+      if (!Array.isArray(results) || results.length === 0) {
+        setError("No matching location found. Try a different place name.");
+        return;
+      }
+
+      const match = results[0];
+      const lat = Number(match.lat);
+      const lng = Number(match.lon);
+
+      setSelectedLatLng({ lat, lng });
+      setAddressText(match.display_name || trimmed);
+      focusMapAtLocation(lat, lng, 15);
+      fetchAddress(lat, lng);
+    } catch (error) {
+      console.error("Location search failed:", error);
+      setError("Failed to search for the location. Please try again.");
+    } finally {
+      setIsSearchingLocation(false);
+    }
+  };
 
   const fetchAddress = async (lat: number, lng: number) => {
     setIsLoading(true);
@@ -317,28 +370,51 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
     <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 backdrop-blur-md p-0 sm:p-4">
       <div className="bg-white w-full max-w-6xl h-full sm:h-[90vh] sm:rounded-3xl shadow-2xl relative flex flex-col overflow-hidden">
         {/* Header Overlay */}
-        <div className="absolute top-6 inset-x-6 z-1001 pointer-events-none flex justify-between items-start">
-          <div className="pointer-events-auto flex flex-col gap-2">
-            <button
-              onClick={() => {
-                /* * NEW * TRIGGER THE EXTRACTED FUNCTION VIA THE MANUAL RE-CENTER BUTTON CLICK */
-                const L = (globalThis as typeof globalThis & { L?: any }).L;
-                requestCurrentLocation(mapInstanceRef.current, L, true);
-                /* * END NEW * */
+        <div className="absolute top-2 inset-x-6 z-1001 pointer-events-none flex justify-between items-start ">
+          <div className="pointer-events-auto flex w-full max-w-[520px] items-center gap-2 rounded-full border border-red-200 bg-white/95 shadow-xl backdrop-blur-md">
+            <Search size={20} className="ml-3 text-red-500" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  handleSearchLocation();
+                }
               }}
-              className="bg-white/90 backdrop-blur shadow-xl border border-gray-100 px-4 py-2 rounded-2xl font-normal text-gray-800 flex items-center gap-2 hover:bg-white transition-all active:scale-95"
+              placeholder="Search for a place or area"
+              className="h-11 flex-1 border-0 bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={handleSearchLocation}
+              disabled={isSearchingLocation || !searchQuery.trim()}
+              className="rounded-full mr-1 bg-red-600 px-4 py-2 text-sm font-semibold tracking-widest text-white transition-all hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300"
             >
-              <span className="text-red-500 text-base">📍</span> Current
-              Location
+              {isSearchingLocation ? "..." : "Search"}
             </button>
           </div>
 
-          <button
-            onClick={onClose}
-            className="pointer-events-auto bg-white/90 backdrop-blur text-gray-400 hover:text-red-600 rounded-2xl w-10 h-10 flex items-center justify-center shadow-xl border border-gray-100 transition-all active:scale-90 text-3xl font-light"
-          >
-            ×
-          </button>
+          <div className="pointer-events-auto flex items-center gap-2">
+            <button
+              onClick={() => {
+                const L = (globalThis as typeof globalThis & { L?: any }).L;
+                requestCurrentLocation(mapInstanceRef.current, L, true);
+              }}
+              className="bg-white/90 backdrop-blur shadow-xl border border-gray-100 rounded-full p-3 font-normal text-gray-800 flex items-center gap-2 hover:bg-white transition-all active:scale-95"
+            >
+              <MapPin size={16} className="text-red-600" />
+
+            </button>
+
+            <button
+              onClick={onClose}
+              className="bg-white/90 backdrop-blur text-gray-400 hover:text-red-600 rounded-full p-3 flex items-center justify-center shadow-xl border border-gray-100 transition-all active:scale-90 text-3xl font-light"
+            >
+            <CircleX size={20} />
+            </button>
+          </div>
         </div>
 
         {/* The Interactive Map Layer */}
@@ -363,16 +439,16 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
         </div>
 
         {/* Bottom Selection Panel (Floating Card Style) */}
-        <div className="absolute bottom-8 inset-x-0 z-1002 flex justify-center px-4 pointer-events-none">
-          <div className=" pointer-events-auto w-full max-w-xl bg-white/95 backdrop-blur-lg border border-white/20 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] p-3 sm:p-6 flex flex-col gap-4">
+        <div className="absolute bottom-6 inset-x-0 z-1002 flex justify-center pointer-events-none">
+          <div className="pointer-events-auto w-full max-w-xl bg-white/95 backdrop-blur-lg border border-white/20 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] sm:p-3 flex flex-col gap-2">
 
-            <div className="space-y-1 p-3">
+            <div className="">
               <h3 className="text-sm font-medium  tracking-widest text-red-600">
                  Delivery Point
               </h3>
               <div className="min-h-12 flex items-center">
                 {isLoading ? (
-                  <div className="flex items-center gap-3 text-gray-400 italic">
+                  <div className="flex items-center gap-2 text-gray-400 italic">
                     <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
                     Fetching address details...
                   </div>
@@ -390,15 +466,15 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                     <div className="flex items-start gap-2 rounded-2xl border border-red-200 bg-red-50 px-5 py-2 text-sm text-red-700">
                       {/* <span className="mt-0.5 shrink-0 text-lg leading-none">⚠️</span> */}
                       {/* <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" /> */}
-                      <div className="flex flex-col">
+                      <div className="flex flex-col mx-auto">
                         {/* <span className="font-semibold text-base">Out of Delivery Range</span> */}
                         <span className="font-normal opacity-90">
-                           Outside our standard delivery zone. Contact us directly at +971 50 302 1317.
+                           Outside our delivery zones. Contact us at +971 50 302 1317.
                         </span>
                       </div>
                     </div>
                   ) : (
-                    <div className="flex flex-col gap-2 p-3 border border-red-100 rounded-2xl bg-red-50/50">
+                    <div className="flex flex-col p-2 rounded-full bg-red-50/50">
                       {deliveryCharge > 0 ? (
                         // PAID DELIVERY UX
                         <div className="flex items-center justify-between gap-2 px-1 text-sm font-medium text-red-600">
