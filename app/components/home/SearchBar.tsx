@@ -1,19 +1,30 @@
 "use client";
 
-import { Search, Settings2 } from "lucide-react";
+import { Search } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRef, useState } from "react";
 
 export default function SearchBar() {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchValue = searchParams.get("search") ?? "";
+  const [draftSearchValue, setDraftSearchValue] = useState(searchValue);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const updateSearchQuery = (nextValue: string) => {
+  const cleanupDebounce = () => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = null;
+    }
+  };
+
+  const applySearchQuery = (nextValue: string) => {
+    const cleanValue = nextValue.trim();
     const nextParams = new URLSearchParams(searchParams.toString());
 
-    if (nextValue.trim()) {
-      nextParams.set("search", nextValue);
+    if (cleanValue.length >= 2) {
+      nextParams.set("search", cleanValue);
     } else {
       nextParams.delete("search");
     }
@@ -22,6 +33,27 @@ export default function SearchBar() {
     router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
       scroll: false,
     });
+  };
+
+  const updateSearchQuery = (nextValue: string) => {
+    const trimmedValue = nextValue;
+    setDraftSearchValue(trimmedValue);
+
+    cleanupDebounce();
+
+    if (!trimmedValue.trim()) {
+      searchDebounceRef.current = setTimeout(() => applySearchQuery(""), 350);
+      return;
+    }
+
+    if (trimmedValue.trim().length < 2) {
+      return;
+    }
+
+    searchDebounceRef.current = setTimeout(
+      () => applySearchQuery(trimmedValue),
+      400
+    );
   };
 
   return (
@@ -34,15 +66,11 @@ export default function SearchBar() {
         <input
           type="text"
           placeholder="Search for dishes and more"
-          value={searchValue}
+          value={draftSearchValue}
           onChange={(event) => updateSearchQuery(event.target.value)}
           className="w-full rounded-full border border-slate-100 bg-slate-50 py-3 pl-10 pr-4 text-base text-slate-900 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-slate-200"
         />
       </div>
-      {/* Ensure button has h-12 and w-12 for a clear 48px tap target */}
-      {/* <button className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-700 shadow-sm transition-all active:scale-95">
-        <Settings2 size={20} />
-      </button> */}
     </section>
   );
 }

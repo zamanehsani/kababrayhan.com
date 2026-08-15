@@ -103,26 +103,62 @@ export default function TabletHeader() {
   const isHomeRoute =
     pathname === "/" || pathname.startsWith("/home");
   const searchValue = searchParams.get("search") ?? "";
+  const [draftSearchValue, setDraftSearchValue] = useState(searchValue);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shouldShowSearchInput = isSearchOpen || Boolean(searchValue);
 
-  const updateSearchQuery = (nextValue: string) => {
-    const nextParams = new URLSearchParams(searchParams.toString());
+  const cleanupDebounce = () => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = null;
+    }
+  };
 
-    if (nextValue.trim()) {
-      nextParams.set("search", nextValue);
-    } else {
-      nextParams.delete("search");
+  const applySearchQuery = useCallback(
+    (nextValue: string) => {
+      const cleanValue = nextValue.trim();
+      const nextParams = new URLSearchParams(searchParams.toString());
+
+      if (cleanValue.length >= 2) {
+        nextParams.set("search", cleanValue);
+      } else {
+        nextParams.delete("search");
+      }
+
+      const queryString = nextParams.toString();
+      router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+        scroll: false,
+      });
+    },
+    [pathname, router, searchParams]
+  );
+
+  const updateSearchQuery = (nextValue: string) => {
+    const trimmedValue = nextValue;
+    setDraftSearchValue(trimmedValue);
+
+    cleanupDebounce();
+
+    if (!trimmedValue.trim()) {
+      searchDebounceRef.current = setTimeout(() => applySearchQuery(""), 350);
+      return;
     }
 
-    const queryString = nextParams.toString();
-    router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
-      scroll: false,
-    });
+    if (trimmedValue.trim().length < 2) {
+      return;
+    }
+
+    searchDebounceRef.current = setTimeout(
+      () => applySearchQuery(trimmedValue),
+      450
+    );
   };
 
   const handleSearchToggle = () => {
     if (shouldShowSearchInput) {
-      updateSearchQuery("");
+      cleanupDebounce();
+      setDraftSearchValue("");
+      applySearchQuery("");
       setIsSearchOpen(false);
       return;
     }
@@ -331,7 +367,7 @@ export default function TabletHeader() {
               type="text"
               autoFocus
               placeholder="Search dishes, orders, tags..."
-              value={searchValue}
+              value={draftSearchValue}
               onChange={(event) => updateSearchQuery(event.target.value)}
               className="h-12 w-full rounded-full border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all focus:border-slate-200 focus:bg-white focus:ring-4 focus:ring-slate-50 shadow-inner"
             />

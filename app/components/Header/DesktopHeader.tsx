@@ -86,26 +86,62 @@ export default function DesktopHeader() {
   const shouldShowNav = portalState.isVerified;
   const isHomeRoute = pathname === "/" || pathname.startsWith("/home");
   const searchValue = searchParams.get("search") ?? "";
+  const [draftSearchValue, setDraftSearchValue] = useState(searchValue);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shouldShowSearchInput = isSearchOpen || Boolean(searchValue);
 
-  const updateSearchQuery = (nextValue: string) => {
-    const nextParams = new URLSearchParams(searchParams.toString());
+  const cleanupDebounce = () => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = null;
+    }
+  };
 
-    if (nextValue.trim()) {
-      nextParams.set("search", nextValue);
-    } else {
-      nextParams.delete("search");
+  const applySearchQuery = useCallback(
+    (nextValue: string) => {
+      const cleanValue = nextValue.trim();
+      const nextParams = new URLSearchParams(searchParams.toString());
+
+      if (cleanValue.length >= 2) {
+        nextParams.set("search", cleanValue);
+      } else {
+        nextParams.delete("search");
+      }
+
+      const queryString = nextParams.toString();
+      router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+        scroll: false,
+      });
+    },
+    [pathname, router, searchParams]
+  );
+
+  const updateSearchQuery = (nextValue: string) => {
+    const trimmedValue = nextValue;
+    setDraftSearchValue(trimmedValue);
+
+    cleanupDebounce();
+
+    if (!trimmedValue.trim()) {
+      searchDebounceRef.current = setTimeout(() => applySearchQuery(""), 350);
+      return;
     }
 
-    const queryString = nextParams.toString();
-    router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
-      scroll: false,
-    });
+    if (trimmedValue.trim().length < 2) {
+      return;
+    }
+
+    searchDebounceRef.current = setTimeout(
+      () => applySearchQuery(trimmedValue),
+      450
+    );
   };
 
   const handleSearchToggle = () => {
     if (shouldShowSearchInput) {
-      updateSearchQuery("");
+      cleanupDebounce();
+      setDraftSearchValue("");
+      applySearchQuery("");
       setIsSearchOpen(false);
       return;
     }
@@ -200,16 +236,16 @@ export default function DesktopHeader() {
   if (shouldShowSearchInput) {
     middleSectionContent = (
       <div className="relative w-full flex items-center animate-in fade-in slide-in-from-top-1 duration-300">
-        <span className="absolute inset-y-0 left-4 flex items-center text-slate-400 pointer-events-none">
-          <Search size={16} />
+        <span className="absolute inset-y-0 left-4 flex items-center text-red-400 pointer-events-none">
+          <Search size={20} />
         </span>
         <input
           type="text"
           autoFocus
           placeholder="Search anything"
-          value={searchValue}
+          value={draftSearchValue}
           onChange={(event) => updateSearchQuery(event.target.value)}
-          className="w-full h-12 pl-10 pr-3.5 rounded-full border border-slate-200 bg-slate-50 text-[13px] font-medium text-slate-700 placeholder-slate-400 outline-none transition-all duration-200 focus:border-slate-300 focus:bg-white focus:ring-4 focus:ring-slate-100 shadow-inner"
+          className="w-full h-12 pl-10 pr-3.5 rounded-full border border-red-200 bg-red-50 text-[16px] font-medium placeholder-slate-400 outline-none transition-all duration-200 focus:border-red-300 focus:bg-white focus:ring-4 focus:ring-red-100 shadow-inner"
         />
       </div>
     );
@@ -252,7 +288,7 @@ export default function DesktopHeader() {
             priority
           />
         </Link>
-        <h1 className="text-lg font-bold text-slate-900 ml-3 leading-tight">Kabab AlRayhan <br /> 
+        <h1 className="text-lg font-bold text-slate-900 ml-3 leading-tight">Kabab Al Rayhan <br /> 
           <span className="text-sm text-slate-500 font-normal">Restaurant & Bakery</span>
         </h1>
       </div>
@@ -303,29 +339,24 @@ export default function DesktopHeader() {
 
             {isProfileOpen && (
               <div className="absolute right-0 top-13 z-50 w-64 origin-top-right rounded-2xl border border-slate-100 bg-white p-2 shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="px-3 py-2.5 mb-1.5 border-b border-slate-50">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    Verified Phone
-                  </p>
-                  <p className="text-xs font-semibold text-slate-800 truncate">
-                    {portalState.phone}
-                  </p>
-                  <p className="text-[10px] text-slate-400 mt-0.5 truncate">
-                    {portalState.address || "No saved address"}
-                  </p>
-                </div>
-
                 <button
                   type="button"
-                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
                   onClick={() => {
                     setIsProfileOpen(false);
                     router.push("/account-profile");
                   }}
+                  className="w-full border-b border-slate-50 px-3 py-2.5 text-left"
                 >
-                  <User size={16} className="text-slate-400" />
-                  <span>Account Profile</span>
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-slate-800">
+                      {portalState.phone}
+                    </p>
+                    <p className="mt-0.5 truncate text-[12px] text-slate-400">
+                      {portalState.address || "No saved address"}
+                    </p>
+                  </div>
                 </button>
+
 
                 <div className="h-px bg-slate-100 my-1.5" />
 
