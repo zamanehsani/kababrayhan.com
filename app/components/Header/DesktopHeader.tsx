@@ -206,16 +206,16 @@ export default function DesktopHeader() {
         <input
           type="text"
           autoFocus
-          placeholder="Search items, active orders, tickets..."
+          placeholder="Search anything"
           value={searchValue}
           onChange={(event) => updateSearchQuery(event.target.value)}
-          className="w-full h-11 pl-10 pr-3.5 rounded-lg border border-slate-200 bg-slate-50/50 text-[13px] font-medium text-slate-700 placeholder-slate-400 outline-none transition-all duration-200 focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-50"
+          className="w-full h-12 pl-10 pr-3.5 rounded-full border border-slate-200 bg-slate-50 text-[13px] font-medium text-slate-700 placeholder-slate-400 outline-none transition-all duration-200 focus:border-slate-300 focus:bg-white focus:ring-4 focus:ring-slate-100 shadow-inner"
         />
       </div>
     );
   } else if (shouldShowNav) {
     middleSectionContent = (
-      <nav className="flex items-center gap-1 bg-slate-50 p-0.5 rounded-xl border border-slate-100/60 shadow-sm animate-in fade-in zoom-in-95 duration-200">
+      <nav className="flex items-center gap-1 bg-slate-50 p-1 rounded-full border border-slate-100 shadow-sm animate-in fade-in zoom-in-95 duration-200">
         {desktopNavItems.map((item) => (
           <button
             key={item.id}
@@ -223,7 +223,7 @@ export default function DesktopHeader() {
               setIsSearchOpen(false);
               router.push(item.href);
             }}
-            className={`flex items-center gap-1.5 px-3.5 h-9 rounded-lg text-[13px] font-semibold tracking-wide transition-all duration-200 ${
+            className={`flex items-center gap-1.5 px-4 h-10 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-200 ${
               (item.href === "/home" && isHomeRoute) ||
               (item.href !== "/home" && pathname.startsWith(item.href))
                 ? "bg-red-600 text-white shadow-sm scale-100"
@@ -268,10 +268,10 @@ export default function DesktopHeader() {
         {/* Dynamic Search Toggle Trigger */}
         <button 
           onClick={handleSearchToggle}
-          className={`flex h-11 w-11 items-center justify-center rounded-xl border transition-all active:scale-95 duration-200 ${
+          className={`flex h-11 w-11 items-center justify-center rounded-full border transition-all active:scale-95 duration-200 ${
             shouldShowSearchInput
               ? "border-slate-200 bg-slate-50 text-slate-600 rotate-90"
-              : "border-slate-200 bg-white text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+              : "border-slate-100 bg-slate-50 text-slate-600 hover:bg-slate-100"
           }`}
         >
           {shouldShowSearchInput ? <X size={18} /> : <Search size={18} />}
@@ -283,7 +283,7 @@ export default function DesktopHeader() {
             <button
               type="button"
               onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all duration-200 group ${
+              className={`flex items-center gap-2 px-3 py-2 rounded-full border transition-all duration-200 group ${
                 isProfileOpen
                   ? "border-red-200 bg-orange-50/40"
                   : "border-slate-200/80 bg-white hover:bg-slate-50"
@@ -353,7 +353,7 @@ export default function DesktopHeader() {
         <button
           type="button"
           onClick={handleTriggerCart}
-          className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-all duration-200 hover:bg-slate-50 hover:text-slate-800 active:scale-95"
+          className="relative flex h-11 w-11 items-center justify-center rounded-full border border-slate-100 bg-slate-50 text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-slate-800 active:scale-95"
           aria-label={`View shopping bag summary containing ${cartItemCount} items`}
         >
           <UtensilsCrossed size={18} />
