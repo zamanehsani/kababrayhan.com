@@ -52,7 +52,7 @@ export default function CartSidebarWidget() {
         - `hidden`: Hidden by default on all screens under 768px (< md)
         - `md:flex`: Becomes visible as a flex container from 768px and up
       */}
-      <div className="hidden md:flex fixed right-0 top-1/2 -translate-y-1/2 z-[200]">
+      <div className="hidden">
         <button
           onClick={handleTriggerCart}
           className="flex flex-col items-center justify-center w-14 h-16 bg-slate-900 hover:bg-slate-800 text-white rounded-l-2xl shadow-2xl border-y border-l border-slate-800 transition-all active:scale-95 group relative"

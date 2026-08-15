@@ -8,18 +8,17 @@ import {
   User,
   LogOut,
   X,
+  UtensilsCrossed,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useGetCustomerSalesOrdersQuery } from "@/app/redux/api";
 import { useLogoutMutation } from "@/app/redux/authApi";
-import { CART_UPDATED } from "@/app/lib/cart";
+import { CART_UPDATED, getCart, type CartEntry } from "@/app/lib/cart";
 import {
   clearCustomerPortalSession,
   CUSTOMER_PORTAL_UPDATED,
   PHONE_KEY,
-  getCustomerName,
   readCustomerPortalSnapshot,
 } from "@/app/lib/customerPortal";
 import PhoneModal from "../home/modal/PhoneModal";
@@ -35,30 +34,55 @@ export default function DesktopHeader() {
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [phoneForVerify, setPhoneForVerify] = useState("");
+  const [cartItemCount, setCartItemCount] = useState(() => {
+    if (typeof window === "undefined") return 0;
+
+    try {
+      const items = getCart() || [];
+      return items.reduce(
+        (sum: number, entry: CartEntry) => sum + (entry.qty || 1),
+        0
+      );
+    } catch (error) {
+      console.error("Failed to parse cart values safely:", error);
+      return 0;
+    }
+  });
   const [portalState, setPortalState] = useState(() =>
     readCustomerPortalSnapshot()
   );
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const stableCustomerName = getCustomerName() || portalState.phone;
 
   const desktopNavItems = [
     { id: "home", href: "/home", label: "Home", icon: <Home size={16} /> },
     { id: "orders", href: "/my-orders", label: "My Orders", icon: <StickyNote size={16} /> },
   ];
 
-  const { data: salesOrders } = useGetCustomerSalesOrdersQuery(
-    stableCustomerName,
-    {
-      skip: !portalState.isVerified || !stableCustomerName,
-    }
-  );
   const [logout] = useLogoutMutation();
 
   const refreshPortalState = useCallback(() => {
     setPortalState(readCustomerPortalSnapshot());
   }, []);
 
-  const hasOrders = portalState.hasOrder || (salesOrders?.length ?? 0) > 0;
+  const refreshCartBadge = useCallback(() => {
+    if (typeof window === "undefined") {
+      setCartItemCount(0);
+      return;
+    }
+
+    try {
+      const items = getCart() || [];
+      const nextCount = items.reduce(
+        (sum: number, entry: CartEntry) => sum + (entry.qty || 1),
+        0
+      );
+      setCartItemCount(nextCount);
+    } catch (error) {
+      console.error("Failed to parse cart values safely:", error);
+      setCartItemCount(0);
+    }
+  }, []);
+
   const shouldShowNav = portalState.isVerified;
   const isHomeRoute = pathname === "/" || pathname.startsWith("/home");
   const searchValue = searchParams.get("search") ?? "";
@@ -102,18 +126,22 @@ export default function DesktopHeader() {
 
   useEffect(() => {
     globalThis.addEventListener(CUSTOMER_PORTAL_UPDATED, refreshPortalState);
-    globalThis.addEventListener(CART_UPDATED, refreshPortalState);
+    globalThis.addEventListener(CART_UPDATED, refreshCartBadge);
     globalThis.addEventListener("storage", refreshPortalState);
+    globalThis.addEventListener("storage", refreshCartBadge);
+    globalThis.addEventListener("openCartDrawer", refreshCartBadge);
 
     return () => {
       globalThis.removeEventListener(
         CUSTOMER_PORTAL_UPDATED,
         refreshPortalState
       );
-      globalThis.removeEventListener(CART_UPDATED, refreshPortalState);
+      globalThis.removeEventListener(CART_UPDATED, refreshCartBadge);
       globalThis.removeEventListener("storage", refreshPortalState);
+      globalThis.removeEventListener("storage", refreshCartBadge);
+      globalThis.removeEventListener("openCartDrawer", refreshCartBadge);
     };
-  }, [refreshPortalState]);
+  }, [refreshCartBadge, refreshPortalState]);
 
   const handlePortalClick = () => {
     setShowPhoneModal(true);
@@ -136,6 +164,10 @@ export default function DesktopHeader() {
     setShowVerifyModal(false);
     setPhoneForVerify("");
     refreshPortalState();
+  };
+
+  const handleTriggerCart = () => {
+    window.dispatchEvent(new CustomEvent("openCartDrawer"));
   };
 
   const handleSignOut = async () => {
@@ -318,6 +350,19 @@ export default function DesktopHeader() {
           </button>
         )}
 
+        <button
+          type="button"
+          onClick={handleTriggerCart}
+          className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-all duration-200 hover:bg-slate-50 hover:text-slate-800 active:scale-95"
+          aria-label={`View shopping bag summary containing ${cartItemCount} items`}
+        >
+          <UtensilsCrossed size={18} />
+          {cartItemCount > 0 && (
+            <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white ring-2 ring-white">
+              {cartItemCount > 9 ? "9+" : cartItemCount}
+            </span>
+          )}
+        </button>
       </div>
 
       {showPhoneModal && (

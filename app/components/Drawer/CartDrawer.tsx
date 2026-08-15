@@ -27,6 +27,7 @@ type CheckoutMode = "delivery" | "takeaway";
 export default function CartDrawer() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [cart, setCart] = useState<CartEntry[]>([]);
 
   // Modal Orchestration State
@@ -50,6 +51,7 @@ export default function CartDrawer() {
   useEffect(() => {
     const handleOpen = () => {
       setCart(getCart());
+      setIsClosing(false);
       setOpen(true);
       setIsNavigatingToCheckout(false); // Reset navigation state when drawer opens
     };
@@ -57,9 +59,19 @@ export default function CartDrawer() {
     return () => globalThis.removeEventListener("openCartDrawer", handleOpen);
   }, []);
 
+  const handleClose = () => {
+    if (isClosing) return;
+
+    setIsClosing(true);
+    window.setTimeout(() => {
+      setOpen(false);
+      setIsClosing(false);
+    }, 340);
+  };
+
   // Sync body scroll locked state when drawer opens
   useEffect(() => {
-    if (open) {
+    if (open || isClosing) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
@@ -67,7 +79,7 @@ export default function CartDrawer() {
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [open]);
+  }, [open, isClosing]);
 
   const totalPrice = cart.reduce((sum, entry) => {
     const quantity = entry.qty || 1;
@@ -75,7 +87,7 @@ export default function CartDrawer() {
   }, 0);
   const isCartEmpty = cart.length === 0;
 
-  if (!open) {
+  if (!open && !isClosing) {
     return (
       <>
         {isNavigatingToCheckout && (
@@ -203,12 +215,18 @@ export default function CartDrawer() {
       <button
         type="button"
         aria-label="Close cart drawer"
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity animate-fade-in"
-        onClick={() => setOpen(false)}
+        className={`absolute inset-0 bg-slate-900/40 backdrop-blur-sm ${
+          isClosing ? "animate-cart-fade-out" : "animate-cart-fade-in"
+        }`}
+        onClick={handleClose}
       />
 
       {/* Drawer Canvas */}
-      <div className="relative z-10 w-full max-w-md h-full bg-white shadow-2xl flex flex-col border-l border-slate-100 animate-slide-in">
+      <div
+        className={`relative z-10 w-full max-w-md h-full bg-white shadow-2xl flex flex-col border-l border-slate-100 ${
+          isClosing ? "animate-cart-slide-out" : "animate-cart-slide-in"
+        }`}
+      >
         {/* Header Segment */}
         <div className="flex items-center justify-between p-5 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
@@ -218,7 +236,7 @@ export default function CartDrawer() {
             </h2>
           </div>
           <button
-            onClick={() => setOpen(false)}
+            onClick={handleClose}
             className="p-1.5 rounded-full border border-slate-100 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors active:scale-95"
           >
             <X size={18} />

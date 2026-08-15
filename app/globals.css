@@ -10,7 +10,57 @@
 	display: none;
 }
 
+@keyframes cartFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
 
+@keyframes cartFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes cartSlideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes cartSlideOut {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.animate-cart-fade-in {
+  animation: cartFadeIn 0.36s ease-out forwards;
+}
+
+.animate-cart-fade-out {
+  animation: cartFadeOut 0.32s ease-in forwards;
+}
+
+.animate-cart-slide-in {
+  animation: cartSlideIn 0.36s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-cart-slide-out {
+  animation: cartSlideOut 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
 
 
 /* Forces nested rich-text elements to stay inline so line-clamp works perfectly */

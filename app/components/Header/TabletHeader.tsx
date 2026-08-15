@@ -6,16 +6,14 @@ import {
   ClipboardList,
   User,
   LogOut,
+  UtensilsCrossed,
 } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import {
-  useGetCustomerAvatarQuery,
-  useGetCustomerSalesOrdersQuery,
-} from "@/app/redux/api";
+import { useGetCustomerAvatarQuery } from "@/app/redux/api";
 import { useLogoutMutation } from "@/app/redux/authApi";
-import { CART_UPDATED } from "@/app/lib/cart";
+import { CART_UPDATED, getCart, type CartEntry } from "@/app/lib/cart";
 import {
   clearCustomerPortalSession,
   CUSTOMER_PORTAL_UPDATED,
@@ -36,6 +34,20 @@ export default function TabletHeader() {
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [phoneForVerify, setPhoneForVerify] = useState("");
   const [pendingRoute, setPendingRoute] = useState<string | null>(null);
+  const [cartItemCount, setCartItemCount] = useState(() => {
+    if (typeof window === "undefined") return 0;
+
+    try {
+      const items = getCart() || [];
+      return items.reduce(
+        (sum: number, entry: CartEntry) => sum + (entry.qty || 1),
+        0
+      );
+    } catch (error) {
+      console.error("Failed to parse cart values safely:", error);
+      return 0;
+    }
+  });
   const [portalState, setPortalState] = useState(() =>
     readCustomerPortalSnapshot()
   );
@@ -57,13 +69,6 @@ export default function TabletHeader() {
     },
   ];
 
-  const { data: salesOrders } = useGetCustomerSalesOrdersQuery(
-    stableCustomerName,
-    {
-      skip: !portalState.isVerified || !stableCustomerName,
-    }
-  );
-
   const { data: customerAvatar } = useGetCustomerAvatarQuery(
     stableCustomerName,
     {
@@ -76,7 +81,25 @@ export default function TabletHeader() {
     setPortalState(readCustomerPortalSnapshot());
   }, []);
 
-  const hasOrders = portalState.hasOrder || (salesOrders?.length ?? 0) > 0;
+  const refreshCartBadge = useCallback(() => {
+    if (typeof window === "undefined") {
+      setCartItemCount(0);
+      return;
+    }
+
+    try {
+      const items = getCart() || [];
+      const nextCount = items.reduce(
+        (sum: number, entry: CartEntry) => sum + (entry.qty || 1),
+        0
+      );
+      setCartItemCount(nextCount);
+    } catch (error) {
+      console.error("Failed to parse cart values safely:", error);
+      setCartItemCount(0);
+    }
+  }, []);
+
   const isHomeRoute =
     pathname === "/" || pathname.startsWith("/home");
   const searchValue = searchParams.get("search") ?? "";
@@ -123,18 +146,22 @@ export default function TabletHeader() {
 
   useEffect(() => {
     globalThis.addEventListener(CUSTOMER_PORTAL_UPDATED, refreshPortalState);
-    globalThis.addEventListener(CART_UPDATED, refreshPortalState);
+    globalThis.addEventListener(CART_UPDATED, refreshCartBadge);
     globalThis.addEventListener("storage", refreshPortalState);
+    globalThis.addEventListener("storage", refreshCartBadge);
+    globalThis.addEventListener("openCartDrawer", refreshCartBadge);
 
     return () => {
       globalThis.removeEventListener(
         CUSTOMER_PORTAL_UPDATED,
         refreshPortalState
       );
-      globalThis.removeEventListener(CART_UPDATED, refreshPortalState);
+      globalThis.removeEventListener(CART_UPDATED, refreshCartBadge);
       globalThis.removeEventListener("storage", refreshPortalState);
+      globalThis.removeEventListener("storage", refreshCartBadge);
+      globalThis.removeEventListener("openCartDrawer", refreshCartBadge);
     };
-  }, [refreshPortalState]);
+  }, [refreshCartBadge, refreshPortalState]);
 
   const openVerificationFlowFor = (route: string) => {
     if (portalState.isVerified) {
@@ -182,6 +209,10 @@ export default function TabletHeader() {
     }
 
       setShowPhoneModal(true);
+  };
+
+  const handleTriggerCart = () => {
+    window.dispatchEvent(new CustomEvent("openCartDrawer"));
   };
 
   const handleSignOut = async () => {
@@ -348,7 +379,19 @@ export default function TabletHeader() {
           {shouldShowSearchInput ? <X size={20} /> : <Search size={20} />}
         </button>
 
-  
+        <button
+          type="button"
+          onClick={handleTriggerCart}
+          className="relative flex h-12 w-12 items-center justify-center rounded-full border border-slate-100 bg-slate-50 text-slate-600 transition-all active:scale-95 hover:bg-slate-100"
+          aria-label={`View shopping bag summary containing ${cartItemCount} items`}
+        >
+          <UtensilsCrossed size={18} />
+          {cartItemCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white ring-2 ring-white">
+              {cartItemCount > 9 ? "9+" : cartItemCount}
+            </span>
+          )}
+        </button>
       </div>
 
       </header>

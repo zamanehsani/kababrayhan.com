@@ -28,8 +28,10 @@ export default function Home() {
 
       {/* <Header /> */}
       <SearchBar />
+
       {/* <PromoBanner /> */}
       <CategoryTabs />
+      
       <PopularDishes />
 
       {/* Footer */}
