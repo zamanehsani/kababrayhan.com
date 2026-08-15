@@ -123,12 +123,22 @@ export default function MobileHeader() {
     refreshPortalState();
   };
 
+  const handleChangePhoneFromVerify = () => {
+    setShowVerifyModal(false);
+    setPhoneForVerify("");
+    setShowPhoneModal(true);
+  };
+
   const handleProfileClick = () => {
     if (portalState.isVerified) {
       setIsProfileOpen((prev) => !prev);
       return;
     }
 
+    setShowVerifyModal(false);
+    setPhoneForVerify("");
+    localStorage.removeItem(PHONE_KEY);
+    localStorage.removeItem(PHONE_STATUS_KEY);
     setShowPhoneModal(true);
   };
 
@@ -140,6 +150,10 @@ export default function MobileHeader() {
       return;
     }
 
+    setShowVerifyModal(false);
+    setPhoneForVerify("");
+    localStorage.removeItem(PHONE_KEY);
+    localStorage.removeItem(PHONE_STATUS_KEY);
     setShowPhoneModal(true);
   };
 
@@ -234,13 +248,18 @@ export default function MobileHeader() {
       </header>
 
       {showPhoneModal && (
-        <PhoneModal open={showPhoneModal} onClose={handlePhoneModalClose} />
+        <PhoneModal
+          open={showPhoneModal}
+          allowExistingPhone={true}
+          onClose={handlePhoneModalClose}
+        />
       )}
       {showVerifyModal && (
         <PhoneVerifyModal
           open={showVerifyModal}
           phone={phoneForVerify}
           onClose={handleVerifyModalClose}
+          onChangePhone={handleChangePhoneFromVerify}
         />
       )}
     </>

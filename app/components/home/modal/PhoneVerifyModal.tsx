@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useSendOtpMutation, useGetCustomerAddressesQuery } from "../../../redux/api";
 import { useVerifyOtpMutation } from "../../../redux/authApi";
 import {
@@ -10,11 +11,12 @@ import {
 
 type PhoneVerifyModalProps = {
   open: boolean;
-  onClose: () => void;
+  onClose: (didVerify?: boolean) => void;
+  onChangePhone?: () => void;
   phone: string;
 };
 
-const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, phone }) => {
+const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, onChangePhone, phone }) => {
   const [digits, setDigits] = useState(["", "", "", ""]);
   const [error, setError] = useState("");
   const [verifyOtp, { isLoading }] = useVerifyOtpMutation();
@@ -57,16 +59,14 @@ const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, phon
         if (result.status === "success") {
           saveVerifiedPhone(phone);
           setError("");
-          
-          // Immediately fetch addresses after successful verification
-          // This ensures addresses are loaded before user navigates to account-profile
+
           try {
             await refetchAddresses();
           } catch (err) {
             console.warn("Failed to prefetch addresses after verification:", err);
           }
-          
-          onClose();
+
+          onClose(true);
         } else {
           setError("Invalid code. Please try again.");
         }
@@ -79,7 +79,6 @@ const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, phon
     }
   };
 
-  // Resend OTP handler
   const handleResend = async () => {
     if (resendTimer > 0 || isResending) return;
     setError("");
@@ -119,18 +118,32 @@ const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, phon
     resendLabel = "Resent! Send again?";
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+  const modalContent = (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/30">
       <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-sm relative">
         <button
-          onClick={onClose}
+          onClick={() => onClose(false)}
           className="absolute top-3 right-3 text-gray-400 hover:text-red-600 text-2xl font-black"
           aria-label="Close verification modal"
         >
           ×
         </button>
         <h2 className="text-xl font-medium mb-2 text-center tracking-wide">Verify Your Phone</h2>
-        <div className="text-center text-gray-500 mb-4 text-sm tracking-wide">We sent a 4-digit code to <span className="font-medium tracking-wide">{phone}</span></div>
+        <div className="text-center text-gray-500 text-sm tracking-wide">We sent a 4-digit code to <span className="font-medium tracking-wide">{phone}</span></div>
+        <button
+          type="button"
+          className="mt-2 mb-4 block w-full text-center text-xs text-red-600 font-bold underline disabled:text-gray-400 disabled:cursor-not-allowed"
+          onClick={() => {
+            if (onChangePhone) {
+              onChangePhone();
+              return;
+            }
+
+            onClose(false);
+          }}
+        >
+          Change phone number
+        </button>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex gap-3 justify-center">
             {digits.map((digit, idx) => (
@@ -157,20 +170,22 @@ const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, phon
           >
             {isLoading ? "Verifying..." : "Verify"}
           </button>
-          <div className="text-center mt-2">
-            <button
-              type="button"
-              className="text-xs text-red-600 font-bold underline disabled:text-gray-400 disabled:cursor-not-allowed"
-              onClick={handleResend}
-              disabled={resendTimer > 0 || isResending}
-            >
-              {resendLabel}
-            </button>
-          </div>
+          <div className="mt-2 flex flex-col items-center gap-2 text-center">
+          <button
+            type="button"
+            className="text-xs text-red-600 font-bold underline disabled:text-gray-400 disabled:cursor-not-allowed"
+            onClick={handleResend}
+            disabled={resendTimer > 0 || isResending}
+          >
+            {resendLabel}
+          </button>
+        </div>
         </form>
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default PhoneVerifyModal;

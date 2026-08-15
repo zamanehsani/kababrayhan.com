@@ -137,6 +137,14 @@ export default function BottomNav() {
     setPendingRoute(null);
   };
 
+  const handleChangePhoneFromVerify = () => {
+    setShowVerifyModal(false);
+    setPhoneForVerify("");
+    localStorage.removeItem(PHONE_KEY);
+    localStorage.removeItem(PHONE_STATUS_KEY);
+    setShowPhoneModal(true);
+  };
+
   const handleAction = (id: string) => {
     if (id === "home") {
       router.push("/home");
@@ -182,13 +190,18 @@ export default function BottomNav() {
       </nav>
 
       {showPhoneModal && (
-        <PhoneModal open={showPhoneModal} onClose={handlePhoneModalClose} />
+        <PhoneModal
+          open={showPhoneModal}
+          allowExistingPhone={true}
+          onClose={handlePhoneModalClose}
+        />
       )}
       {showVerifyModal && (
         <PhoneVerifyModal
           open={showVerifyModal}
           phone={phoneForVerify}
           onClose={handleVerifyModalClose}
+          onChangePhone={handleChangePhoneFromVerify}
         />
       )}
     </>

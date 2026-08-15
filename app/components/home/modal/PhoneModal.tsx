@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useSendOtpMutation } from "../../../redux/api";
 import {
   PHONE_KEY,
@@ -12,14 +13,23 @@ type PhoneModalProps = {
   open: boolean;
   onClose: (phoneJustSaved?: string) => void;
   allowExistingPhone?: boolean;
+  initialPhone?: string;
+};
+
+const deriveInitialPhoneRest = (value: string) => {
+  if (!value) return "";
+
+  const digitsOnly = value.replace(/\D/g, "").replace(/^971/, "");
+  return digitsOnly.replace(/^0+/, "");
 };
 
 const PhoneModal: React.FC<PhoneModalProps> = ({
   open,
   onClose,
   allowExistingPhone = false,
+  initialPhone = "",
 }) => {
-  const [phoneRest, setPhoneRest] = useState("");
+  const [phoneRest, setPhoneRest] = useState(() => deriveInitialPhoneRest(initialPhone));
   const [error, setError] = useState("");
   const [sendOtp, { isLoading }] = useSendOtpMutation();
 
@@ -62,11 +72,11 @@ const PhoneModal: React.FC<PhoneModalProps> = ({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+  const modalContent = (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/30">
       <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-sm relative">
         <button
-          onClick={() => onClose()}
+          onClick={() => onClose(undefined)}
           className="absolute top-3 right-3 text-gray-400 hover:text-red-600 text-xl font-black"
           aria-label="Close phone modal"
         >
@@ -100,6 +110,8 @@ const PhoneModal: React.FC<PhoneModalProps> = ({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default PhoneModal;

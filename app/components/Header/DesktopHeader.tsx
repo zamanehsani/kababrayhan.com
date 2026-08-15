@@ -19,6 +19,7 @@ import {
   clearCustomerPortalSession,
   CUSTOMER_PORTAL_UPDATED,
   PHONE_KEY,
+  PHONE_STATUS_KEY,
   readCustomerPortalSnapshot,
 } from "@/app/lib/customerPortal";
 import PhoneModal from "../home/modal/PhoneModal";
@@ -180,6 +181,10 @@ export default function DesktopHeader() {
   }, [refreshCartBadge, refreshPortalState]);
 
   const handlePortalClick = () => {
+    setShowVerifyModal(false);
+    setPhoneForVerify("");
+    localStorage.removeItem(PHONE_KEY);
+    localStorage.removeItem(PHONE_STATUS_KEY);
     setShowPhoneModal(true);
   };
 
@@ -200,6 +205,14 @@ export default function DesktopHeader() {
     setShowVerifyModal(false);
     setPhoneForVerify("");
     refreshPortalState();
+  };
+
+  const handleChangePhoneFromVerify = () => {
+    setShowVerifyModal(false);
+    setPhoneForVerify("");
+    localStorage.removeItem(PHONE_KEY);
+    localStorage.removeItem(PHONE_STATUS_KEY);
+    setShowPhoneModal(true);
   };
 
   const handleTriggerCart = () => {
@@ -375,9 +388,9 @@ export default function DesktopHeader() {
           <button
             type="button"
             onClick={handlePortalClick}
-            className="h-11 rounded-xl border border-slate-200 bg-white px-5 text-xs font-semibold uppercase tracking-widest text-slate-700 transition-all hover:bg-slate-50 active:scale-95"
+            className="h-11 rounded-full border border-slate-200 bg-white p-3 font-semibold uppercase tracking-widest text-slate-700 transition-all hover:bg-slate-50 active:scale-95"
           >
-            Account
+            <User size={20} />
           </button>
         )}
 
@@ -397,13 +410,18 @@ export default function DesktopHeader() {
       </div>
 
       {showPhoneModal && (
-        <PhoneModal open={showPhoneModal} onClose={handlePhoneModalClose} />
+        <PhoneModal
+          open={showPhoneModal}
+          allowExistingPhone={true}
+          onClose={handlePhoneModalClose}
+        />
       )}
       {showVerifyModal && (
         <PhoneVerifyModal
           open={showVerifyModal}
           phone={phoneForVerify}
           onClose={handleVerifyModalClose}
+          onChangePhone={handleChangePhoneFromVerify}
         />
       )}
     </header>

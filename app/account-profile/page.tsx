@@ -206,6 +206,8 @@ export default function AccountProfilePage() {
 
   const handleOpenPhoneUpdate = () => {
     setPreviousVerifiedPhone(portalState.isVerified ? portalState.phone : "");
+    localStorage.removeItem(PHONE_KEY);
+    localStorage.removeItem(PHONE_STATUS_KEY);
     setShowPhoneModal(true);
   };
 
@@ -252,6 +254,14 @@ export default function AccountProfilePage() {
     }
 
     refreshPortalState();
+  };
+
+  const handleChangePhoneFromVerify = () => {
+    setShowVerifyModal(false);
+    setPhoneForVerify("");
+    localStorage.removeItem(PHONE_KEY);
+    localStorage.removeItem(PHONE_STATUS_KEY);
+    setShowPhoneModal(true);
   };
 
   const handleAddressSelect = (addressData: SelectedAddress) => {
@@ -726,7 +736,7 @@ export default function AccountProfilePage() {
       {showPhoneModal && (
         <PhoneModal
           open={showPhoneModal}
-          allowExistingPhone
+          allowExistingPhone={true}
           onClose={handlePhoneModalClose}
         />
       )}
@@ -736,6 +746,7 @@ export default function AccountProfilePage() {
           open={showVerifyModal}
           phone={phoneForVerify}
           onClose={handleVerifyModalClose}
+          onChangePhone={handleChangePhoneFromVerify}
         />
       )}
 

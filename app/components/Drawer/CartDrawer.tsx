@@ -186,6 +186,21 @@ export default function CartDrawer() {
     setShowVerifyModal(true);
   };
 
+  const handleVerifyModalClose = (didVerify?: boolean) => {
+    setShowVerifyModal(false);
+
+    if (didVerify) {
+      proceedAfterPhoneDecision();
+      return;
+    }
+  };
+
+  const handleChangePhoneFromVerify = () => {
+    setShowVerifyModal(false);
+    setAllowExistingPhoneInput(true);
+    setShowPhoneModal(true);
+  };
+
   const handleDeliverySelection = (option: CheckoutMode) => {
     setShowDeliveryTakeaway(false);
 
@@ -360,6 +375,7 @@ export default function CartDrawer() {
           <PhoneModal
             open={showPhoneModal}
             allowExistingPhone={allowExistingPhoneInput}
+            initialPhone={phone}
             onClose={handlePhoneModalClose}
           />
         )}
@@ -367,10 +383,8 @@ export default function CartDrawer() {
           <PhoneVerifyModal
             open={showVerifyModal}
             phone={phone}
-            onClose={() => {
-              setShowVerifyModal(false);
-              proceedAfterPhoneDecision();
-            }}
+            onClose={handleVerifyModalClose}
+            onChangePhone={handleChangePhoneFromVerify}
           />
         )}
         {showDeliveryTakeaway && (

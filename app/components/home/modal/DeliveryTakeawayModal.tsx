@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { createPortal } from "react-dom";
 
 export type DeliveryOption = "delivery" | "takeaway";
 
@@ -12,8 +13,9 @@ export type DeliveryTakeawayModalProps = {
 
 const DeliveryTakeawayModal: React.FC<DeliveryTakeawayModalProps> = ({ open, onSelect, onClose }) => {
   if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+
+  const modalContent = (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/30">
       <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-sm relative">
         <button
           onClick={onClose}
@@ -40,6 +42,8 @@ const DeliveryTakeawayModal: React.FC<DeliveryTakeawayModalProps> = ({ open, onS
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default DeliveryTakeawayModal;
