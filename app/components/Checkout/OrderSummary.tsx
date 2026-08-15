@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import DirhamIcon from "../icon/DirhamIcon";
 
 interface CartEntry {
@@ -49,9 +50,11 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total, deliveryCharge
           >
             <div className="flex items-center gap-4">
               <div className="relative h-16 w-16 overflow-hidden rounded-2xl border border-stone-50 bg-stone-50">
-                <img
-                  src={entry.item?.image}
-                  alt={entry.item?.title}
+                <Image
+                  src={entry.item?.image || "/popular-dishes/burger.png"}
+                  alt={entry.item?.title || "Menu item"}
+                  width={64}
+                  height={64}
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
               </div>

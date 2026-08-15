@@ -234,6 +234,7 @@ export default function DesktopPopularDishes() {
                       src={dish.img}
                       alt={dish.name}
                       fill
+                      loading="eager"
                       onError={(event) => {
                         if (
                           !event.currentTarget.src.includes(

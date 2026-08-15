@@ -193,6 +193,7 @@ export default function TabletPopularDishes() {
                       src={dish.img}
                       alt={dish.name}
                       fill
+                      loading="eager"
                       onError={(event) => {
                         if (!event.currentTarget.src.includes("/popular-dishes/burger.png")) {
                           event.currentTarget.src = "/popular-dishes/burger.png";

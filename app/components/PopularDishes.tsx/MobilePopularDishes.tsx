@@ -1,5 +1,5 @@
 "use client";
-import { Heart, Flame } from "lucide-react";
+import { Flame } from "lucide-react";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -189,6 +189,7 @@ export default function PopularDishes() {
                       src={dish.img}
                       alt={dish.name}
                       fill
+                      loading="eager"
                       onError={(event) => {
                         if (!event.currentTarget.src.includes("/popular-dishes/burger.png")) {
                           event.currentTarget.src = "/popular-dishes/burger.png";
