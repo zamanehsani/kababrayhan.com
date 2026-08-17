@@ -211,9 +211,6 @@ const CheckoutPage = () => {
   const [completeDoorstepOrder] = useCompleteDoorstepOrderMutation();
 
   const hasInitializedPaymentRef = useRef(false);
-  const noteSaveTimerRef = useRef<ReturnType<
-    typeof globalThis.setTimeout
-  > | null>(null);
   const customerName = customer?.name || getCustomerName() || form.phone;
   const { data: backendAddresses } = useGetCustomerAddressesQuery(
     customerName,
@@ -394,22 +391,6 @@ const CheckoutPage = () => {
 
     return () => cancelAnimationFrame(frameId);
   }, [backendAddresses, form.deliveryAddresses]);
-
-  useEffect(() => {
-    return () => {
-      if (noteSaveTimerRef.current) {
-        globalThis.clearTimeout(noteSaveTimerRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!salesOrder?.name || !customerNote.trim()) {
-      return;
-    }
-
-    void handleCustomerNoteSave(customerNote);
-  }, [customerNote, handleCustomerNoteSave, salesOrder?.name]);
 
   const total = cart.reduce(
     (sum: number, entry: CartItem) =>
@@ -654,16 +635,6 @@ const CheckoutPage = () => {
     handleAutoProceed,
   ]);
 
-  const scheduleCustomerNoteSave = (nextNote: string) => {
-    if (noteSaveTimerRef.current) {
-      globalThis.clearTimeout(noteSaveTimerRef.current);
-    }
-
-    noteSaveTimerRef.current = globalThis.setTimeout(() => {
-      void handleCustomerNoteSave(nextNote);
-    }, 700);
-  };
-
   let paymentSection: ReactNode = null;
 
   if (orderError) {
@@ -884,7 +855,6 @@ const CheckoutPage = () => {
                     note={customerNote}
                     onNoteChange={(value) => {
                       setCustomerNote(value);
-                      scheduleCustomerNoteSave(value);
                     }}
                     onBlurSave={() => {
                       void handleCustomerNoteSave(customerNote);
