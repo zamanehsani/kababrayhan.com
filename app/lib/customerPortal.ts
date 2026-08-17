@@ -17,6 +17,8 @@ export const ADDRESS_ID_KEY = "uae_address_id";
 
 export const CUSTOMER_PORTAL_UPDATED = "customerPortalUpdated";
 export const DELIVERY_ADDRESSES_KEY = "uae_delivery_addresses";
+export const APP_STORAGE_VERSION_KEY = "kababrayhan_app_storage_version";
+export const APP_STORAGE_VERSION = "v2";
 // The original ERPNext Customer document name (= first verified phone).
 // This never changes even when the user updates their phone number.
 export const CUSTOMER_NAME_KEY = "uae_customer_name";
@@ -122,7 +124,46 @@ const writeStorageState = (
   }
 };
 
+export const clearStaleAppStorage = () => {
+  if (!hasWindow()) return;
+
+  const version = globalThis.localStorage.getItem(APP_STORAGE_VERSION_KEY);
+  const staleVersionDetected = version !== APP_STORAGE_VERSION;
+
+  if (!staleVersionDetected) {
+    return;
+  }
+
+  const staleKeys = [
+    "cart",
+    "pending_sales_order",
+    "sales_order",
+    "checkout_client_secret",
+    "uae_phone",
+    "uae_phone_status",
+    "uae_address",
+    "uae_address_id",
+    "uae_delivery_address",
+    "uae_delivery_address_id",
+    DELIVERY_ADDRESSES_KEY,
+    "uae_delivery_zone",
+    "uae_delivery_charge",
+    "order_type",
+    CUSTOMER_NAME_KEY,
+    "erpnext.customer",
+    "erpnext.customerProfile",
+  ];
+
+  staleKeys.forEach((key) => globalThis.localStorage.removeItem(key));
+  globalThis.sessionStorage?.removeItem("checkout_client_secret");
+  globalThis.localStorage.setItem(APP_STORAGE_VERSION_KEY, APP_STORAGE_VERSION);
+  store.dispatch(clearSession());
+  dispatchCustomerPortalUpdated();
+};
+
 export const initializeCustomerPortalSession = () => {
+  clearStaleAppStorage();
+
   const storageState = readStorageState();
   store.dispatch(
     hydrateSession({
@@ -135,7 +176,7 @@ export const initializeCustomerPortalSession = () => {
 
   // Validate session in background (non-blocking)
   if (storageState.phoneStatus === "verified" && storageState.phone) {
-    validateCustomerSession().catch((err) => 
+    validateCustomerSession().catch((err) =>
       console.warn("Session validation failed:", err)
     );
   }

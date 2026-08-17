@@ -4,7 +4,10 @@ import { Provider } from "react-redux";
 import { useEffect, type ReactNode } from "react";
 import { PersistGate } from "redux-persist/integration/react";
 import { persistor, store } from "./redux/store";
-import { initializeCustomerPortalSession } from "./lib/customerPortal";
+import {
+  clearStaleAppStorage,
+  initializeCustomerPortalSession,
+} from "./lib/customerPortal";
 
 type ProvidersProps = {
   children: ReactNode;
@@ -12,6 +15,7 @@ type ProvidersProps = {
 
 export default function Providers({ children }: ProvidersProps) {
   useEffect(() => {
+    clearStaleAppStorage();
     initializeCustomerPortalSession();
   }, []);
 

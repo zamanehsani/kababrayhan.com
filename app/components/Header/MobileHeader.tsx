@@ -14,6 +14,7 @@ import {
   clearCustomerPortalSession,
   CUSTOMER_PORTAL_UPDATED,
   PHONE_KEY,
+  PHONE_STATUS_KEY,
   getCustomerName,
   readCustomerPortalSnapshot,
 } from "@/app/lib/customerPortal";
