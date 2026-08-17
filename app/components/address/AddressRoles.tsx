@@ -4,37 +4,33 @@ import React from "react";
 interface AddressRolesProps {
   isDelivery: boolean;
   isBilling: boolean;
-  onToggleDelivery: () => void;
-  onToggleBilling: () => void;
+  onToggleDelivery?: () => void;
+  onToggleBilling?: () => void;
 }
 
 const AddressRoles: React.FC<AddressRolesProps> = ({
   isDelivery,
   isBilling,
-  onToggleDelivery,
-  onToggleBilling,
 }) => {
   return (
     <div className="mt-4 flex flex-wrap gap-4">
-      <label className="flex items-center gap-2 text-xs font-medium text-stone-600">
-        <input
-          type="checkbox"
-          checked={isDelivery}
-          onChange={onToggleDelivery}
-          className="h-4 w-4 rounded border-stone-300 text-red-600 focus:ring-red-500"
+      <div className="flex items-center gap-2 text-xs font-medium text-stone-600">
+        <span
+          className={`h-2.5 w-2.5 rounded-full ${
+            isDelivery ? "bg-emerald-500" : "bg-stone-300"
+          }`}
         />
         Delivery Address
-      </label>
+      </div>
 
-      <label className="flex items-center gap-2 text-xs font-medium text-stone-600">
-        <input
-          type="checkbox"
-          checked={isBilling}
-          onChange={onToggleBilling}
-          className="h-4 w-4 rounded border-stone-300 text-red-600 focus:ring-red-500"
+      <div className="flex items-center gap-2 text-xs font-medium text-stone-600">
+        <span
+          className={`h-2.5 w-2.5 rounded-full ${
+            isBilling ? "bg-amber-500" : "bg-stone-300"
+          }`}
         />
         Billing Address
-      </label>
+      </div>
     </div>
   );
 };

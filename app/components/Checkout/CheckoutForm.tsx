@@ -10,9 +10,8 @@ import {
 import type { Address } from "../../redux/apiType";
 import { getCustomerName } from "@/app/lib/customerPortal";
 import ErrorIcon from "../icon/ErrorIcon";
-import AddressRoles from "../address/AddressRoles";
 import LocationPinIcon from "../icon/LocationPinIcon";
-import ContactPhoneCard from "./ContactPhoneCard";
+import PhoneIcon from "../icon/PhoneIcon";
 
 export type DeliveryAddressItem = {
   id?: string;
@@ -53,9 +52,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     index: number;
     label: string;
   } | null>(null);
-  const [updatingTitleIndex, setUpdatingTitleIndex] = useState<number | null>(
-    null
-  );
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
     message: string;
@@ -188,67 +184,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     );
   }, [customerAddresses, setForm, form.phone]);
 
-  const handleTitleChange = (index: number, newTitle: string) => {
-    const updated = form.deliveryAddresses.map((da, i) =>
-      i === index ? { ...da, title: newTitle } : da
-    );
-    setForm((prev) => ({ ...prev, deliveryAddresses: updated }));
-    localStorage.setItem("uae_delivery_addresses", JSON.stringify(updated));
-  };
-
-  const handleTitleCommit = async (index: number) => {
-    const current = form.deliveryAddresses[index];
-    if (!current?.addressId) return;
-
-    // Build friendly clean display value
-    const cleanFriendlyTitle = extractFriendlyTitle(current.title, form.phone);
-    if (!cleanFriendlyTitle) return;
-
-    // Convert friendly title to backend title format (e.g., "+971567777788-offi")
-    const backendTitle = buildBackendTitle(
-      cleanFriendlyTitle,
-      form.phone || ""
-    );
-
-    setUpdatingTitleIndex(index);
-
-    try {
-      await updateAddress({
-        addressName: current.addressId,
-        // Save prefixed title configuration
-        address_title: backendTitle,
-      }).unwrap();
-
-      // Instantly update the local state to match what was committed
-      const updated = form.deliveryAddresses.map((da, i) =>
-        i === index ? { ...da, title: cleanFriendlyTitle } : da
-      );
-      setForm((prev) => ({ ...prev, deliveryAddresses: updated }));
-      localStorage.setItem("uae_delivery_addresses", JSON.stringify(updated));
-
-      // Refetch source-of-truth from backend
-      await refetchAddresses();
-
-      setFeedback({
-        type: "success",
-        message: "Address title updated successfully",
-      });
-
-      setTimeout(() => setFeedback(null), 2000);
-    } catch (err) {
-      console.warn("Failed to update checkout address title:", err);
-
-      setFeedback({
-        type: "error",
-        message: "Failed to update title",
-      });
-
-      setTimeout(() => setFeedback(null), 4000);
-    } finally {
-      setUpdatingTitleIndex(null);
-    }
-  };
-
   const handleRemoveAddress = async () => {
     if (!confirmDelete) return;
 
@@ -342,73 +277,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     refetchAddresses();
   };
 
-  const handleToggleDelivery = async (index: number) => {
-    const updated = form.deliveryAddresses.map((item, i) => ({
-      ...item,
-      isDelivery: i === index ? !item.isDelivery : item.isDelivery,
-    }));
-
-    setForm((prev) => ({
-      ...prev,
-      deliveryAddresses: updated,
-    }));
-
-    localStorage.setItem("uae_delivery_addresses", JSON.stringify(updated));
-
-    const selected = updated[index];
-
-    if (selected?.addressId) {
-      try {
-        await updateAddress({
-          addressName: selected.addressId,
-          is_shipping_address: selected.isDelivery ? 1 : 0,
-        }).unwrap();
-      } catch (err) {
-        console.error("Failed to update delivery address:", err);
-      }
-    }
-  };
-
-  const handleToggleBilling = async (index: number) => {
-    const updated = form.deliveryAddresses.map((item, i) => ({
-      ...item,
-      isBilling: i === index,
-    }));
-
-    setForm((prev) => ({
-      ...prev,
-      deliveryAddresses: updated,
-    }));
-
-    localStorage.setItem("uae_delivery_addresses", JSON.stringify(updated));
-
-    const selected = updated[index];
-
-    if (selected?.addressId) {
-      try {
-        await updateAddress({
-          addressName: selected.addressId,
-          is_primary_address: selected.isBilling ? 1 : 0,
-        }).unwrap();
-      } catch (err) {
-        console.error("Failed to update billing address:", err);
-      }
-    }
-  };
-
-
-
-  const buildBackendTitle = (label: string, phone?: string) => {
-    const slug = label
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "");
-
-    // Prepend the phone number prefix so ERPNext keeps its structured identifier
-    return phone ? `${phone}-${slug}` : slug;
-  };
-
   return (
     <>
       {/* Feedback Toast */}
@@ -429,14 +297,12 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
         className=" bg-white p-2"
         data-address-section
       >
-        <h2 className="mb-8 flex items-center gap-3 text-xl font-medium tracking-wide text-stone-900">
+        <h2 className="mb-2 flex items-center gap-3 text-xl font-medium tracking-wide text-stone-900">
           <span className="h-6 w-1 rounded-full bg-red-600" />
           Delivery Details
         </h2>
 
         <div className="space-y-8">
-          <ContactPhoneCard phone={form.phone} />
-
           {/* FIX: Map over form.deliveryAddresses instead of customerAddresses */}
           {form.deliveryAddresses?.map((localAddressItem, index) => {
             const targetId = selectedAddressId || (globalThis.localStorage ? localStorage.getItem("uae_delivery_address_id") : "");
@@ -447,74 +313,52 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
             }
 
             const resolvedAddress = localAddressItem.address || "";
-            const displayTitle = localAddressItem.title || "";
-
-            // Force flags to true since this is our active choice
-            const isDeliveryChecked = true;
-            const isBillingChecked = true;
+            // const displayTitle = localAddressItem.title || "Address";
 
             return (
               <div key={localAddressItem.addressId || index} className="group">
-                <div className="mb-3 ml-1 flex items-center gap-1">
-                  <span className="text-[13px] font-medium tracking-wide text-stone-700">
-                    Delivery To&nbsp;(
-                  </span>
+             
 
-                  <input
-                    type="text"
-                    value={displayTitle}
-                    onChange={(e) => handleTitleChange(index, e.target.value)}
-                    onBlur={() => {
-                      void handleTitleCommit(index);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.currentTarget.blur();
-                      }
-                    }}
-                    disabled={updatingTitleIndex === index}
-                    placeholder={index === 0 ? "Home" : `Office`}
-                    className="w-40 border-b border-dashed border-stone-300 bg-transparent text-center text-[13px] font-medium  tracking-wide text-stone-600 focus:border-red-600 focus:outline-none"
-                  />
+                <div className=" p-4 ">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 flex-1 flex-col gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-stone-500 shadow-sm">
+                          <PhoneIcon />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-stone-400">
+                            Contact
+                          </p>
+                          <p className="truncate text-sm font-medium text-stone-900">
+                            {form.phone || "No phone provided"}
+                          </p>
+                        </div>
+                      </div>
 
-                  {updatingTitleIndex === index && (
-                    <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
-                  )}
-
-                  <span className="text-[13px] font-medium uppercase tracking-wide text-stone-400">
-                    )
-                  </span>
-                </div>
-
-                <div
-                  className={`flex flex-col gap-4 rounded-2xl border-2 p-5 transition-all sm:flex-row sm:items-center`}
-                >
-                  <div className="flex min-w-0 flex-1 items-center gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-50 text-red-600">
-                      <LocationPinIcon />
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600">
+                          <LocationPinIcon />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-stone-400">
+                            Address
+                          </p>
+                          <p className="text-sm font-medium leading-snug text-stone-900">
+                            {resolvedAddress || "No address selected"}
+                          </p>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="flex-1 overflow-hidden">
-                      <p className="text-sm font-medium leading-snug text-stone-900">
-                        {resolvedAddress}
-                      </p>
-
-                      <AddressRoles
-                        isDelivery={isDeliveryChecked}
-                        isBilling={isBillingChecked}
-                        onToggleDelivery={() => handleToggleDelivery(index)}
-                        onToggleBilling={() => handleToggleBilling(index)}
-                      />
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveDeliveryIndex(index)}
+                      className="w-full shrink-0 rounded-xl px-4 py-2 text-[13px] font-medium tracking-widest bg-stone-100 text-stone-600 hover:bg-red-600 hover:text-white sm:w-auto"
+                    >
+                      Edit
+                    </button>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveDeliveryIndex(index)}
-                    className="w-full shrink-0 rounded-xl px-4 py-2 text-[13px] font-medium tracking-widest bg-stone-100 text-stone-600 hover:bg-red-600 hover:text-white sm:w-auto"
-                  >
-                    Edit
-                  </button>
                 </div>
               </div>
             );

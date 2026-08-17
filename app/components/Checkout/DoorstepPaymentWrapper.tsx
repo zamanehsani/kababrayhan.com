@@ -31,9 +31,6 @@ export const DoorstepPaymentWrapper: React.FC<DoorstepPaymentWrapperProps> = ({
         <div className="space-y-6">
             {/* Payment Selection Control */}
             <div className="space-y-2">
-                <label className="text-sm font-medium tracking-wide text-stone-700">
-                    Select Payment Method
-                </label>
                 <PaymentMethodSelector
                     onChange={(method) => setPaymentMethod(method)}
                     currentMethod={paymentMethod}
@@ -79,7 +76,7 @@ export const DoorstepPaymentWrapper: React.FC<DoorstepPaymentWrapperProps> = ({
                                     setIsSubmitting(false);
                                 }
                             }}
-                            className="w-full rounded-2xl bg-red-600 py-4 text-sm font-medium  tracking-wide text-white shadow-xl shadow-red-600/10 transition-all hover:bg-red-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="w-full rounded-full bg-red-600 py-4 text-sm font-medium  tracking-wide text-white transition-all hover:bg-red-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             {isSubmitting ? "Processing Order..." : "Confirm Card on Delivery Order"}
                         </button>

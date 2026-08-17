@@ -6,6 +6,8 @@ interface CartEntry {
   item: {
     id: string;
     title: string;
+    baseTitle?: string;
+    variationTitle?: string;
     image: string;
     discountedPrice: number;
   };
@@ -51,20 +53,24 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total, deliveryCharge
             <div className="flex items-center gap-4">
               <div className="relative h-16 w-16 overflow-hidden rounded-2xl border border-stone-50 bg-stone-50">
                 <Image
-                  src={entry.item?.image || "/popular-dishes/burger.png"}
-                  alt={entry.item?.title || "Menu item"}
+                  src={entry.item?.image || "/"}
+                  alt={entry.item?.title || ""}
                   width={64}
                   height={64}
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
               </div>
-              <div>
-                <div className="text-base font-medium text-stone-900 leading-tight">
-                  <span className="text-red-600">{entry.qty || 1}x</span> {entry.item?.title}
+              <div className="min-w-0">
+                <div className="text-base font-medium leading-tight text-stone-900">
+                  <span className="text-red-600">{entry.qty || 1}x</span>{" "}
+                  <span>{entry.item?.baseTitle || entry.item?.title}</span>
                 </div>
-                {entry.addon?.title && (
-                  <div className="mt-1 text-[12px] font-medium text-stone-400">
-                    + {entry.addon.title}
+
+                {entry.item?.variationTitle && (
+                  <div className="mt-1.5 flex items-center gap-2 text-[11px] font-medium tracking-wide text-stone-600">
+                    <span className="rounded-full bg-red-50 px-2 py-1 text-red-600">
+                      {entry.item.variationTitle}
+                    </span>
                   </div>
                 )}
               </div>
@@ -72,7 +78,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total, deliveryCharge
             
             <div className="text-right">
               <div className="flex items-center justify-end gap-0.5 text-base font-medium text-stone-900">
-                <DirhamIcon size={11} className="text-stone-900" />
+                <DirhamIcon className="text-stone-900" />
                 {((entry.item?.discountedPrice || 0) * (entry.qty || 1)).toFixed(2)}
               </div>
             </div>
@@ -121,13 +127,13 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total, deliveryCharge
         </div>
         
         {/* Total Highlight */}
-        <div className="mt-6 flex items-center justify-between rounded-xl p-4 bg-stone-900 shadow-xl shadow-stone-200/50 md:rounded-2xl md:p-6">
-          <span className="text-sm font-medium tracking-widest text-white md:text-base">
+        <div className="mt-6 flex items-center justify-between rounded-full p-4 bg-red-50 border border-red-600">
+          <span className=" font-medium tracking-widest text-red-600">
             Total
           </span>
           <div className="text-right">
-            <span className="flex items-center gap-0.5 text-xl font-medium leading-none text-red-500 md:text-2xl">
-              <DirhamIcon size={16} className="text-red-500 md:w-[18px] md:h-[18px]" />
+            <span className="flex items-center gap-0.5 text-xl font-medium leading-none text-red-600">
+              <DirhamIcon size={16} className="text-red-600 md:w-[18px] md:h-[18px]" />
               {grandTotal.toFixed(2)}
             </span>
           </div>

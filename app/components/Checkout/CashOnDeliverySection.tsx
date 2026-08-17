@@ -85,7 +85,7 @@ const CashOnDeliverySection: React.FC<CashOnDeliverySectionProps> = ({
           How will you pay the driver?
         </label>
         <p className="text-xs text-stone-500">
-          Select an option so our courier can bring the exact change line item.
+          Select an option so our delivery can bring the exact change.
         </p>
       </div>
 
@@ -116,8 +116,8 @@ const CashOnDeliverySection: React.FC<CashOnDeliverySectionProps> = ({
               }`}
           >
             <span className="flex items-center gap-0.5 text-sm font-medium">
-              {note}
               <DirhamIcon size={12} className={changeMode === note.toString() ? "text-red-600" : "text-stone-900"} />
+              {note}
             </span>
             <span className="text-[10px] opacity-70 mt-1">Pay with bill</span>
           </button>
@@ -141,7 +141,7 @@ const CashOnDeliverySection: React.FC<CashOnDeliverySectionProps> = ({
       {changeMode === "custom" && (
         <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
           <label className="text-[14px] font-normal text-slate-600 tracking-wide">
-            Enter the amount you will hand to the courier
+            Enter the amount you will hand to the delivery.
           </label>
           <div className="relative rounded-xl border border-stone-200 bg-white px-3 py-2.5">
             <input
@@ -176,16 +176,16 @@ const CashOnDeliverySection: React.FC<CashOnDeliverySectionProps> = ({
       )}
 
       {/* Warning Box */}
-      <div className="rounded-2xl bg-amber-50/40 border border-amber-100 p-4 text-xs text-amber-800 leading-relaxed">
+      {/* <div className="rounded-2xl bg-amber-50/40 border border-amber-100 p-4 text-xs text-amber-800 leading-relaxed">
         💡 <strong>Note:</strong> Cash on delivery fulfillment is completed at your doorstep. Please keep your specified currency ready for delivery agents.
-      </div>
+      </div> */}
 
       {/* Primary Call to Action */}
       <button
         type="button"
         disabled={isSubmitting || (changeMode === "custom" && (!customAmount || parseFloat(customAmount) <= total))}
         onClick={handleSubmit}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-red-600 py-4 text-sm font-medium tracking-wide text-white shadow-xl transition-all hover:bg-red-700 active:scale-95 disabled:bg-stone-300 disabled:scale-100 disabled:cursor-not-allowed"
+        className="flex w-full items-center justify-center gap-2 rounded-full bg-red-600 py-4 text-sm font-medium tracking-wide text-white  transition-all hover:bg-red-700 active:scale-95 disabled:bg-stone-300 disabled:scale-100 disabled:cursor-not-allowed"
       >
         {isSubmitting ? (
           <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-stone-400 border-t-white" />

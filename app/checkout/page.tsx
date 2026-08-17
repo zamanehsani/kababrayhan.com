@@ -746,13 +746,27 @@ const CheckoutPage = () => {
   const summaryCart = cart.map((entry) => ({
     item: {
       id: entry.item?.id || entry.item?.baseItemCode || "",
-      title: entry.item?.title || entry.item?.item_name || entry.name || "",
+      title:
+        entry.item?.baseTitle ||
+        entry.item?.title ||
+        entry.item?.item_name ||
+        entry.name ||
+        "",
+      baseTitle:
+        entry.item?.baseTitle ||
+        entry.item?.title ||
+        entry.item?.item_name ||
+        entry.name ||
+        "",
+      variationTitle: entry.item?.variationTitle || undefined,
       image: entry.item?.image || "",
       discountedPrice: entry.item?.discountedPrice || entry.price || 0,
     },
     qty: entry.qty || 1,
     addon: entry.addon ? { title: entry.addon.title || "" } : undefined,
   }));
+
+  
 
   return (
     <div className="min-h-screen bg-white">
@@ -796,10 +810,6 @@ const CheckoutPage = () => {
                     </>
                   )}
                 </span>
-
-                <span className="text-xs font-normal text-stone-400">
-                  {form.deliveryAddresses[0]?.title || "Active Address"}
-                </span>
               </button>
 
               {/* Outer Grid Wrapper (Controls the animation) */}
@@ -819,14 +829,14 @@ const CheckoutPage = () => {
             {/* PAYMENT COMPONENT (Always explicitly visible) */}
             {(isInitializing || clientSecret || orderError) && (
               <section className="overflow-hidden bg-white animate-in fade-in zoom-in-95 duration-700">
-                <div className="px-2">
+                <div className="">
                   <h2 className=" flex items-center gap-3 text-xl font-medium tracking-wide text-stone-900">
                     <span className="h-6 w-1 rounded-full bg-red-600" />
                     Payment
                   </h2>
                 </div>
 
-                <div className="pr-4 py-6">{paymentSection}</div>
+                <div className="pr-4 py-2">{paymentSection}</div>
               </section>
             )}
           </div>

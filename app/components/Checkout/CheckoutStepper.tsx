@@ -8,7 +8,7 @@ const CheckoutStepper: React.FC<CheckoutStepperProps> = ({ currentStep }) => {
   const steps = ["My Order", "Address", "Payment"];
 
   return (
-    <div className="mx-auto mb-16 w-full max-w-xl px-4">
+    <div className="mx-auto mb-14 w-full max-w-xl px-2">
       <div className="relative flex items-center justify-between">
         {/* Progress Bar Background */}
         <div className="absolute top-1/2 left-0 h-[2px] w-full -translate-y-1/2 bg-stone-100" />

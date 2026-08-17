@@ -126,7 +126,7 @@ const PaymentForm = ({
       <button
         type="submit"
         disabled={!stripe || !elements || isProcessing}
-        className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4 text-xs font-black uppercase tracking-[0.2em] transition-all shadow-xl ${!stripe || !elements || isProcessing
+        className={`flex w-full items-center justify-center gap-3 rounded-full py-4 text-xs font-black uppercase tracking-[0.2em] transition-all ${!stripe || !elements || isProcessing
             ? "cursor-not-allowed bg-stone-400 text-white"
             : "bg-red-600 text-white shadow-red-200 hover:bg-red-700 active:scale-95"
           }`}
@@ -142,22 +142,6 @@ const PaymentForm = ({
         )}
       </button>
 
-      <div className="flex items-center justify-center gap-2 text-[10px] text-stone-400 font-medium">
-        <svg
-          className="h-3.5 w-3.5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-          />
-        </svg>
-        <span>Secured by Stripe • AES-256 Encryption</span>
-      </div>
     </form>
   );
 };
