@@ -6,6 +6,7 @@ import { CART_UPDATED, getCart, type CartEntry } from "@/app/lib/cart";
 import {
   CUSTOMER_PORTAL_UPDATED,
   PHONE_KEY,
+  PHONE_STATUS_KEY,
   readCustomerPortalSnapshot,
 } from "@/app/lib/customerPortal";
 import PhoneModal from "./modal/PhoneModal";
