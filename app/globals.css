@@ -87,3 +87,32 @@
   --color-brand-900: #872215;
   --color-brand-950: #4A0D05;
 }
+
+@layer base {
+  button,
+  a[href],
+  [role="button"],
+  [role="menuitem"],
+  [role="tab"],
+  [role="link"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"],
+  summary,
+  label,
+  select,
+  option,
+  input[type="checkbox"],
+  input[type="radio"],
+  .clickable,
+  [data-clickable="true"] {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [disabled],
+  [aria-disabled="true"],
+  .is-disabled {
+    cursor: not-allowed;
+  }
+}
