@@ -70,6 +70,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
+  const zoneLayersRef = useRef<any[]>([]);
   const [deliveryZone, setDeliveryZone] = useState<string>("");
   const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
   const [isOutOfRange, setIsOutOfRange] = useState<boolean>(false);
@@ -268,6 +269,199 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
       mapInstance?.setView([25.2048, 55.2708], 13);
     }
   };
+
+  const parseJSONIfNeeded = (value: unknown): unknown => {
+    if (typeof value !== "string") return value;
+
+    const trimmed = value.trim();
+    if (!trimmed) return value;
+
+    try {
+      return JSON.parse(trimmed);
+    } catch {
+      return value;
+    }
+  };
+
+  const normalizePolygonPoints = (coordValue: unknown): Array<[number, number]> | null => {
+    const normalizedValue = parseJSONIfNeeded(coordValue);
+
+    if (!Array.isArray(normalizedValue) || normalizedValue.length === 0) {
+      return null;
+    }
+
+    const parsePoint = (point: unknown): [number, number] | null => {
+      if (point && typeof point === "object") {
+        const obj = point as Record<string, unknown>;
+        const lng = Number(obj.longitude ?? obj.lng ?? obj.lon);
+        const lat = Number(obj.latitude ?? obj.lat);
+
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+          return [lat, lng];
+        }
+      }
+
+      if (Array.isArray(point) && point.length >= 2) {
+        const first = Number(point[0]);
+        const second = Number(point[1]);
+
+        if (Number.isFinite(first) && Number.isFinite(second)) {
+          const isLngFirst = Math.abs(first) > Math.abs(second);
+          const lat = isLngFirst ? second : first;
+          const lng = isLngFirst ? first : second;
+          return [lat, lng];
+        }
+      }
+
+      return null;
+    };
+
+    const parseRing = (ring: unknown): Array<[number, number]> | null => {
+      if (!Array.isArray(ring) || ring.length === 0) {
+        return null;
+      }
+
+      const points = ring
+        .map((point) => parsePoint(point))
+        .filter((point): point is [number, number] => point !== null);
+
+      return points.length >= 3 ? points : null;
+    };
+
+    const direct = parseRing(normalizedValue);
+    if (direct) {
+      return direct;
+    }
+
+    if (Array.isArray(normalizedValue[0]) && Array.isArray(normalizedValue[0][0])) {
+      const nestedRing = parseRing(normalizedValue[0]);
+      if (nestedRing) {
+        return nestedRing;
+      }
+    }
+
+    for (const item of normalizedValue) {
+      if (Array.isArray(item)) {
+        const nested = parseRing(item);
+        if (nested) {
+          return nested;
+        }
+      }
+    }
+
+    return null;
+  };
+
+  const renderDeliveryZonePolygons = async () => {
+    const map = mapInstanceRef.current;
+    const L = (globalThis as typeof globalThis & { L?: any }).L;
+
+    if (!map || !L) {
+      return;
+    }
+
+    zoneLayersRef.current.forEach((layer) => layer.remove());
+    zoneLayersRef.current = [];
+
+    const token = process.env.NEXT_PUBLIC_ERP_API_TOKEN || "";
+    const doctypeName = "Delivery Zone";
+
+    if (!baseUrl || !token) {
+      return;
+    }
+
+    try {
+      const fields = [
+        "name",
+        "is_active",
+        "zone_name",
+        "zone_polygon_data",
+        "min_order_amount",
+        "delivery_charge",
+      ];
+
+      const query = new URLSearchParams({
+        fields: JSON.stringify(fields),
+        limit_page_length: "200",
+        filters: JSON.stringify([["is_active", "=", 1]]),
+      });
+
+      const url = `${baseUrl}/api/resource/${encodeURIComponent(doctypeName)}?${query.toString()}`;
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `token ${token}`,
+          "X-Frappe-Site-Name": "kababrayhan.com",
+          Accept: "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        return;
+      }
+
+      const payload = await response.json();
+
+      const zoneDocs = Array.isArray(payload?.data)
+        ? payload.data
+        : Array.isArray(payload?.message)
+          ? payload.message
+          : [];
+
+      if (!zoneDocs.length) {
+        return;
+      }
+
+      const polygons: Array<Array<[number, number]>> = [];
+
+      for (const zoneDoc of zoneDocs) {
+        const zonePolygonData = parseJSONIfNeeded((zoneDoc as Record<string, unknown>)?.zone_polygon_data);
+        const normalized = normalizePolygonPoints(zonePolygonData);
+
+        if (normalized) {
+          polygons.push(normalized);
+        }
+      }
+
+      if (!polygons.length) {
+        return;
+      }
+
+      const zoneColors = [
+        { color: "#ef4444", fillColor: "#fca5a5" },
+        { color: "#f97316", fillColor: "#fdba74" },
+        { color: "#f59e0b", fillColor: "#fcd34d" },
+        { color: "#10b981", fillColor: "#6ee7b7" },
+        { color: "#3b82f6", fillColor: "#93c5fd" },
+        { color: "#8b5cf6", fillColor: "#c4b5fd" },
+        { color: "#ec4899", fillColor: "#f9a8d4" },
+        { color: "#14b8a6", fillColor: "#99f6e4" },
+      ];
+
+      polygons.forEach((points, index) => {
+        const style = zoneColors[index % zoneColors.length];
+        const polygon = L.polygon(points, {
+          color: style.color,
+          fillColor: style.fillColor,
+          fillOpacity: 0.18,
+          weight: 2,
+          opacity: 0.9,
+        }).addTo(map);
+        zoneLayersRef.current.push(polygon);
+      });
+
+      if (zoneLayersRef.current.length) {
+        const bounds = L.featureGroup(zoneLayersRef.current).getBounds();
+        if (bounds.isValid()) {
+          map.fitBounds(bounds, { padding: [24, 24], maxZoom: 13 });
+        }
+      }
+
+      return;
+    } catch (error) {
+      console.warn("Failed to load delivery-zone polygons from Delivery Zone:", error);
+    }
+  };
   /* * END NEW * */
 
 
@@ -334,6 +528,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
         mapInstanceRef.current = map;
 
         requestCurrentLocation(map, L, false);
+        void renderDeliveryZonePolygons();
 
         // Force resize recalculation for Modals
         setTimeout(() => {
