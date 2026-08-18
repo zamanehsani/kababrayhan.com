@@ -6,7 +6,6 @@ import { X, ShoppingBag, ArrowRight } from "lucide-react";
 import DirhamIcon from "../icon/DirhamIcon";
 import PhoneModal from "../home/modal/PhoneModal";
 import PhoneVerifyModal from "../home/modal/PhoneVerifyModal";
-import DeliveryTakeawayModal from "../home/modal/DeliveryTakeawayModal";
 import AddressSelectModal from "../home/modal/AddressSelectModal";
 import UpdateDecisionModal from "../home/modal/UpdateDecisionModal";
 import GlobalLoader from "../home/modal/shared/GlobalLoader";
@@ -22,8 +21,6 @@ import {
 import SavedAddressesModal from "../home/modal/SavedAddressesModal";
 import { useUpdateAddressMutation } from "@/app/redux/api";
 
-type CheckoutMode = "delivery" | "takeaway";
-
 export default function CartDrawer() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -34,7 +31,6 @@ export default function CartDrawer() {
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [phone, setPhone] = useState("");
-  const [showDeliveryTakeaway, setShowDeliveryTakeaway] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showPhoneUpdatePrompt, setShowPhoneUpdatePrompt] = useState(false);
   const [allowExistingPhoneInput, setAllowExistingPhoneInput] = useState(false);
@@ -137,8 +133,16 @@ export default function CartDrawer() {
     setShowPhoneModal(true);
   };
 
-  const proceedAfterPhoneDecision = () => {
-    setShowDeliveryTakeaway(true);
+  const proceedToDeliveryFlow = () => {
+    const currentSnapshot = readCustomerPortalSnapshot();
+    const addresses = currentSnapshot.deliveryAddresses;
+
+    if (addresses.length > 0) {
+      setShowSavedAddressesModal(true);
+      return;
+    }
+
+    setShowAddressModal(true);
   };
 
   const handlePhoneUpdateConfirm = () => {
@@ -149,7 +153,7 @@ export default function CartDrawer() {
 
   const handlePhoneUpdateSkip = () => {
     setShowPhoneUpdatePrompt(false);
-    proceedAfterPhoneDecision();
+    proceedToDeliveryFlow();
   };
 
 
@@ -178,7 +182,7 @@ export default function CartDrawer() {
     // continue checkout with existing verified session.
     if (allowExistingPhoneInput && status === "verified") {
       setAllowExistingPhoneInput(false);
-      proceedAfterPhoneDecision();
+      proceedToDeliveryFlow();
       return;
     }
 
@@ -190,7 +194,7 @@ export default function CartDrawer() {
     setShowVerifyModal(false);
 
     if (didVerify) {
-      proceedAfterPhoneDecision();
+      proceedToDeliveryFlow();
       return;
     }
   };
@@ -199,29 +203,6 @@ export default function CartDrawer() {
     setShowVerifyModal(false);
     setAllowExistingPhoneInput(true);
     setShowPhoneModal(true);
-  };
-
-  const handleDeliverySelection = (option: CheckoutMode) => {
-    setShowDeliveryTakeaway(false);
-
-    globalThis.localStorage?.setItem("order_type", option);
-
-    if (option !== "delivery") {
-      setOpen(false);
-      setIsNavigatingToCheckout(true);
-      router.push("/checkout");
-      return;
-    }
-
-    const currentSnapshot = readCustomerPortalSnapshot();
-    const addresses = currentSnapshot.deliveryAddresses;
-
-    if (addresses.length > 0) {
-      setShowSavedAddressesModal(true);
-      return;
-    }
-
-    setShowAddressModal(true);
   };
 
   return (
@@ -385,13 +366,6 @@ export default function CartDrawer() {
             phone={phone}
             onClose={handleVerifyModalClose}
             onChangePhone={handleChangePhoneFromVerify}
-          />
-        )}
-        {showDeliveryTakeaway && (
-          <DeliveryTakeawayModal
-            open={showDeliveryTakeaway}
-            onClose={() => setShowDeliveryTakeaway(false)}
-            onSelect={handleDeliverySelection}
           />
         )}
         {showAddressModal && (

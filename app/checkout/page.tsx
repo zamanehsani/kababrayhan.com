@@ -168,16 +168,6 @@ const CheckoutPage = () => {
   const [customerNote, setCustomerNote] = useState<string>("");
   const [retryCount, setRetryCount] = useState(0);
   const [showAddressWarning, setShowAddressWarning] = useState(false);
-  const [orderType] = useState<"delivery" | "takeaway">(() => {
-    if (typeof window === "undefined") {
-      return "delivery";
-    }
-
-    return (
-      (globalThis.localStorage.getItem("order_type") as "delivery" | "takeaway") ||
-      "delivery"
-    );
-  });
   const [deliveryZone] = useState<string>(() => {
     if (typeof window === "undefined") {
       return "";
@@ -415,7 +405,7 @@ const CheckoutPage = () => {
     const currentSelectedId = globalThis.localStorage?.getItem("uae_delivery_address_id") || "";
     const selectedAddressObj = form.deliveryAddresses.find(a => a.addressId === currentSelectedId) || form.deliveryAddresses[0];
     const primaryAddress = selectedAddressObj?.address?.trim();
-    if (orderType === "delivery" && !primaryAddress) {
+    if (!primaryAddress) {
       setOrderError("Please select a delivery address before proceeding.");
       setIsInitializing(false);
       setShowAddressWarning(true);
@@ -595,7 +585,6 @@ const CheckoutPage = () => {
     form.deliveryAddresses,
     form.phone,
     isInitializing,
-    orderType,
     retryCount,
     router,
     total,
