@@ -2,20 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import {
-  CalendarDays,
-  CreditCard,
-  Mail,
-  MapPin,
-  Menu,
-  Package,
-  PencilLine,
-  Phone,
-  Plus,
-  ReceiptText,
-  UserRound,
-  X,
-} from "lucide-react";
+import { CreditCard, LogOut, MapPin, Menu, Package, ReceiptText, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import MobileHeader from "../components/Header/MobileHeader";
 import TabletHeader from "../components/Header/TabletHeader";
 import DesktopHeader from "../components/Header/DesktopHeader";
@@ -29,6 +17,7 @@ import AddressSelectModal, {
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import {
   CUSTOMER_PORTAL_UPDATED,
+  clearCustomerPortalSession,
   type DeliveryAddressItem,
   PHONE_KEY,
   PHONE_STATUS_KEY,
@@ -49,7 +38,11 @@ import {
   useGetSalesOrderQuery,
   useSetCustomerInfoMutation,
 } from "@/app/redux/api";
+import { useLogoutMutation } from "@/app/redux/authApi";
 import Footer from "../components/Footer/Footer";
+import AddressesTab from "./components/AddressesTab";
+import OrdersTab from "./components/OrdersTab";
+import ProfileTab from "./components/ProfileTab";
 
 
 // Robust recursive string utility to strip out prefixes and format titles beautifully
@@ -99,6 +92,7 @@ type ERPNextAddress = {
 };
 
 export default function AccountProfilePage() {
+  const router = useRouter();
   const [portalState, setPortalState] = useState(() =>
     readCustomerPortalSnapshot()
   );
@@ -120,6 +114,7 @@ export default function AccountProfilePage() {
     label: string;
   } | null>(null);
   const [setCustomerInfo] = useSetCustomerInfoMutation();
+  const [logout] = useLogoutMutation();
   const [deleteAddress] = useDeleteAddressMutation();
   const [disableAddress] = useDisableAddressMutation();
 
@@ -144,12 +139,13 @@ export default function AccountProfilePage() {
     skip: !customerName || !portalState.isVerified,
   });
 
-  const { data: customerOrders = [] } = useGetCustomerSalesOrdersQuery(
+  const { data: customerOrdersData } = useGetCustomerSalesOrdersQuery(
     customerName || "",
     {
       skip: !customerName || !portalState.isVerified,
     }
   );
+  const customerOrders = customerOrdersData ?? [];
 
   const { data: selectedOrderDetails } = useGetSalesOrderQuery(
     selectedOrderName || "",
@@ -157,6 +153,27 @@ export default function AccountProfilePage() {
       skip: !selectedOrderName,
     }
   );
+
+  useEffect(() => {
+    if (!customerProfile && !backendAddresses && !customerOrdersData) {
+      return;
+    }
+
+    console.groupCollapsed("[Frappe] Account profile data");
+    console.log("Customer details:", customerProfile);
+    console.log("Customer name fields:", {
+      firstName: customerProfile?.first_name,
+      lastName: customerProfile?.last_name,
+      customerName: customerProfile?.customer_name,
+    });
+    console.log("Customer contact fields:", {
+      mobileNo: customerProfile?.mobile_no,
+      emailId: customerProfile?.email_id,
+    });
+    console.log("Addresses:", backendAddresses);
+    console.log("Orders:", customerOrdersData);
+    console.groupEnd();
+  }, [backendAddresses, customerOrdersData, customerProfile]);
 
   const refreshPortalState = useCallback(() => {
     setPortalState(readCustomerPortalSnapshot());
@@ -486,11 +503,27 @@ export default function AccountProfilePage() {
     setShowVerifyModal(true);
   };
 
+  const handleSignOut = async () => {
+    const mobile = (portalState.phone || localStorage.getItem(PHONE_KEY) || "").trim();
+
+    clearCustomerPortalSession();
+
+    try {
+      if (mobile) {
+        await logout({ mobile }).unwrap();
+      }
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+
+    router.push("/home");
+  };
+
   const fullName =
-    customerProfile?.customer_name ||
     [customerProfile?.first_name, customerProfile?.last_name]
-      .filter(Boolean)
+      .filter((name): name is string => Boolean(name?.trim()))
       .join(" ") ||
+    customerProfile?.customer_name ||
     "Customer";
 
   const emailAddress = customerProfile?.email_id || "No email added yet";
@@ -536,7 +569,7 @@ export default function AccountProfilePage() {
             </div>
           )}
 
-          <div className="mb-3 flex items-center justify-between gap-3 lg:hidden">
+          <div className="mb-3 flex items-center justify-between gap-3 md:hidden">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
@@ -550,8 +583,8 @@ export default function AccountProfilePage() {
             </span>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
-            <aside className="hidden rounded-3xl border border-slate-200 bg-white p-3 shadow-sm shadow-slate-200/40 lg:block">
+          <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)]">
+            <aside className="hidden h-fit self-start rounded-3xl border border-slate-200 bg-white p-3 shadow-sm shadow-slate-200/40 md:block">
               <nav className="space-y-2">
                 {menuItems.map((item) => {
                   const isActive = activeTab === item.key;
@@ -574,264 +607,58 @@ export default function AccountProfilePage() {
                     </button>
                   );
                 })}
+                <div className="my-1.5 h-px bg-slate-100" />
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="flex w-full items-center gap-2 rounded-2xl px-4 py-3 text-left text-sm font-medium text-red-600 transition hover:bg-red-50"
+                >
+                  <LogOut size={16} />
+                  <span>Sign Out</span>
+                </button>
               </nav>
             </aside>
 
             <div className="space-y-6">
-                {activeTab === "profile" && (
-                  <div>
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-600 shadow-inner shadow-red-100">
-                          <UserRound size={24} />
-                        </div>
-                        <div>
-                          <h2 className="mt-2 text-xl font-semibold text-slate-900">
-                            {fullName}
-                          </h2>
-                          <p className="mt-1 text-sm text-slate-500">
-                            {customerProfile?.customer_name || "Customer profile"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+              {activeTab === "profile" && (
+                <ProfileTab
+                  customerProfile={customerProfile}
+                  fullName={fullName}
+                  emailAddress={emailAddress}
+                  profilePhone={profilePhone}
+                  onEditEmail={() => {
+                    setPendingEmailValue(
+                      emailAddress === "No email added yet" ? "" : emailAddress
+                    );
+                    setEmailEditorOpen(true);
+                  }}
+                  onEditPhone={handleOpenPhoneUpdate}
+                />
+              )}
 
-                    <div className="mt-6 grid gap-4 md:grid-cols-2">
-                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-orange-600">
-                              <Mail size={18} />
-                            </div>
-                            <div>
-                              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                Email
-                              </p>
-                              <p className="mt-1 text-sm text-slate-700">{emailAddress}</p>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setPendingEmailValue(
-                                emailAddress === "No email added yet" ? "" : emailAddress
-                              );
-                              setEmailEditorOpen(true);
-                            }}
-                            className="rounded-full border border-slate-200 bg-white p-2 text-slate-600 transition-colors hover:border-red-200 hover:text-red-600"
-                            aria-label="Edit email"
-                          >
-                            <PencilLine size={15} />
-                          </button>
-                        </div>
-                      </div>
+              {activeTab === "addresses" && (
+                <AddressesTab
+                  addresses={portalState.deliveryAddresses}
+                  isLoading={isLoadingAddresses}
+                  profilePhone={profilePhone}
+                  onAddAddress={handleAddNewAddress}
+                  onEditAddress={setActiveDeliveryIndex}
+                />
+              )}
 
-                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-red-600">
-                              <Phone size={18} />
-                            </div>
-                            <div>
-                              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                Phone
-                              </p>
-                              <p className="mt-1 text-sm text-slate-700">{profilePhone}</p>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={handleOpenPhoneUpdate}
-                            className="rounded-full border border-slate-200 bg-white p-2 text-slate-600 transition-colors hover:border-red-200 hover:text-red-600"
-                            aria-label="Edit phone"
-                          >
-                            <PencilLine size={15} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === "addresses" && (
-                  <div className="py-6">
-                    <div className="mb-5 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-orange-600">
-                          <MapPin size={20} />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">Delivery Addresses</p>
-                          <p className="text-xs text-slate-500">Manage your saved locations</p>
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={handleAddNewAddress}
-                        className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition-all hover:border-red-200 hover:text-red-600"
-                        aria-label="Add another address"
-                      >
-                        <Plus size={16} strokeWidth={2} />
-                      </button>
-                    </div>
-
-                    <div className="space-y-5">
-                      {isLoadingAddresses ? (
-                        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center">
-                          <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-red-600" />
-                          <p className="mt-2 text-sm text-slate-500">Loading saved addresses...</p>
-                        </div>
-                      ) : portalState.deliveryAddresses.length > 0 ? (
-                        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-                          {portalState.deliveryAddresses.map((delivery, index) => (
-                            <div
-                              key={delivery.id ?? String(index)}
-                              className="group overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_10px_25px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_32px_rgba(15,23,42,0.1)]"
-                            >
-                              <div className="relative h-44 overflow-hidden bg-[#e9eef1]">
-                                <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.15),rgba(255,255,255,0.02))]" />
-                                <div className="absolute inset-0 opacity-80">
-                                  <div className="absolute inset-y-0 left-7 w-[10%] rotate-[-8deg] rounded-full bg-[#dfe7eb]" />
-                                  <div className="absolute inset-y-0 right-10 w-[14%] rotate-[12deg] rounded-full bg-[#dfe7eb]" />
-                                  <div className="absolute left-1/2 top-0 h-full w-[18%] -translate-x-1/2 rotate-[10deg] bg-[#dfe7eb]" />
-                                  <div className="absolute left-10 top-12 h-10 w-28 rounded-[18px] bg-[#f3f4f6]" />
-                                  <div className="absolute right-10 top-20 h-10 w-24 rounded-[18px] bg-[#f3f4f6]" />
-                                  <div className="absolute bottom-8 left-8 h-12 w-28 rounded-[18px] bg-[#f3f4f6]" />
-                                </div>
-
-                                <div className="absolute left-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-[#5d1a80] text-white shadow-lg shadow-violet-200/80">
-                                  <MapPin size={20} className="text-white" />
-                                </div>
-
-                                <div className="absolute right-4 top-4 flex items-center gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => setActiveDeliveryIndex(index)}
-                                    className="inline-flex items-center gap-2 rounded-full border border-[#1f9d94] bg-[#f0fdfa] px-3 py-2 text-xs font-semibold text-[#0f766e] shadow-sm transition-transform hover:scale-[1.02]"
-                                    aria-label="Edit address"
-                                  >
-                                    <PencilLine size={14} />
-                                    Edit
-                                  </button>
-                                </div>
-
-                                <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between gap-3">
-                                  <div className="flex items-center gap-2 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-medium text-slate-700 shadow-sm">
-                                    <span className="h-2 w-2 rounded-full bg-[#5d1a80]" />
-                                    {delivery.title || (index === 0 ? "Home" : "Address")}
-                                  </div>
-                                  {index === 0 && (
-                                    <span className="rounded-full bg-[#0f172a] px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-white">
-                                      Default
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div className="space-y-3 p-3">
-                                <div className="">
-                                  <p
-                                    className="text-[15px] leading-7 text-slate-700"
-                                    style={{
-                                      whiteSpace: "nowrap",
-                                      overflow: "hidden",
-                                      textOverflow: "ellipsis",
-                                      display: "block",
-                                    }}
-                                  >
-                                    {delivery.address || "No address selected yet"}
-                                  </p>
-                                </div>
-
-                                <div className="space-y-2 border-t border-slate-100 pt-3">
-                                  <div className="flex items-center gap-2 px-2 text-sm text-slate-600">
-                                    <Phone size={16} className="text-[#0f766e]" />
-                                    <span>{profilePhone}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-6 text-center">
-                          <MapPin size={32} className="mx-auto mb-3 text-slate-300" />
-                          <p className="text-sm text-slate-500">No delivery addresses saved yet</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === "orders" && (
-                  <div className="py-6">
-                    <div className="mb-5 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
-                          <Package size={20} />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">Orders</p>
-                          <p className="text-xs text-slate-500">Recent purchases and order history</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      {customerOrders.length === 0 ? (
-                        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
-                          No orders have been placed yet.
-                        </div>
-                      ) : (
-                        customerOrders.map((order) => (
-                          <button
-                            key={order.name}
-                            type="button"
-                            onClick={() => setSelectedOrderName(order.name)}
-                            className="w-full rounded-2xl border border-slate-200 bg-white p-4 text-left transition-all hover:border-red-200 hover:shadow-md"
-                          >
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                              <div>
-                                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                  Order name
-                                </p>
-                                <p className="mt-1 text-sm font-semibold text-slate-900">{order.name}</p>
-                              </div>
-                              <div className="sm:text-right">
-                                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                  Total
-                                </p>
-                                <p className="mt-1 text-sm font-semibold text-slate-900">
-                                  {formatCurrency(order.grand_total)}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-100 pt-3 text-xs text-slate-500">
-                              <span className="inline-flex items-center gap-1.5">
-                                <CalendarDays size={12} />
-                                {new Date(order.transaction_date).toLocaleDateString("en-AE", {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                })}
-                              </span>
-                              <span className="inline-flex items-center gap-1.5 font-semibold text-red-600">
-                                View details
-                                <ReceiptText size={12} />
-                              </span>
-                            </div>
-                          </button>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                )}
+              {activeTab === "orders" && (
+                <OrdersTab
+                  orders={customerOrders}
+                  formatCurrency={formatCurrency}
+                  onSelectOrder={setSelectedOrderName}
+                />
+              )}
               </div>
             </div>
 
         </section>
 
+        <Footer />
         <BottomNav />
         <CartSidebarWidget />
       </main>
@@ -882,12 +709,19 @@ export default function AccountProfilePage() {
                   </button>
                 );
               })}
+              <div className="my-1.5 h-px bg-slate-100" />
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="flex w-full items-center gap-2 rounded-2xl px-4 py-3 text-left text-sm font-medium text-red-600 transition hover:bg-red-50"
+              >
+                <LogOut size={16} />
+                <span>Sign Out</span>
+              </button>
             </nav>
           </aside>
         </div>
       )}
-
-      <Footer />
 
       {showPhoneModal && (
         <PhoneModal
