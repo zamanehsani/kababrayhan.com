@@ -2,47 +2,33 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { CreditCard, LogOut, MapPin, Menu, Package, ReceiptText, X } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import MobileHeader from "../components/Header/MobileHeader";
 import TabletHeader from "../components/Header/TabletHeader";
 import DesktopHeader from "../components/Header/DesktopHeader";
 import BottomNav from "../components/home/BottomNav";
 import CartSidebarWidget from "../components/Cart/CartSidebarWidget";
-import PhoneModal from "../components/home/modal/PhoneModal";
-import PhoneVerifyModal from "../components/home/modal/PhoneVerifyModal";
-import AddressSelectModal, {
-  type SelectedAddress,
-} from "../components/home/modal/AddressSelectModal";
-import ConfirmDialog from "../components/shared/ConfirmDialog";
 import {
   CUSTOMER_PORTAL_UPDATED,
   clearCustomerPortalSession,
   type DeliveryAddressItem,
   PHONE_KEY,
-  PHONE_STATUS_KEY,
-  dispatchCustomerPortalUpdated,
   getCustomerName,
-  initializeCustomerPortalSession,
   readCustomerPortalSnapshot,
   saveDeliveryAddress,
-  saveVerifiedPhone,
   writeDeliveryAddresses,
 } from "@/app/lib/customerPortal";
 import {
-  useDeleteAddressMutation,
   useGetCustomerAddressesQuery,
-  useDisableAddressMutation,
   useGetCustomerQuery,
   useGetCustomerSalesOrdersQuery,
-  useGetSalesOrderQuery,
-  useSetCustomerInfoMutation,
 } from "@/app/redux/api";
 import { useLogoutMutation } from "@/app/redux/authApi";
 import Footer from "../components/Footer/Footer";
-import AddressesTab from "./components/AddressesTab";
-import OrdersTab from "./components/OrdersTab";
-import ProfileTab from "./components/ProfileTab";
+import AddressesTab from "@/app/account-profile/components/AddressesTab";
+import OrdersTab from "@/app/account-profile/components/OrdersTab";
+import ProfileTab from "@/app/account-profile/components/ProfileTab";
 
 
 // Robust recursive string utility to strip out prefixes and format titles beautifully
@@ -96,31 +82,12 @@ export default function AccountProfilePage() {
   const [portalState, setPortalState] = useState(() =>
     readCustomerPortalSnapshot()
   );
-  const [showPhoneModal, setShowPhoneModal] = useState(false);
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [activeDeliveryIndex, setActiveDeliveryIndex] = useState<number | null>(
-    null
-  );
-  const [phoneForVerify, setPhoneForVerify] = useState("");
-  const [previousVerifiedPhone, setPreviousVerifiedPhone] = useState("");
   const isSyncingFromBackendRef = useRef(false);
-  const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<{
-    index: number;
-    label: string;
-  } | null>(null);
-  const [setCustomerInfo] = useSetCustomerInfoMutation();
   const [logout] = useLogoutMutation();
-  const [deleteAddress] = useDeleteAddressMutation();
-  const [disableAddress] = useDisableAddressMutation();
-
-  const [emailEditorOpen, setEmailEditorOpen] = useState(false);
-  const [pendingEmailValue, setPendingEmailValue] = useState("");
-  const [selectedOrderName, setSelectedOrderName] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"profile" | "addresses" | "orders">(
     "profile"
@@ -146,13 +113,6 @@ export default function AccountProfilePage() {
     }
   );
   const customerOrders = customerOrdersData ?? [];
-
-  const { data: selectedOrderDetails } = useGetSalesOrderQuery(
-    selectedOrderName || "",
-    {
-      skip: !selectedOrderName,
-    }
-  );
 
   useEffect(() => {
     if (!customerProfile && !backendAddresses && !customerOrdersData) {
@@ -185,10 +145,6 @@ export default function AccountProfilePage() {
     }
 
     // Prevent race condition: don't overwrite during active user mutations
-    if (deletingIndex !== null) {
-      return;
-    }
-
     const syncedAddresses: DeliveryAddressItem[] = backendAddresses.map(
       (address: ERPNextAddress, index: number) => ({
         id: address.name,
@@ -246,7 +202,6 @@ export default function AccountProfilePage() {
     setTimeout(() => { isSyncingFromBackendRef.current = false; }, 100);
   }, [
     backendAddresses,
-    deletingIndex,
     portalState.phone,
   ]);
 
@@ -262,246 +217,6 @@ export default function AccountProfilePage() {
       globalThis.removeEventListener("storage", refreshPortalState);
     };
   }, [refreshPortalState]);
-
-  const handleOpenPhoneUpdate = () => {
-    setPreviousVerifiedPhone(portalState.isVerified ? portalState.phone : "");
-    localStorage.removeItem(PHONE_KEY);
-    localStorage.removeItem(PHONE_STATUS_KEY);
-    setShowPhoneModal(true);
-  };
-
-  const handlePhoneModalClose = (phoneJustSaved?: string) => {
-    setShowPhoneModal(false);
-
-    if (!phoneJustSaved) {
-      refreshPortalState();
-      return;
-    }
-
-    setPhoneForVerify(phoneJustSaved);
-    setShowVerifyModal(true);
-  };
-
-  const handleVerifyModalClose = () => {
-    setShowVerifyModal(false);
-
-    const status = globalThis.localStorage.getItem(PHONE_STATUS_KEY);
-    if (status === "verified") {
-      const newPhone = globalThis.localStorage.getItem(PHONE_KEY) || "";
-      const customerName = getCustomerName();
-
-      if (pendingEmailValue && customerName) {
-        setCustomerInfo({
-          customerName,
-          fieldname: "email_id",
-          value: pendingEmailValue,
-        })
-          .then(() => {
-            setFeedback({
-              type: "success",
-              message: "Email updated successfully.",
-            });
-            setTimeout(() => setFeedback(null), 3000);
-            setPendingEmailValue("");
-          })
-          .catch((err: unknown) => {
-            console.warn("Failed to update customer email_id:", err);
-            setFeedback({
-              type: "error",
-              message: "Failed to update email. Please try again.",
-            });
-            setTimeout(() => setFeedback(null), 3000);
-          });
-      }
-
-      if (customerName && newPhone && customerName !== newPhone) {
-        setCustomerInfo({
-          customerName,
-          fieldname: "mobile_no",
-          value: newPhone,
-        }).catch((err: unknown) =>
-          console.warn("Failed to update customer mobile_no:", err)
-        );
-      }
-      refreshPortalState();
-      refetchAddresses();
-      return;
-    }
-
-    if (previousVerifiedPhone) {
-      saveVerifiedPhone(previousVerifiedPhone);
-    } else {
-      globalThis.localStorage.removeItem(PHONE_KEY);
-      globalThis.localStorage.removeItem(PHONE_STATUS_KEY);
-      initializeCustomerPortalSession();
-      dispatchCustomerPortalUpdated();
-    }
-
-    refreshPortalState();
-  };
-
-  const handleChangePhoneFromVerify = () => {
-    setShowVerifyModal(false);
-    setPhoneForVerify("");
-    localStorage.removeItem(PHONE_KEY);
-    localStorage.removeItem(PHONE_STATUS_KEY);
-    setShowPhoneModal(true);
-  };
-
-  const handleAddressSelect = (addressData: SelectedAddress) => {
-    if (activeDeliveryIndex === null) return;
-
-    const resolvedAddress = addressData.name || "";
-    const addressId = addressData.id;
-
-    const updatedAddresses = portalState.deliveryAddresses.map((da, i) =>
-      i === activeDeliveryIndex
-        ? { ...da, address: resolvedAddress, addressId }
-        : da
-    );
-
-    writeDeliveryAddresses(updatedAddresses);
-
-    if (activeDeliveryIndex === 0) {
-      saveDeliveryAddress(resolvedAddress, addressId);
-    }
-
-    refreshPortalState();
-    setActiveDeliveryIndex(null);
-  };
-
-  const handleAddNewAddress = () => {
-    const newAddress: DeliveryAddressItem = {
-      id: String(Date.now()),
-      title: "",
-      address: "",
-      addressId: "",
-    };
-    const updatedAddresses = [...portalState.deliveryAddresses, newAddress];
-    writeDeliveryAddresses(updatedAddresses);
-    refreshPortalState();
-    setActiveDeliveryIndex(updatedAddresses.length - 1);
-  };
-
-  const handleRemoveAddress = async () => {
-    if (!confirmDelete) return;
-
-    const indexToRemove = confirmDelete.index;
-    const addressToRemove = portalState.deliveryAddresses[indexToRemove];
-    if (!addressToRemove) return;
-
-    setConfirmDelete(null);
-    setDeletingIndex(indexToRemove);
-
-    type AddressDeleteError = {
-      data?: {
-        _server_messages?: string;
-        exception?: string;
-        message?: string;
-      };
-      message?: string;
-    };
-
-    let isFallbackDisable = false;
-
-    if (addressToRemove.addressId) {
-      try {
-        await deleteAddress(addressToRemove.addressId).unwrap();
-      } catch (err: unknown) {
-        const errorData =
-          typeof err === "object" && err !== null && "data" in err
-            ? ((err as AddressDeleteError).data ?? undefined)
-            : undefined;
-
-        const serverMessages = String(
-          errorData?._server_messages ||
-            errorData?.exception ||
-            errorData?.message ||
-            (typeof err === "object" && err !== null && "message" in err
-              ? (err as AddressDeleteError).message || ""
-              : "") ||
-            ""
-        ).toLowerCase();
-
-        // Detect if address is linked to other documents (sales order, etc.)
-        const isLinkedError =
-          serverMessages.includes("linkexistserror") ||
-          serverMessages.includes("link exists") ||
-          serverMessages.includes("linked") ||
-          serverMessages.includes("cannot delete");
-
-        if (isLinkedError) {
-          // Address is linked to other documents, disable instead of delete
-          try {
-            await disableAddress(addressToRemove.addressId).unwrap();
-            isFallbackDisable = true;
-          } catch (disableErr) {
-            console.warn(
-              "Failed to disable linked address:",
-              disableErr
-            );
-            setFeedback({
-              type: "error",
-              message: "Address is in use and cannot be removed. Please try again.",
-            });
-            setTimeout(() => setFeedback(null), 4000);
-            setDeletingIndex(null);
-            return;
-          }
-        } else {
-          console.warn("Failed to delete address:", err);
-          setFeedback({
-            type: "error",
-            message: "Failed to remove address. Please try again.",
-          });
-          setTimeout(() => setFeedback(null), 4000);
-          setDeletingIndex(null);
-          return;
-        }
-      }
-    }
-
-    const updatedAddresses = portalState.deliveryAddresses.filter(
-      (_, i) => i !== indexToRemove
-    );
-    writeDeliveryAddresses(updatedAddresses);
-
-    if (indexToRemove === 0) {
-      if (updatedAddresses[0]) {
-        saveDeliveryAddress(
-          updatedAddresses[0].address,
-          updatedAddresses[0].addressId
-        );
-      } else {
-        saveDeliveryAddress("", "");
-      }
-    }
-
-    setFeedback({
-      type: "success",
-      message: isFallbackDisable
-        ? "Address is linked to orders and has been hidden"
-        : "Address removed successfully"
-    });
-
-    setTimeout(() => setFeedback(null), 3000);
-
-    // Refetch to ensure disabled addresses are filtered out
-    await refetchAddresses();
-    refreshPortalState();
-    setDeletingIndex(null);
-  };
-
-  const handleEmailSave = async () => {
-    const trimmed = pendingEmailValue.trim();
-    if (!trimmed || !customerName) {
-      return;
-    }
-
-    setEmailEditorOpen(false);
-    setPhoneForVerify(portalState.phone || "");
-    setShowVerifyModal(true);
-  };
 
   const handleSignOut = async () => {
     const mobile = (portalState.phone || localStorage.getItem(PHONE_KEY) || "").trim();
@@ -528,12 +243,6 @@ export default function AccountProfilePage() {
 
   const emailAddress = customerProfile?.email_id || "No email added yet";
   const profilePhone = customerProfile?.mobile_no || portalState.phone || "Not verified yet";
-
-  const selectedOrderAddress =
-    typeof (selectedOrderDetails as { customer_address?: string } | undefined)
-      ?.customer_address === "string"
-      ? (selectedOrderDetails as { customer_address?: string }).customer_address
-      : portalState.address || "Address not available";
 
   const menuItems: Array<{ key: "profile" | "addresses" | "orders"; label: string }> = [
     { key: "profile", label: "Profile" },
@@ -626,13 +335,14 @@ export default function AccountProfilePage() {
                   fullName={fullName}
                   emailAddress={emailAddress}
                   profilePhone={profilePhone}
-                  onEditEmail={() => {
-                    setPendingEmailValue(
-                      emailAddress === "No email added yet" ? "" : emailAddress
-                    );
-                    setEmailEditorOpen(true);
+                  customerName={customerName}
+                  portalPhone={portalState.phone}
+                  onRefresh={refreshPortalState}
+                  onFeedback={(nextFeedback: { type: "success" | "error"; message: string }) => {
+                    setFeedback(nextFeedback);
+                    setTimeout(() => setFeedback(null), 3000);
                   }}
-                  onEditPhone={handleOpenPhoneUpdate}
+                  onRefetchAddresses={refetchAddresses}
                 />
               )}
 
@@ -641,8 +351,12 @@ export default function AccountProfilePage() {
                   addresses={portalState.deliveryAddresses}
                   isLoading={isLoadingAddresses}
                   profilePhone={profilePhone}
-                  onAddAddress={handleAddNewAddress}
-                  onEditAddress={setActiveDeliveryIndex}
+                  onRefresh={refreshPortalState}
+                  onRefetchAddresses={refetchAddresses}
+                  onFeedback={(nextFeedback: { type: "success" | "error"; message: string }) => {
+                    setFeedback(nextFeedback);
+                    setTimeout(() => setFeedback(null), 3000);
+                  }}
                 />
               )}
 
@@ -650,7 +364,6 @@ export default function AccountProfilePage() {
                 <OrdersTab
                   orders={customerOrders}
                   formatCurrency={formatCurrency}
-                  onSelectOrder={setSelectedOrderName}
                 />
               )}
               </div>
@@ -723,236 +436,6 @@ export default function AccountProfilePage() {
         </div>
       )}
 
-      {showPhoneModal && (
-        <PhoneModal
-          open={showPhoneModal}
-          allowExistingPhone={true}
-          onClose={handlePhoneModalClose}
-        />
-      )}
-
-      {showVerifyModal && (
-        <PhoneVerifyModal
-          open={showVerifyModal}
-          phone={phoneForVerify}
-          onClose={handleVerifyModalClose}
-          onChangePhone={handleChangePhoneFromVerify}
-        />
-      )}
-
-      {activeDeliveryIndex !== null && (
-        <AddressSelectModal
-          open={true}
-          onClose={() => setActiveDeliveryIndex(null)}
-          onSelect={handleAddressSelect}
-          redirectTo={null}
-          existingAddressId={
-            portalState.deliveryAddresses[activeDeliveryIndex]?.addressId || null
-          }
-          customTitle={
-            portalState.deliveryAddresses[activeDeliveryIndex]?.title || undefined
-          }
-        />
-      )}
-
-      {confirmDelete && (
-        <ConfirmDialog
-          open={true}
-          onClose={() => setConfirmDelete(null)}
-          onConfirm={handleRemoveAddress}
-          title="Remove address?"
-          message={`Are you sure you want to remove "${confirmDelete.label}"? This action cannot be undone.`}
-          confirmText="Remove"
-          cancelText="Keep"
-          variant="danger"
-        />
-      )}
-
-      {emailEditorOpen && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-red-600">
-                  Update email
-                </p>
-                <h3 className="mt-2 text-xl font-semibold text-slate-900">Edit your email address</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setEmailEditorOpen(false)}
-                className="rounded-full border border-slate-200 p-2 text-slate-500 transition-colors hover:text-red-600"
-                aria-label="Close edit email"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <label className="mt-5 block text-sm font-medium text-slate-700">
-              Email address
-              <input
-                type="email"
-                value={pendingEmailValue}
-                onChange={(event) => setPendingEmailValue(event.target.value)}
-                className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-red-300 focus:bg-white"
-                placeholder="name@example.com"
-              />
-            </label>
-
-            <div className="mt-6 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setEmailEditorOpen(false)}
-                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleEmailSave}
-                disabled={!pendingEmailValue.trim()}
-                className="rounded-full bg-red-600 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300"
-              >
-                Verify & save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {selectedOrderName && selectedOrderDetails && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
-            <div className="flex items-start justify-between border-b border-slate-200 p-5">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-red-600">
-                  Order details
-                </p>
-                <h3 className="mt-2 text-xl font-semibold text-slate-900">{selectedOrderDetails.name}</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedOrderName(null)}
-                className="rounded-full border border-slate-200 p-2 text-slate-500 transition-colors hover:text-red-600"
-                aria-label="Close order details"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="space-y-6 p-5">
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Date</p>
-                  <p className="mt-2 text-sm font-medium text-slate-700">
-                    {new Date(selectedOrderDetails.transaction_date).toLocaleDateString("en-AE", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Status</p>
-                  <p className="mt-2 text-sm font-medium text-slate-700">{selectedOrderDetails.status}</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Total</p>
-                  <p className="mt-2 text-sm font-medium text-slate-700">
-                    {formatCurrency(selectedOrderDetails.grand_total)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-red-600">
-                    <MapPin size={18} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      Delivery address
-                    </p>
-                    <p className="mt-1 text-sm text-slate-700">{selectedOrderAddress}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 p-4">
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-orange-600">
-                    <Package size={18} />
-                  </div>
-                  <h4 className="text-base font-semibold text-slate-900">Order items</h4>
-                </div>
-
-                <div className="space-y-3">
-                  {selectedOrderDetails.items?.map((item) => (
-                    <div
-                      key={`${selectedOrderDetails.name}-${item.name}-${item.item_code}`}
-                      className="flex items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-white p-3"
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-slate-800">
-                          {item.item_name || item.item_code || item.name}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-500">Qty: {item.qty}</p>
-                      </div>
-                      <p className="text-sm font-semibold text-slate-800">
-                        {formatCurrency(item.amount ?? item.qty * item.rate)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 p-4">
-                  <div className="mb-3 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-red-600">
-                      <ReceiptText size={18} />
-                    </div>
-                    <h4 className="text-base font-semibold text-slate-900">Pricing</h4>
-                  </div>
-                  <div className="space-y-2 text-sm text-slate-600">
-                    <div className="flex items-center justify-between">
-                      <span>Total items</span>
-                      <span>{selectedOrderDetails.total_qty}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Grand total</span>
-                      <span className="font-semibold text-slate-900">
-                        {formatCurrency(selectedOrderDetails.grand_total)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 p-4">
-                  <div className="mb-3 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
-                      <CreditCard size={18} />
-                    </div>
-                    <h4 className="text-base font-semibold text-slate-900">Payment</h4>
-                  </div>
-                  <div className="space-y-2 text-sm text-slate-600">
-                    <div className="flex items-center justify-between">
-                      <span>Method</span>
-                      <span className="font-medium text-slate-800">
-                        {selectedOrderDetails.status === "Paid" ? "Card / COD" : "Awaiting payment"}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Order status</span>
-                      <span className="font-medium text-slate-800">{selectedOrderDetails.status}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
