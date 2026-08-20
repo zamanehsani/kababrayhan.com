@@ -15,11 +15,17 @@ import Image from "next/image";
 import {
   PHONE_KEY,
   PHONE_STATUS_KEY,
+  getCustomerName,
   readCustomerPortalSnapshot,
   saveDeliveryAddress,
+  type DeliveryAddressItem,
 } from "@/app/lib/customerPortal";
+import type { Address } from "@/app/redux/apiType";
 import SavedAddressesModal from "../home/modal/SavedAddressesModal";
-import { useUpdateAddressMutation } from "@/app/redux/api";
+import {
+  useGetCustomerAddressesQuery,
+  useUpdateAddressMutation,
+} from "@/app/redux/api";
 
 export default function CartDrawer() {
   const router = useRouter();
@@ -41,6 +47,30 @@ export default function CartDrawer() {
   const [selectedDeliveryAddressId, setSelectedDeliveryAddressId] = useState<
     string | undefined
   >(() => readCustomerPortalSnapshot().addressId);
+
+  const customerName = getCustomerName() || snapshot.phone || phone;
+  const { data: backendAddresses, refetch: refetchSavedAddresses } =
+    useGetCustomerAddressesQuery(customerName, {
+      skip: !customerName,
+    });
+
+  const resolvedSavedAddresses: DeliveryAddressItem[] =
+    snapshot.deliveryAddresses.length > 0
+      ? snapshot.deliveryAddresses
+      : (backendAddresses ?? [])
+          .map((address: Address): DeliveryAddressItem => ({
+            title:
+              address.address_title ||
+              address.address_type ||
+              "Saved Address",
+            address: [address.address_line1, address.address_line2]
+              .filter(Boolean)
+              .join(", "),
+            addressId: address.name,
+          }))
+          .filter(
+            (address) => Boolean(address.address) || Boolean(address.addressId)
+          );
 
   const [updateAddress] = useUpdateAddressMutation();
 
@@ -133,13 +163,28 @@ export default function CartDrawer() {
     setShowPhoneModal(true);
   };
 
-  const proceedToDeliveryFlow = () => {
+  const proceedToDeliveryFlow = async () => {
     const currentSnapshot = readCustomerPortalSnapshot();
-    const addresses = currentSnapshot.deliveryAddresses;
+    const localAddresses = currentSnapshot.deliveryAddresses;
 
-    if (addresses.length > 0) {
+    if (localAddresses.length > 0) {
       setShowSavedAddressesModal(true);
       return;
+    }
+
+    const customerNameToUse = getCustomerName() || currentSnapshot.phone || phone;
+    if (customerNameToUse) {
+      try {
+        const refreshed = await refetchSavedAddresses();
+        const remoteAddresses = refreshed.data ?? backendAddresses ?? [];
+
+        if (Array.isArray(remoteAddresses) && remoteAddresses.length > 0) {
+          setShowSavedAddressesModal(true);
+          return;
+        }
+      } catch {
+        // fall through to map selection when no saved addresses are available
+      }
     }
 
     setShowAddressModal(true);
@@ -153,7 +198,7 @@ export default function CartDrawer() {
 
   const handlePhoneUpdateSkip = () => {
     setShowPhoneUpdatePrompt(false);
-    proceedToDeliveryFlow();
+    void proceedToDeliveryFlow();
   };
 
 
@@ -182,7 +227,7 @@ export default function CartDrawer() {
     // continue checkout with existing verified session.
     if (allowExistingPhoneInput && status === "verified") {
       setAllowExistingPhoneInput(false);
-      proceedToDeliveryFlow();
+      void proceedToDeliveryFlow();
       return;
     }
 
@@ -194,7 +239,7 @@ export default function CartDrawer() {
     setShowVerifyModal(false);
 
     if (didVerify) {
-      proceedToDeliveryFlow();
+      void proceedToDeliveryFlow();
       return;
     }
   };
@@ -402,7 +447,7 @@ export default function CartDrawer() {
         )}
         <SavedAddressesModal
           open={showSavedAddressesModal}
-          addresses={snapshot.deliveryAddresses}
+          addresses={resolvedSavedAddresses}
           selectedAddressId={selectedDeliveryAddressId}
           onSelect={async (selected) => {
             try {

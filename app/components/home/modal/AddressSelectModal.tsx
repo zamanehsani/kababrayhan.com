@@ -439,6 +439,18 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
       ];
 
       polygons.forEach((points, index) => {
+        if (!Array.isArray(points) || points.length < 3) {
+          return;
+        }
+
+        const hasInvalidPoint = points.some(([lat, lng]) => {
+          return !Number.isFinite(lat) || !Number.isFinite(lng);
+        });
+
+        if (hasInvalidPoint) {
+          return;
+        }
+
         const style = zoneColors[index % zoneColors.length];
         const polygon = L.polygon(points, {
           color: style.color,
