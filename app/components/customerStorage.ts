@@ -1,4 +1,4 @@
-import { type Customer } from "../redux/api";
+import type { CustomerDetails } from "../redux/apiType";
 
 export const CUSTOMER_STORAGE_KEY = "erpnext.customer";
 export const CUSTOMER_PROFILE_STORAGE_KEY = "erpnext.customerProfile";
@@ -14,7 +14,7 @@ export interface StoredCustomerProfile {
 
 const hasWindow = () => "window" in globalThis;
 
-export const readStoredCustomer = (): Customer | null => {
+export const readStoredCustomer = (): CustomerDetails | null => {
   if (!hasWindow()) {
     return null;
   }
@@ -25,14 +25,14 @@ export const readStoredCustomer = (): Customer | null => {
   }
 
   try {
-    return JSON.parse(storedValue) as Customer;
+    return JSON.parse(storedValue) as CustomerDetails;
   } catch {
     globalThis.localStorage.removeItem(CUSTOMER_STORAGE_KEY);
     return null;
   }
 };
 
-export const saveStoredCustomer = (customer: Customer) => {
+export const saveStoredCustomer = (customer: CustomerDetails) => {
   if (!hasWindow()) {
     return;
   }

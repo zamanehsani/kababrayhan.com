@@ -15,7 +15,6 @@ import type {
   CreateSalesOrderRequest,
   UpdateSalesOrderRequest,
   UpdateSalesOrderResponse,
-  Customer,
   CustomerDetails,
   FullItemResponse,
   Item,
@@ -30,6 +29,7 @@ import type {
   SetCustomerInfoRequest,
   UpdateContactRequest,
   UpdateCustomerRequest,
+  RenameCustomerRequest,
   UploadCustomerAvatarRequest,
   UploadedFile,
 } from "./apiType";
@@ -161,7 +161,7 @@ export const erpApi = createApi({
       },
     }),
     // create the customer
-    createCustomer: builder.mutation<Customer, CreateCustomerRequest>({
+    createCustomer: builder.mutation<CustomerDetails, CreateCustomerRequest>({
       query: (body) => ({
         url: "Customer",
         method: "POST",
@@ -172,7 +172,7 @@ export const erpApi = createApi({
           territory: body.territory || "All Territories",
         },
       }),
-      transformResponse: (response: { data: Customer }) => response.data,
+      transformResponse: (response: { data: CustomerDetails }) => response.data,
     }),
     // get customer
     getCustomer: builder.query<CustomerDetails, string>({
@@ -196,6 +196,19 @@ export const erpApi = createApi({
           customer_name?: string;
           mobile_no?: string;
         }>;
+      }) => response.data,
+    }),
+    getCustomersByMobileNumber: builder.query<CustomerDetails[], string>({
+      query: (mobileNumber) => ({
+        url: "Customer",
+        params: {
+          filters: JSON.stringify([["mobile_number", "=", mobileNumber]]),
+          fields: JSON.stringify(["*"]),
+          limit_page_length: 20,
+        },
+      }),
+      transformResponse: (response: {
+        data: CustomerDetails[];
       }) => response.data,
     }),
     getCustomerAvatar: builder.query<string | null, string>({
@@ -240,10 +253,14 @@ export const erpApi = createApi({
             "phone",
             "is_primary_address",
             "is_shipping_address",
+            "custom_latitude",
+            "custom_longitude",
           ]),
         },
       }),
-      transformResponse: (response: { data: Address[] }) => response.data,
+      transformResponse: (response: { data: Address[] }) => {
+        return response.data;
+      },
       providesTags: (_result, _error, customerName) => [
         { type: "CustomerAddresses", id: customerName },
         { type: "CustomerAddresses", id: "LIST" },
@@ -270,6 +287,26 @@ export const erpApi = createApi({
         body,
       }),
       transformResponse: (response: { data: CustomerDetails }) => response.data,
+    }),
+    renameCustomer: builder.mutation<{ name: string }, RenameCustomerRequest>({
+      query: ({ oldName, newName }) => ({
+        url: `${baseUrl}/api/method/frappe.client.rename_doc`,
+        method: "POST",
+        body: {
+          doctype: "Customer",
+          old_name: oldName,
+          new_name: newName,
+          merge: 0,
+        },
+      }),
+      transformResponse: (
+        response: { message?: string | { name?: string } }
+      ) => ({
+        name:
+          typeof response.message === "string"
+            ? response.message
+            : response.message?.name || "",
+      }),
     }),
     getContact: builder.query<Contact, string>({
       query: (contactName) => ({
@@ -589,10 +626,12 @@ export const {
   useDisableAddressMutation,
   useGetCustomerQuery,
   useGetCustomersByMobileQuery,
+  useGetCustomersByMobileNumberQuery,
   useGetCustomerAvatarQuery,
   useGetCustomerAddressesQuery,
   useGetContactQuery,
   useUpdateCustomerMutation,
+  useRenameCustomerMutation,
   useCreateContactMutation,
   useUpdateContactMutation,
   useSetCustomerInfoMutation,

@@ -19,13 +19,16 @@ import {
   saveCustomerName,
   addDeliveryAddress,
 } from "@/app/lib/customerPortal";
+import { saveStoredCustomer } from "@/app/components/customerStorage";
 import { Search } from "lucide-react";
 import DirhamIcon from "../../icon/DirhamIcon";
-import { MapPin, CircleX } from "lucide-react";
+import { MapPin, CircleX, PencilLine, Trash2 } from "lucide-react";
 
 export type SelectedAddress = {
   id: string;
   name: string;
+  title?: string;
+  addressType?: "Home" | "Office" | "Other";
   lat: number;
   lng: number;
   delivery_zone?: string;
@@ -40,7 +43,10 @@ export type AddressSelectModalProps = {
   addressType?: "Shipping" | "Billing";
   skipCustomerCreation?: boolean;
   customTitle?: string; // e.g. "Home", "Office" — used as label in ERPNext address name
+  defaultAddressType?: "Home" | "Office" | "Other";
   existingAddressId?: string | null;
+  initialCoordinates?: { lat: number; lng: number };
+  onRemove?: (addressId: string) => void;
 };
 
 const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
@@ -51,7 +57,10 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
   addressType = "Shipping",
   skipCustomerCreation = false,
   customTitle,
+  defaultAddressType = "Home",
   existingAddressId,
+  initialCoordinates,
+  onRemove,
 }) => {
   const router = useRouter();
   const [addressText, setAddressText] = useState("");
@@ -63,6 +72,20 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [showLocationAlert, setShowLocationAlert] = useState(false);
+  const [isAddressEditorOpen, setIsAddressEditorOpen] = useState(false);
+  const [addressTitle, setAddressTitle] = useState(() => customTitle || defaultAddressType || "Home");
+  const [addressCategory, setAddressCategory] = useState<"Home" | "Office" | "Other">(
+    () => defaultAddressType || "Home"
+  );
+  const [addressDetails, setAddressDetails] = useState({
+    country: "United Arab Emirates",
+    state: "",
+    city: "",
+    area: "",
+    street: "",
+    building: "",
+    landmark: "",
+  });
   const [createCustomer] = useCreateCustomerMutation();
   const [createAddress] = useCreateAddressMutation();
   const [updateAddress] = useUpdateAddressMutation();
@@ -76,6 +99,61 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
   const [isOutOfRange, setIsOutOfRange] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchingLocation, setIsSearchingLocation] = useState(false);
+
+  const normalizeAddressPart = (...values: Array<string | undefined>) => {
+    const trimmed = values
+      .map((value) => value?.trim())
+      .find((value) => Boolean(value));
+
+    return trimmed || "";
+  };
+
+  const normalizeEmirateName = (value?: string) => {
+    if (!value) return "";
+
+    const cleaned = value
+      .trim()
+      .replace(/\s*\b(?:Emirate|Emirates)\b\s*$/i, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    return cleaned;
+  };
+
+  const buildCompiledAddress = () => {
+    const addressParts = [
+      addressDetails.building,
+      addressDetails.street,
+      addressDetails.area,
+      addressDetails.state,
+    ].filter(Boolean);
+
+    return addressParts.join(", ");
+  };
+
+  const buildAddressSummary = () => {
+    const lineOne = [
+      addressDetails.building,
+      addressDetails.street,
+      addressDetails.area,
+      addressDetails.state,
+    ]
+      .filter(Boolean)
+      .join(", ");
+
+    const lineTwo = [addressDetails.country]
+      .filter(Boolean)
+      .join(", ");
+
+    return { lineOne, lineTwo };
+  };
+
+  const handleAddressDetailChange = (
+    field: keyof typeof addressDetails,
+    value: string
+  ) => {
+    setAddressDetails((current) => ({ ...current, [field]: value }));
+  };
 
   const focusMapAtLocation = (lat: number, lng: number, zoom: number = 16) => {
     const map = mapInstanceRef.current;
@@ -140,7 +218,39 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
       );
       const geoData = await geoResponse.json();
       const name = geoData.display_name || `Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+      const addressInfo = geoData.address || {};
       setAddressText(name);
+      setAddressDetails((current) => ({
+        country: normalizeAddressPart(current.country, addressInfo.country) || "United Arab Emirates",
+        state:
+          normalizeEmirateName(
+            normalizeAddressPart(
+              current.state,
+              addressInfo.state,
+              addressInfo.county,
+              addressInfo.province,
+              addressInfo.emirate
+            )
+          ) || "",
+        city:
+          normalizeEmirateName(
+            normalizeAddressPart(
+              current.city,
+              addressInfo.state,
+              addressInfo.county,
+              addressInfo.province,
+              addressInfo.emirate,
+              addressInfo.city,
+              addressInfo.town,
+              addressInfo.village,
+              addressInfo.municipality
+            )
+          ) || "",
+        area: normalizeAddressPart(current.area, addressInfo.suburb, addressInfo.neighbourhood, addressInfo.quarter, addressInfo.residential) || "",
+        street: normalizeAddressPart(current.street, addressInfo.road, addressInfo.pedestrian, addressInfo.street) || "",
+        building: normalizeAddressPart(current.building, addressInfo.house_number, addressInfo.house_name, addressInfo.building) || "",
+        landmark: normalizeAddressPart(current.landmark, addressInfo.landmark, addressInfo.attraction) || "",
+      }));
 
       // 2. Query your live custom Frappe Spatial engine
       const token = process.env.NEXT_PUBLIC_ERP_API_TOKEN || "";
@@ -506,8 +616,10 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
         });
 
         const map = L.map(mapRef.current, {
-          center: [25.2048, 55.2708],
-          zoom: 13,
+          center: initialCoordinates
+            ? [initialCoordinates.lat, initialCoordinates.lng]
+            : [25.2048, 55.2708],
+          zoom: initialCoordinates ? 13 : 12,
           zoomControl: false, // Positioned manually below
           attributionControl: false,
         });
@@ -539,7 +651,17 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
 
         mapInstanceRef.current = map;
 
-        requestCurrentLocation(map, L, false);
+        if (initialCoordinates) {
+          setSelectedLatLng(initialCoordinates);
+          markerRef.current = L.marker(
+            [initialCoordinates.lat, initialCoordinates.lng],
+            { bounceOnAdd: true }
+          ).addTo(map);
+          map.setView([initialCoordinates.lat, initialCoordinates.lng], 13);
+          void fetchAddress(initialCoordinates.lat, initialCoordinates.lng);
+        } else {
+          requestCurrentLocation(map, L, false);
+        }
         void renderDeliveryZonePolygons();
 
         // Force resize recalculation for Modals
@@ -569,12 +691,12 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
         markerRef.current = null;
       }
     };
-  }, [open]);
+  }, [initialCoordinates, open]);
 
   if (!open) return null;
 
   const modalContent = (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 backdrop-blur-md p-0 sm:p-4">
+    <div className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/70 backdrop-blur-md p-0 sm:p-4">
       <div className="bg-white w-full max-w-6xl h-full sm:h-[90vh] sm:rounded-3xl shadow-2xl relative flex flex-col overflow-hidden">
         {/* Header Overlay */}
         <div className="absolute top-2 inset-x-6 z-1001 pointer-events-none flex justify-between items-start ">
@@ -650,9 +772,20 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
           <div className="pointer-events-auto w-full max-w-xl bg-white/95 backdrop-blur-lg border border-white/20 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] sm:p-3 flex flex-col gap-2">
 
             <div className="">
-              <h3 className="text-sm font-medium  tracking-widest text-red-600">
-                 Delivery Point
-              </h3>
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-sm font-medium text-red-600">
+                  Delivery Point
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setIsAddressEditorOpen((previous) => !previous)}
+                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 shadow-sm transition-all hover:border-red-200 hover:text-red-600"
+                  aria-label="Expand or collapse address edit form"
+                >
+                  <PencilLine size={12} className="text-red-600" />
+                  {isAddressEditorOpen ? "Collapse" : "Edit"}
+                </button>
+              </div>
               <div className="min-h-12 flex items-center">
                 {isLoading ? (
                   <div className="flex items-center gap-2 text-gray-400 italic">
@@ -661,10 +794,116 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                   </div>
                 ) : (
                   <p className="text-gray-800 font-medium text-lg line-clamp-2 leading-tight tracking-wide">
-                    {addressText || "Tap the map to select your location"}
+                    {isAddressEditorOpen ? buildCompiledAddress() || addressText : addressText || "Tap the map to select your location"}
                   </p>
                 )}
               </div>
+
+              {isAddressEditorOpen && (
+                <div className="mt-1 mb-2 space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold text-slate-600">
+                      Edit address details
+                    </h4>
+                    {existingAddressId && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!existingAddressId) return;
+                          try {
+                            await updateAddress({
+                              addressName: existingAddressId,
+                              disabled: 1,
+                            }).unwrap();
+                            onRemove?.(existingAddressId);
+                            onClose();
+                          } catch (removeError) {
+                            console.error("Failed to remove address:", removeError);
+                            setError("Failed to remove this address.");
+                          }
+                        }}
+                        className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2 py-1 text-[10px] font-semibold text-red-600"
+                      >
+                        <Trash2 size={12} /> Remove
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <label className="text-[11px] font-medium text-slate-500 sm:col-span-2">
+                      Address Title
+                      <input
+                        value={addressTitle}
+                        onChange={(event) => setAddressTitle(event.target.value)}
+                        className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-0 focus:border-red-300"
+                        placeholder="Home"
+                      />
+                    </label>
+                    <label className="text-[11px] font-medium text-slate-500">
+                      Address Type
+                      <select
+                        value={addressCategory}
+                        onChange={(event) => setAddressCategory(event.target.value as "Home" | "Office" | "Other")}
+                        className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-0 focus:border-red-300"
+                      >
+                        <option value="Home">Home</option>
+                        <option value="Office">Office</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </label>
+                    <label className="text-[11px] font-medium text-slate-500">
+                      Country
+                      <input
+                        value={addressDetails.country}
+                        onChange={(event) => handleAddressDetailChange("country", event.target.value)}
+                        className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-0 focus:border-red-300"
+                        placeholder="United Arab Emirates"
+                      />
+                    </label>
+                    <label className="text-[11px] font-medium text-slate-500">
+                      State / Emirate
+                      <input
+                        value={addressDetails.state}
+                        onChange={(event) => handleAddressDetailChange("state", event.target.value)}
+                        className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-0 focus:border-red-300"
+                        placeholder="Dubai"
+                      />
+                    </label>
+                    <label className="text-[11px] font-medium text-slate-500">
+                      Area / Community
+                      <input
+                        value={addressDetails.area}
+                        onChange={(event) => handleAddressDetailChange("area", event.target.value)}
+                        className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-0 focus:border-red-300"
+                        placeholder="Downtown"
+                      />
+                    </label>
+                    <label className="text-[11px] font-medium text-slate-500">
+                      Street / Building
+                      <input
+                        value={addressDetails.street || addressDetails.building}
+                        onChange={(event) => {
+                          const value = event.target.value;
+                          const [maybeBuilding, ...rest] = value.split(",").map((part) => part.trim());
+                          handleAddressDetailChange("building", maybeBuilding || "");
+                          handleAddressDetailChange("street", rest.join(", "));
+                        }}
+                        className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-0 focus:border-red-300"
+                        placeholder="Al Mina Road, Building 24"
+                      />
+                    </label>
+                    <label className="text-[11px] font-medium text-slate-500 sm:col-span-2">
+                      Landmark / Unit
+                      <input
+                        value={addressDetails.landmark}
+                        onChange={(event) => handleAddressDetailChange("landmark", event.target.value)}
+                        className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-0 focus:border-red-300"
+                        placeholder="Near Metro Station, Flat 1203"
+                      />
+                    </label>
+                  </div>
+                </div>
+              )}
 
               {/* DELIVERY FEEDBACK PANEL */}
               {!isLoading && selectedLatLng && (
@@ -787,6 +1026,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                         const createdCustomer = await createCustomer({
                           customer_name: customerName,
                           mobile_no: phone,
+                          mobile_number: phone,
                           customer_type: "Individual",
                           customer_group: "Individual",
                           territory: "United Arab Emirates",
@@ -796,42 +1036,43 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
 
                         customerName = createdCustomer.name;
                         saveCustomerName(customerName);
+                        saveStoredCustomer(createdCustomer);
                       }
                     }
                   }
 
-                  const addressLine = addressText || "User's Street Address";
+                  const { lineOne, lineTwo } = buildAddressSummary();
+                  const normalizedAddressTitle = addressTitle.trim() || addressCategory || "Home";
+                  const addressLine = lineOne || addressText || "User's Street Address";
+                  const addressLineTwo = [lineTwo, addressDetails.landmark]
+                    .filter(Boolean)
+                    .join(", ");
                   const hasExistingAddress = Boolean(existingAddressId);
 
                   const addressResponse = hasExistingAddress
                     ? await updateAddress({
                       addressName: existingAddressId!,
                       address_line1: addressLine,
+                      address_line2: addressLineTwo || undefined,
+                      city: addressDetails.state || "Dubai",
+                      country: addressDetails.country || "United Arab Emirates",
                       custom_latitude: String(selectedLatLng!.lat),
                       custom_longitude: String(selectedLatLng!.lng),
                       custom_delivery_zone: deliveryZone || undefined,
-                      ...(customTitle
-                        ? {
-                          address_title: `${phone}-${customTitle
-                            .trim()
-                            .toLowerCase()
-                            .replace(/\s+/g, "-")}`,
-                        }
-                        : {}),
+                      address_title: `${phone}-${normalizedAddressTitle
+                        .trim()
+                        .toLowerCase()
+                        .replace(/\s+/g, "-")}`,
                     }).unwrap()
                     : await createAddress({
-                      address_title: customTitle
-                        ? `${phone}-${customTitle
-                          .trim()
-                          .toLowerCase()
-                          .replace(/\s+/g, "-")}`
-                        : addressType === "Billing"
-                          ? `${phone}-delivery`
-                          : phone,
+                      address_title: `${phone}-${normalizedAddressTitle
+                        .trim()
+                        .toLowerCase()
+                        .replace(/\s+/g, "-")}`,
                       address_type: addressType,
                       address_line1: addressLine,
-                      city: "Dubai",
-                      country: "United Arab Emirates",
+                      city: addressDetails.state || "Dubai",
+                      country: addressDetails.country || "United Arab Emirates",
                       custom_latitude: String(selectedLatLng!.lat),
                       custom_longitude: String(selectedLatLng!.lng),
                       custom_delivery_zone: deliveryZone || undefined,
@@ -847,13 +1088,10 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                   if (addressType !== "Billing") {
                     globalThis.localStorage?.setItem("uae_delivery_zone", deliveryZone);
                     globalThis.localStorage?.setItem("uae_delivery_charge", String(deliveryCharge));
-                    // saveDeliveryAddress(
-                    //   addressResponse.data.address_line1,
-                    //   addressResponse.data.name
-                    // );
                     addDeliveryAddress({
                       id: addressResponse.data.name,
-                      title: customTitle || "Address",
+                      title: normalizedAddressTitle,
+                      addressType: addressCategory,
                       address: addressResponse.data.address_line1,
                       addressId: addressResponse.data.name,
                     });
@@ -862,6 +1100,8 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                   onSelect({
                     id: addressResponse.data.name,
                     name: addressResponse.data.address_line1,
+                    title: normalizedAddressTitle,
+                    addressType: addressCategory,
                     lat: selectedLatLng!.lat,
                     lng: selectedLatLng!.lng,
                     delivery_zone: deliveryZone,

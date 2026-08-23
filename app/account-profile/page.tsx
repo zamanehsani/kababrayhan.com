@@ -22,10 +22,13 @@ import {
 import {
   useGetCustomerAddressesQuery,
   useGetCustomerQuery,
+  useGetCustomersByMobileNumberQuery,
   useGetCustomerSalesOrdersQuery,
 } from "@/app/redux/api";
 import { useLogoutMutation } from "@/app/redux/authApi";
 import Footer from "../components/Footer/Footer";
+import type { CustomerDetails } from "@/app/redux/apiType";
+import { saveStoredCustomer } from "@/app/components/customerStorage";
 import AddressesTab from "@/app/account-profile/components/AddressesTab";
 import OrdersTab from "@/app/account-profile/components/OrdersTab";
 import ProfileTab from "@/app/account-profile/components/ProfileTab";
@@ -75,6 +78,8 @@ type ERPNextAddress = {
   address_line2?: string;
   is_shipping_address?: number | string;
   is_primary_address?: number | string;
+  custom_latitude?: string;
+  custom_longitude?: string;
 };
 
 export default function AccountProfilePage() {
@@ -94,8 +99,22 @@ export default function AccountProfilePage() {
   );
 
   // Fetch customer and order data from ERPNext backend
-  const customerName = getCustomerName();
-  const { data: customerProfile } = useGetCustomerQuery(customerName || "", {
+  const storedCustomerName = getCustomerName();
+  const phoneNumber =
+    typeof window === "undefined"
+      ? ""
+      : globalThis.localStorage.getItem(PHONE_KEY) || "";
+  const { data: customersByMobileNumber } = useGetCustomersByMobileNumberQuery(
+    phoneNumber,
+    { skip: !phoneNumber }
+  );
+
+  const customerName =
+    customersByMobileNumber?.[0]?.name || storedCustomerName || phoneNumber;
+  const {
+    data: customerProfile,
+    refetch: refetchCustomer,
+  } = useGetCustomerQuery(customerName, {
     skip: !customerName,
   });
   const {
@@ -115,25 +134,24 @@ export default function AccountProfilePage() {
   const customerOrders = customerOrdersData ?? [];
 
   useEffect(() => {
+    const matchedCustomer = customersByMobileNumber?.[0];
+    if (matchedCustomer) {
+      saveStoredCustomer(matchedCustomer);
+    }
+
+    //reconstruct the addresses state from the store and to the actions like remove, edit and creating, listing as standard, then while checkout process, first create and complete the  frontend address as per the 
+
     if (!customerProfile && !backendAddresses && !customerOrdersData) {
       return;
     }
-
-    console.groupCollapsed("[Frappe] Account profile data");
-    console.log("Customer details:", customerProfile);
-    console.log("Customer name fields:", {
-      firstName: customerProfile?.first_name,
-      lastName: customerProfile?.last_name,
-      customerName: customerProfile?.customer_name,
-    });
-    console.log("Customer contact fields:", {
-      mobileNo: customerProfile?.mobile_no,
-      emailId: customerProfile?.email_id,
-    });
-    console.log("Addresses:", backendAddresses);
-    console.log("Orders:", customerOrdersData);
-    console.groupEnd();
-  }, [backendAddresses, customerOrdersData, customerProfile]);
+  }, [
+    backendAddresses,
+    customerName,
+    customerOrdersData,
+    customerProfile,
+    customersByMobileNumber,
+    phoneNumber,
+  ]);
 
   const refreshPortalState = useCallback(() => {
     setPortalState(readCustomerPortalSnapshot());
@@ -163,6 +181,8 @@ export default function AccountProfilePage() {
         isBilling:
           address.is_primary_address === 1 ||
           address.is_primary_address === "1",
+        latitude: address.custom_latitude,
+        longitude: address.custom_longitude,
       })
     );
 
@@ -234,15 +254,11 @@ export default function AccountProfilePage() {
     router.push("/home");
   };
 
-  const fullName =
-    [customerProfile?.first_name, customerProfile?.last_name]
-      .filter((name): name is string => Boolean(name?.trim()))
-      .join(" ") ||
-    customerProfile?.customer_name ||
-    "Customer";
-
-  const emailAddress = customerProfile?.email_id || "No email added yet";
-  const profilePhone = customerProfile?.mobile_no || portalState.phone || "Not verified yet";
+  const profilePhone =
+    customerProfile?.mobile_number ||
+    customerProfile?.mobile_no ||
+    portalState.phone ||
+    "Not verified yet";
 
   const menuItems: Array<{ key: "profile" | "addresses" | "orders"; label: string }> = [
     { key: "profile", label: "Profile" },
@@ -332,11 +348,15 @@ export default function AccountProfilePage() {
               {activeTab === "profile" && (
                 <ProfileTab
                   customerProfile={customerProfile}
-                  fullName={fullName}
-                  emailAddress={emailAddress}
                   profilePhone={profilePhone}
                   customerName={customerName}
                   portalPhone={portalState.phone}
+                  onRefetchCustomer={async () => {
+                    const result = await refetchCustomer();
+                    return "data" in result
+                      ? (result.data as CustomerDetails | undefined)
+                      : undefined;
+                  }}
                   onRefresh={refreshPortalState}
                   onFeedback={(nextFeedback: { type: "success" | "error"; message: string }) => {
                     setFeedback(nextFeedback);
@@ -352,11 +372,6 @@ export default function AccountProfilePage() {
                   isLoading={isLoadingAddresses}
                   profilePhone={profilePhone}
                   onRefresh={refreshPortalState}
-                  onRefetchAddresses={refetchAddresses}
-                  onFeedback={(nextFeedback: { type: "success" | "error"; message: string }) => {
-                    setFeedback(nextFeedback);
-                    setTimeout(() => setFeedback(null), 3000);
-                  }}
                 />
               )}
 

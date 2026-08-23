@@ -52,8 +52,11 @@ export type DeliveryAddressItem = {
   title: string;
   address: string;
   addressId: string;
+  addressType?: "Home" | "Office" | "Other";
   isDelivery?: boolean;
   isBilling?: boolean;
+  latitude?: string;
+  longitude?: string;
 };
 
 const hasWindow = () => "window" in globalThis;

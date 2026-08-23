@@ -79,6 +79,8 @@ export interface Address {
   phone?: string;
   is_primary_address?: number;
   is_shipping_address?: number;
+  custom_latitude?: string;
+  custom_longitude?: string;
 }
 
 // --- OTP Verification Types ---
@@ -215,6 +217,7 @@ export interface CreateCustomerRequest {
   customer_name: string;
   email_id: string; // Required for Login
   mobile_no?: string;
+  mobile_number?: string;
   customer_type: "Individual" | "Company";
   customer_group: "All Customer Groups" | string; // Use your default group
   territory: "All Territories" | string; // Use your default territory
@@ -223,7 +226,16 @@ export interface CreateCustomerRequest {
 export interface UpdateCustomerRequest {
   customerName: string;
   customer_name?: string;
+  first_name?: string;
+  last_name?: string;
+  mobile_no?: string;
+  mobile_number?: string;
   territory?: string;
+}
+
+export interface RenameCustomerRequest {
+  oldName: string;
+  newName: string;
 }
 
 export interface SetCustomerInfoRequest {
@@ -320,13 +332,40 @@ export interface CustomerDetails extends Customer {
   docstatus: number;
   idx: number;
   naming_series: string;
-  customer_primary_contact?: string;
-  email_id?: string;
-  mobile_no?: string;
-  first_name?: string;
-  last_name?: string;
+  customer_name_in_arabic?: string | null;
+  alias?: string | null;
+  gender?: string | null;
+  default_currency?: string | null;
+  default_bank_account?: string | null;
+  default_price_list?: string | null;
+  payment_terms?: string | null;
+  loyalty_program?: string | null;
+  loyalty_program_tier?: string | null;
+  customer_primary_address?: string | null;
+  primary_address?: string | null;
+  customer_primary_contact?: string | null;
+  email_id?: string | null;
+  mobile_no?: string | null;
+  mobile_number?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  represents_company?: string | null;
+  tax_id?: string | null;
+  tax_category?: string | null;
+  tax_withholding_group?: string | null;
+  tax_withholding_category?: string | null;
+  account_manager?: string | null;
+  default_sales_partner?: string | null;
+  lead_name?: string | null;
+  opportunity_name?: string | null;
+  prospect_name?: string | null;
+  market_segment?: string | null;
+  industry?: string | null;
+  website?: string | null;
+  customer_pos_id?: string | null;
+  customer_details?: string | null;
   is_internal_customer: number;
-  image?: string;
+  image?: string | null;
   language: string;
   default_commission_rate: number;
   so_required: number;
@@ -339,6 +378,7 @@ export interface CustomerDetails extends Customer {
   accounts: unknown[];
   credit_limits: unknown[];
   portal_users: unknown[];
+  supplier_numbers?: unknown[];
 }
 
 export interface SalesOrderItem {
