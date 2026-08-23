@@ -270,7 +270,6 @@ export default function AddressesTab({
     setActiveDeliveryIndex(-1);
   };
 
-  console.log("AddressesTab render", { addresses, isLoading, profilePhone });
   return (
     <>
       <div className="py-6">

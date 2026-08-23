@@ -942,43 +942,9 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                 </>
               )}
             </div>
-            {/* <div className="space-y-1">
-              <h3 className="text-sm font-medium tracking-wide text-red-500">
-                Confirm Delivery Point
-              </h3>
-              <div className="min-h-12 flex items-center">
-                {isLoading ? (
-                  <div className="flex items-center gap-3 text-gray-400 italic">
-                    <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-                    Fetching address details...
-                  </div>
-                ) : (
-                  <p className="text-gray-800 font-medium text-lg line-clamp-2 leading-tight tracking-wide">
-                    {addressText || "Tap the map to select your location"}
-                  </p>
-                )}
-              </div>
-              {isOutOfRange && !isLoading && (
-                <div className="flex items-start gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  <span className="mt-0.5 shrink-0 text-base leading-none">⚠️</span>
-                  <span className="font-medium">
-                    This location is outside our delivery area. Please select a point within our service zone.
-                  </span>
-                </div>
-              )}
-              {!isOutOfRange && deliveryZone && !isLoading && (
-                <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
-                  <span className="text-base leading-none">✓</span>
-                  <span className="font-medium">
-                    {deliveryZone}
-                    {deliveryCharge > 0 ? ` · AED ${deliveryCharge.toFixed(2)} delivery` : " · Free delivery"}
-                  </span>
-                </div>
-              )}
-            </div> */}
 
-{!isOutOfRange && (
 
+          {!isOutOfRange && (
             <button
               className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-200 disabled:text-gray-400 text-white py-5 rounded-[1.5rem] font-medium tracking-wide transition-all shadow-lg shadow-red-200 active:scale-[0.98]"
               disabled={!selectedLatLng || isLoading || submitting || isOutOfRange}
@@ -1125,13 +1091,8 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
             >
               {submitting ? "Saving..." : "Confirm & Deliver Here"}
             </button>
-
-)}
-            {error && ( <></>
-              // <div className="text-red-600 text-sm text-center">
-              //   {/* {error} */}
-              // </div>
-            )}
+          )}
+            {error && ( <></>)}
           </div>
         </div>
       </div>

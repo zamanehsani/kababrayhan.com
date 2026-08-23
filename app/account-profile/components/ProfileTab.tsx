@@ -146,7 +146,7 @@ export default function ProfileTab({
         first_name: firstName,
         last_name: lastName,
       };
-      console.log("Updating Frappe customer name:", nameUpdate);
+ 
       await updateCustomer(nameUpdate).unwrap();
       setNameEditorOpen(false);
       onFeedback({ type: "success", message: "Name updated successfully." });

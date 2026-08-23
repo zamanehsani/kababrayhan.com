@@ -421,6 +421,14 @@ export interface SalesOrderDetails {
   billing_status: string;
   custom_kitchen_order_ticket?: string;
   items: SalesOrderItem[];
+  base_total_taxes_and_charges?: number;
+  base_net_total?: number;
+  custom_delivery_notes?: string;
+  custom_change_required?: string;
+  custom_requires_pos_terminal?: number;
+  custom_payment_status?: string;
+  custom_payment_method?: string;
+  custom_requires_doorstep_pos_terminal?: number;
 }
 
 export interface SalesOrder {
