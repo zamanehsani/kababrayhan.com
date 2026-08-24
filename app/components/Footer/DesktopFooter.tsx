@@ -164,9 +164,20 @@ export default function DesktopFooter() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-slate-500 tracking-wide">
+        <div className="flex items-center justify-between gap-4 border-t border-slate-800 pt-8">
+          <p className="text-sm tracking-wide text-slate-500">
             &copy; {currentYear} Kabab Al Raihan. All rights reserved.
+          </p>
+          <p className="text-sm text-slate-400">
+            made by{" "}
+            <a
+              href="https://www.coderhq.co"
+              target="_blank"
+              rel="noreferrer"
+              className="text-slate-400 transition-colors hover:text-red-600"
+            >
+              coderhq.co
+            </a>
           </p>
         </div>
       </div>

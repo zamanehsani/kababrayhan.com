@@ -158,9 +158,20 @@ export default function TabletFooter() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-6 border-t border-slate-800">
-          <p className="text-sm text-slate-500 tracking-wide text-center">
+        <div className="flex flex-col items-center gap-2 border-t border-slate-800 pt-6 text-center">
+          <p className="text-sm tracking-wide text-slate-500">
             &copy; {currentYear} Kabab Al Raihan. All rights reserved.
+          </p>
+          <p className="text-sm text-slate-400">
+            made by{" "}
+            <a
+              href="https://www.coderhq.co"
+              target="_blank"
+              rel="noreferrer"
+              className="text-slate-400 transition-colors hover:text-red-600"
+            >
+              coderhq.co
+            </a>
           </p>
         </div>
       </div>

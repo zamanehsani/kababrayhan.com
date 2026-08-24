@@ -146,9 +146,20 @@ export default function MobileFooter() {
         </div>
 
         {/* Copyright */}
-        <div className="text-center pt-4 border-t border-slate-800">
-          <p className="text-xs text-slate-500 tracking-wide">
+        <div className="flex flex-col items-center gap-2 border-t border-slate-800 pt-4 text-center">
+          <p className="text-xs tracking-wide text-slate-500">
             &copy; {currentYear} Kabab Al Raihan. All rights reserved.
+          </p>
+          <p className="text-xs text-slate-400">
+            made by{" "}
+            <a
+              href="https://www.coderhq.co"
+              target="_blank"
+              rel="noreferrer"
+              className="text-slate-400 transition-colors hover:text-red-600"
+            >
+              coderhq.co
+            </a>
           </p>
         </div>
       </div>
