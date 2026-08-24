@@ -1,268 +1,32 @@
 "use client";
 
-import { LogOut, User } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import {
-  useGetCustomerAvatarQuery,
-  useGetCustomerSalesOrdersQuery,
-} from "@/app/redux/api";
-import { useLogoutMutation } from "@/app/redux/authApi";
-import { CART_UPDATED } from "@/app/lib/cart";
-import {
-  clearCustomerPortalSession,
-  CUSTOMER_PORTAL_UPDATED,
-  PHONE_KEY,
-  PHONE_STATUS_KEY,
-  getCustomerName,
-  readCustomerPortalSnapshot,
-} from "@/app/lib/customerPortal";
-import PhoneModal from "../home/modal/PhoneModal";
-import PhoneVerifyModal from "../home/modal/PhoneVerifyModal";
-
-const toWordPreview = (value: string, maxWords: number) => {
-  const normalized = value.trim().replaceAll(/\s+/g, " ");
-
-  if (!normalized) {
-    return "";
-  }
-
-  const words = normalized.split(" ");
-  if (words.length <= maxWords) {
-    return normalized;
-  }
-
-  return `${words.slice(0, maxWords).join(" ")}...`;
-};
+import Link from "next/link";
 
 export default function MobileHeader() {
-  const router = useRouter();
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [showPhoneModal, setShowPhoneModal] = useState(false);
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [phoneForVerify, setPhoneForVerify] = useState("");
-  const [portalState, setPortalState] = useState(() =>
-    readCustomerPortalSnapshot()
-  );
-  const stableCustomerName = getCustomerName() || portalState.phone;
-
-  const { data: salesOrders } = useGetCustomerSalesOrdersQuery(
-    stableCustomerName,
-    {
-      skip: !portalState.isVerified || !stableCustomerName,
-    }
-  );
-
-  const { data: customerAvatar } = useGetCustomerAvatarQuery(
-    stableCustomerName,
-    {
-      skip: !portalState.isVerified || !stableCustomerName,
-    }
-  );
-  const [logout] = useLogoutMutation();
-
-  const refreshPortalState = useCallback(() => {
-    setPortalState(readCustomerPortalSnapshot());
-  }, []);
-
-  const hasOrders = portalState.hasOrder || (salesOrders?.length ?? 0) > 0;
-  const secondaryText = portalState.isVerified
-    ? toWordPreview(portalState.address || "No saved address", 4)
-    : "Verify phone to continue";
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsProfileOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    globalThis.addEventListener(CUSTOMER_PORTAL_UPDATED, refreshPortalState);
-    globalThis.addEventListener(CART_UPDATED, refreshPortalState);
-    globalThis.addEventListener("storage", refreshPortalState);
-
-    return () => {
-      globalThis.removeEventListener(
-        CUSTOMER_PORTAL_UPDATED,
-        refreshPortalState
-      );
-      globalThis.removeEventListener(CART_UPDATED, refreshPortalState);
-      globalThis.removeEventListener("storage", refreshPortalState);
-    };
-  }, [refreshPortalState]);
-
-  const handlePhoneModalClose = (phoneJustSaved?: string) => {
-    setShowPhoneModal(false);
-    const savedPhone =
-      phoneJustSaved || globalThis.localStorage.getItem(PHONE_KEY) || "";
-
-    if (!savedPhone) {
-      refreshPortalState();
-      return;
-    }
-
-    setPhoneForVerify(savedPhone);
-    setShowVerifyModal(true);
-  };
-
-  const handleVerifyModalClose = () => {
-    setShowVerifyModal(false);
-    setPhoneForVerify("");
-    refreshPortalState();
-  };
-
-  const handleChangePhoneFromVerify = () => {
-    setShowVerifyModal(false);
-    setPhoneForVerify("");
-    setShowPhoneModal(true);
-  };
-
-  const handleProfileClick = () => {
-    if (portalState.isVerified) {
-      setIsProfileOpen((prev) => !prev);
-      return;
-    }
-
-    setShowVerifyModal(false);
-    setPhoneForVerify("");
-    localStorage.removeItem(PHONE_KEY);
-    localStorage.removeItem(PHONE_STATUS_KEY);
-    setShowPhoneModal(true);
-  };
-
-  const handleBellClick = () => {
-    setIsProfileOpen(false);
-
-    if (portalState.isVerified) {
-      router.push("/my-orders");
-      return;
-    }
-
-    setShowVerifyModal(false);
-    setPhoneForVerify("");
-    localStorage.removeItem(PHONE_KEY);
-    localStorage.removeItem(PHONE_STATUS_KEY);
-    setShowPhoneModal(true);
-  };
-
-  const handleSignOut = async () => {
-    const mobile = (portalState.phone || localStorage.getItem(PHONE_KEY) || "").trim();
-
-    // Always clear session locally, even if backend logout fails
-    clearCustomerPortalSession();
-    setIsProfileOpen(false);
-    refreshPortalState();
-
-    try {
-      if (mobile) {
-        await logout({ mobile }).unwrap();
-      }
-    } catch (error) {
-      console.error("Logout failed", error);
-    }
-
-    // Always redirect to home after logout
-    router.push("/home");
-  };
-
   return (
-    <>
-      <header className="flex items-center justify-between px-4 pt-6">
-        <div className="relative min-w-0 flex-1" ref={dropdownRef}>
-          <button
-            type="button"
-            onClick={handleProfileClick}
-            className="flex min-w-0 w-full items-center gap-3 text-left"
-          >
-            {/* Profile Image - Kept at 48px, perfect for mobile */}
-            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-red-100 bg-slate-50 shadow-sm">
-              {customerAvatar ? (
-                <Image
-                  src={customerAvatar}
-                  alt="Profile"
-                  width={48}
-                  height={48}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <User size={20} className="text-slate-500" />
-              )}
-            </div>
-
-            <div className="min-w-0">
-              {/* Increased weight for better recognition */}
-              <h1 className="truncate text-[17px] font-semibold tracking-wide text-slate-900">
-                {portalState.isVerified ? portalState.phone : "Guest"}
-              </h1>
-              {/* Bumped to text-sm (14px) for readability; slate-500 is the standard for secondary info */}
-              <p className="truncate text-sm font-normal text-slate-500">
-                {secondaryText}
-              </p>
-            </div>
-          </button>
-
-          {portalState.isVerified && isProfileOpen && (
-            <div className="absolute left-0 top-15 z-50 w-56 rounded-2xl border border-slate-100 bg-white p-2 shadow-xl">
-              <button
-                type="button"
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                onClick={() => {
-                  setIsProfileOpen(false);
-                  router.push("/account-profile");
-                }}
-              >
-                <User size={16} />
-                Account Profile
-              </button>
-
-              <div className="my-1.5 h-px bg-slate-100" />
-
-              <button
-                type="button"
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
-                onClick={handleSignOut}
-              >
-                <LogOut size={16} />
-                Sign Out
-              </button>
-            </div>
-          )}
+    <header className="flex h-20 items-center justify-center border-b border-slate-100 bg-white px-4 py-3">
+      <Link href="/home" className="flex items-center justify-center gap-3">
+        <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full">
+          <Image
+            src="/logo.png"
+            alt="Kabab Al Rayhan"
+            width={50}
+            height={50}
+            className="h-full w-full object-contain p-1"
+            priority
+          />
         </div>
 
-        {/* Increased padding (p-2.5) for a better thumb tap target */}
-
-     
-
-      </header>
-
-      {showPhoneModal && (
-        <PhoneModal
-          open={showPhoneModal}
-          allowExistingPhone={true}
-          onClose={handlePhoneModalClose}
-        />
-      )}
-      {showVerifyModal && (
-        <PhoneVerifyModal
-          open={showVerifyModal}
-          phone={phoneForVerify}
-          onClose={handleVerifyModalClose}
-          onChangePhone={handleChangePhoneFromVerify}
-        />
-      )}
-    </>
+        <div className="min-w-0 text-center">
+          <h1 className="truncate text-lg font-bold text-slate-900">
+            Kabab Al Rayhan
+          </h1>
+          <p className="truncate text-sm font-medium uppercase text-slate-500">
+            Restaurant & Bakery
+          </p>
+        </div>
+      </Link>
+    </header>
   );
 }
