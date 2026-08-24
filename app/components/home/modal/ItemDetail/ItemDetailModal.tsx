@@ -207,7 +207,7 @@ export function ItemDetailModal({
         <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-3">
           <button
             onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm text-slate-800 shadow-sm active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm text-slate-800 shadow-sm active:scale-95 hover:bg-red-600 hover:text-white transition-colors"
           >
             <ChevronLeft size={20} />
           </button>

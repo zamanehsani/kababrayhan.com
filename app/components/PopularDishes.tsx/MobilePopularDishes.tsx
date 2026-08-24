@@ -161,28 +161,6 @@ export default function PopularDishes() {
                   }}
                   className="relative flex flex-col rounded-[2rem] bg-slate-100 p-3 transition-all active:scale-[0.98]"
                 >
-                  {/* TOP SECTION: Title and Wishlist */}
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <h4 className="text-[14px] font-semibold leading-tight text-slate-800 line-clamp-2">
-                      {dish.name}
-                    </h4>
-                    {/* <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-red-500 shadow-sm transition-colors active:scale-90"
-                      aria-label={
-                        dish.liked ? "Remove from favorites" : "Add to favorites"
-                      }
-                    >
-                      <Heart
-                        size={14}
-                        fill={dish.liked ? "currentColor" : "none"}
-                        strokeWidth={2.5}
-                      />
-                    </button> */}
-                  </div>
-
                   {/* MIDDLE SECTION: Image centered on the gray card */}
                   <div className="relative aspect-square w-full">
                     <Image
@@ -197,6 +175,9 @@ export default function PopularDishes() {
                       }}
                       className="object-contain p-0"
                     />
+                  </div>
+                  <div className="mt-2 flex items-center text-center justify-center gap-2">
+                   <h4 className="font-semibold text-center text-slate-800 line-clamp-2"> {dish.name} </h4>
                   </div>
 
                   {/* BOTTOM SECTION: Calories and Price */}

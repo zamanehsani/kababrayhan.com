@@ -177,7 +177,7 @@ export function TabletItemDetailModal({
       <button
         type="button"
         aria-label="Close modal"
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm "
         onClick={onClose}
       />
 
@@ -191,10 +191,8 @@ export function TabletItemDetailModal({
         </h2>
 
         <div className="absolute right-4 top-4 z-20 flex items-center justify-end pointer-events-none">
-          <button
-            onClick={onClose}
-            className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full border border-slate-100/10 bg-white/80 text-slate-800 backdrop-blur-md shadow-sm transition-all active:scale-95"
-          >
+          <button onClick={onClose}
+            className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full border border-slate-100/10 bg-white/80 text-red-600 backdrop-blur-md shadow-sm transition-all active:scale-95 hover:bg-red-600 hover:text-white transition-colors">
             <X size={18} />
           </button>
         </div>

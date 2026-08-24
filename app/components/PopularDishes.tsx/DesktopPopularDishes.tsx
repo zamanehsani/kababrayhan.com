@@ -206,28 +206,7 @@ export default function DesktopPopularDishes() {
                   }}
                   className="group relative flex flex-col rounded-[2rem] bg-slate-100 p-4 border border-slate-100/50 transition-all duration-300 ease-out hover:bg-white hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/50 active:scale-[0.98]"
                 >
-                  {/* TOP SECTION: Title and Wishlist */}
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <h4 className="text-[16px] font-semibold leading-snug tracking-wide text-slate-800 line-clamp-2 group-hover:text-slate-900 transition-colors pl-2 ">
-                      {dish.name}
-                    </h4>
-                    {/* <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-red-500 shadow-sm transition-all duration-200 hover:scale-110 active:scale-90"
-                      aria-label={
-                        dish.liked ? "Remove from favorites" : "Add to favorites"
-                      }
-                    >
-                      <Heart
-                        size={15}
-                        fill={dish.liked ? "currentColor" : "none"}
-                        strokeWidth={2.5}
-                      />
-                    </button> */}
-                  </div>
-
+                  
                   {/* MIDDLE SECTION: Image centered with a soft hover scale effect */}
                   <div className="relative aspect-square w-full my-1 overflow-hidden">
                     <Image
@@ -247,6 +226,9 @@ export default function DesktopPopularDishes() {
                       }}
                       className="object-contain p-0 transition-transform duration-500 ease-out group-hover:scale-105"
                     />
+                  </div>
+                   <div className="mt-2 flex items-center text-center justify-center gap-2">
+                   <h4 className="font-semibold text-center text-slate-800 line-clamp-2"> {dish.name} </h4>
                   </div>
 
                   {/* BOTTOM SECTION: Calories and Price */}

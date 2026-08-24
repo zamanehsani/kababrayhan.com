@@ -159,7 +159,7 @@ export function DesktopItemDetailModal({
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 z-30 flex h-10 w-10 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-800 shadow-md transition-all hover:bg-slate-50 active:scale-95"
+          className="absolute top-5 right-5 z-30 flex h-10 w-10 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-800 shadow-md transition-all hover:bg-red-600 hover:text-white transition-colors active:scale-95"
         >
           <X size={18} />
         </button>
