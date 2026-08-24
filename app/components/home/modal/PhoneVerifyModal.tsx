@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
+import {X} from "lucide-react";
 import { useSendOtpMutation, useGetCustomerAddressesQuery } from "../../../redux/api";
 import { useVerifyOtpMutation } from "../../../redux/authApi";
 import {
@@ -120,16 +121,19 @@ const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, onCh
 
   const modalContent = (
     <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/30">
-      <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-sm relative">
+      <div className="bg-white rounded-4xl shadow-2xl p-8 w-full max-w-sm relative">
         <button
+          type="button"
+          aria-label="Close phone modal"
           onClick={() => onClose(false)}
-          className="absolute top-3 right-3 text-gray-400 hover:text-red-600 text-2xl font-black"
-          aria-label="Close verification modal"
+          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-red-100 bg-white text-red-500 shadow-sm transition-all duration-200 hover:bg-red-500 hover:text-white active:scale-95"
         >
-          ×
+          <X size={18} strokeWidth={2.5} />
         </button>
-        <h2 className="text-xl font-medium mb-2 text-center tracking-wide">Verify Your Phone</h2>
-        <div className="text-center text-gray-500 text-sm tracking-wide">We sent a 4-digit code to <span className="font-medium tracking-wide">{phone}</span></div>
+
+        {/* <h2 className="text-xl font-medium mb-2 text-center tracking-wide">Verify Your Phone</h2> */}
+        {/* <br/> */}
+        <div className="text-center text-gray-500 text-sm tracking-wide">enter the code sent to <br/><span className="font-medium tracking-wide">{phone}</span></div>
         <button
           type="button"
           className="mt-2 mb-4 block w-full text-center text-xs text-red-600 font-bold underline disabled:text-gray-400 disabled:cursor-not-allowed"
@@ -154,7 +158,7 @@ const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, onCh
                 inputMode="numeric"
                 pattern="\d"
                 maxLength={1}
-                className="w-14 h-16 text-center border border-gray-200 rounded-lg px-2 py-3 text-2xl font-bold tracking-widest focus:outline-none focus:border-red-500"
+                className="w-14 h-14 text-center border border-gray-200 rounded-full px-2 py-3 text-2xl font-bold tracking-widest focus:outline-none focus:border-red-500"
                 value={digit}
                 onChange={(e) => handleDigitChange(idx, e.target.value.replaceAll(/\D/g, ""))}
                 autoFocus={idx === 0}
@@ -165,12 +169,12 @@ const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({ open, onClose, onCh
           {error && <div className="text-red-600 text-sm text-center">{error}</div>}
           <button
             type="submit"
-            className="w-full rounded-xl bg-red-600 py-3 text-base font-medium uppercase tracking-widest text-white transition-all hover:bg-red-700 active:scale-[0.98]"
+            className="w-full rounded-full bg-red-600 py-3 text-base font-medium tracking-widest text-white transition-all hover:bg-red-700 active:scale-[0.98]"
             disabled={isLoading}
           >
             {isLoading ? "Verifying..." : "Verify"}
           </button>
-          <div className="mt-2 flex flex-col items-center gap-2 text-center">
+          <div className=" flex flex-col items-center gap-2 text-center">
           <button
             type="button"
             className="text-xs text-red-600 font-bold underline disabled:text-gray-400 disabled:cursor-not-allowed"

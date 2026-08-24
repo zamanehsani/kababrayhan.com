@@ -275,12 +275,12 @@ export default function TabletHeader() {
     <>
       <header className="flex h-24 items-center justify-between border-b border-slate-100 bg-white px-8 transition-all duration-300">
       {/* Left Section: User Profile */}
-      <div className="flex shrink-0 items-center gap-4">
+      <div className="flex shrink-0 items-center gap-3">
         <div className="relative" ref={dropdownRef}>
           <button
             type="button"
             onClick={handleProfileTrigger}
-            className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-red-100 bg-slate-50 shadow-sm"
+            className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-1 border-red-100 bg-slate-50 shadow-sm"
             aria-haspopup="menu"
             aria-expanded={isProfileOpen}
           >
@@ -288,48 +288,37 @@ export default function TabletHeader() {
               <Image
                 src={customerAvatar}
                 alt="Profile"
-                width={56}
-                height={56}
+                width={50}
+                height={50}
                 className="h-full w-full object-cover"
               />
             ) : (
-              <User size={22} className="text-slate-500" />
+              <User size={25} className="text-slate-500" />
             )}
           </button>
 
           {isProfileOpen && (
             <div className="absolute left-0 top-16 z-20 w-56 rounded-2xl border border-slate-100 bg-white p-2 shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="mb-1.5 border-b border-slate-50 px-3 py-2.5">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Verified Phone
-                </p>
-                <p className="truncate text-xs font-medium text-slate-800">
-                  {portalState.phone}
-                </p>
-                <p className="mt-0.5 truncate text-[10px] text-slate-400">
-                  {portalState.address || "No saved address"}
-                </p>
-              </div>
-
               <button
                 type="button"
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="flex w-full flex-col items-start gap-1 rounded-xl px-3 py-2 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50"
                 onClick={() => {
                   setIsProfileOpen(false);
                   router.push("/account-profile");
                 }}
               >
-                <User size={16} />
-                Account Profile
+                <p className="w-full truncate font-medium text-slate-800">
+                  {portalState.phone}
+                </p>
+                <p className="w-full truncate text-slate-400">
+                  {portalState.address || "No saved address"}
+                </p>
               </button>
 
               <div className="my-1.5 h-px bg-slate-100" />
-
-              <button
-                type="button"
+              <button type="button"
                 className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
-                onClick={handleSignOut}
-              >
+                onClick={handleSignOut} >
                 <LogOut size={16} />
                 Sign Out
               </button>
@@ -346,10 +335,10 @@ export default function TabletHeader() {
           }`}
         >
           <p className="text-xs font-normal uppercase tracking-wider text-slate-400 whitespace-nowrap">
-            {portalState.isVerified ? "Welcome Back" : "Welcome"}
+            {portalState.isVerified ? "Welcome Back" : "click to"}
           </p>
-          <h1 className="text-xl font-normal tracking-wide text-slate-900 whitespace-nowrap">
-            {portalState.isVerified ? portalState.phone : "Guest"}
+          <h1 className=" font-normal tracking-wide text-slate-900 whitespace-nowrap">
+            {portalState.isVerified ? portalState.phone : <span onClick={handleProfileTrigger} className="text-red-600 cursor-pointer">Login</span>}
           </h1>
         </div>
       </div>
