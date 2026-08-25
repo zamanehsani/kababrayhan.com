@@ -71,7 +71,9 @@ const toDisplayAddressTitle = (
   return index === 0 ? "Home" : `Address ${index + 1}`;
 };
 
-const stripeKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+const stripeKey =
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
+  process.env.STRIPE_PUBLISHABLE_KEY;
 let stripePromise: ReturnType<typeof loadStripe> | null = null;
 
 if (stripeKey) {

@@ -11,7 +11,6 @@ import {
   useCreateAddressMutation,
   useUpdateAddressMutation,
   useSetCustomerInfoMutation,
-  baseUrl,
 } from "../../../redux/api";
 import ConfirmDialog from "../../shared/ConfirmDialog";
 import {
@@ -252,16 +251,9 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
         landmark: normalizeAddressPart(current.landmark, addressInfo.landmark, addressInfo.attraction) || "",
       }));
 
-      // 2. Query your live custom Frappe Spatial engine
-      const token = process.env.NEXT_PUBLIC_ERP_API_TOKEN || "";
+      // 2. Query your live custom Frappe Spatial engine through the ERP proxy
       const zoneResponse = await fetch(
-        `${baseUrl}/api/method/pizza_app.api.validate_coordinate_zone?lat=${lat}&lng=${lng}`,
-        {
-          headers: {
-            Authorization: `token ${token}`,
-            "X-Frappe-Site-Name": "kababrayhan.com",
-          },
-        }
+        `/api/erp/method/pizza_app.api.validate_coordinate_zone?lat=${lat}&lng=${lng}`
       );
 
       if (zoneResponse.ok) {
@@ -314,16 +306,9 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
     const fields = encodeURIComponent(
       JSON.stringify(["name", "customer_name", "mobile_no"])
     );
-    const token = process.env.NEXT_PUBLIC_ERP_API_TOKEN || "";
 
     const response = await fetch(
-      `${baseUrl}/api/resource/Customer?filters=${filters}&fields=${fields}&limit_page_length=20`,
-      {
-        headers: {
-          Authorization: `token ${token}`,
-          "X-Frappe-Site-Name": "kababrayhan.com",
-        },
-      }
+      `/api/erp/resource/Customer?filters=${filters}&fields=${fields}&limit_page_length=20`
     );
 
     if (!response.ok) {
@@ -473,12 +458,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
     zoneLayersRef.current.forEach((layer) => layer.remove());
     zoneLayersRef.current = [];
 
-    const token = process.env.NEXT_PUBLIC_ERP_API_TOKEN || "";
     const doctypeName = "Delivery Zone";
-
-    if (!baseUrl || !token) {
-      return;
-    }
 
     try {
       const fields = [
@@ -496,12 +476,10 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
         filters: JSON.stringify([["is_active", "=", 1]]),
       });
 
-      const url = `${baseUrl}/api/resource/${encodeURIComponent(doctypeName)}?${query.toString()}`;
+      const url = `/api/erp/resource/${encodeURIComponent(doctypeName)}?${query.toString()}`;
 
       const response = await fetch(url, {
         headers: {
-          Authorization: `token ${token}`,
-          "X-Frappe-Site-Name": "kababrayhan.com",
           Accept: "application/json",
         },
       });

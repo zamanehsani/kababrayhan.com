@@ -8,7 +8,6 @@ import {
   type PhoneStatus,
 } from "@/app/redux/sessionSlice";
 import { store } from "@/app/redux/store";
-import { baseUrl } from "../redux/api";
 
 export const PHONE_KEY = "uae_phone";
 export const PHONE_STATUS_KEY = "uae_phone_status";
@@ -196,18 +195,9 @@ export const validateCustomerSession = async (): Promise<boolean> => {
   if (!customerName) return false;
 
   try {
-    // Check if customer exists by attempting to fetch their data
-    const ERP_API_BASE_URL = baseUrl;
-    const ERP_API_TOKEN = process.env.NEXT_PUBLIC_ERP_API_TOKEN || "";
-    
+    // Check if customer exists via the internal ERP proxy, so the server keeps the secret.
     const response = await fetch(
-      `${ERP_API_BASE_URL}/api/resource/Customer/${encodeURIComponent(customerName)}`,
-      {
-        headers: {
-          "Authorization": `token ${ERP_API_TOKEN}`,
-          "X-Frappe-Site-Name": "kababrayhan.com",
-        },
-      }
+      `/api/erp/resource/Customer/${encodeURIComponent(customerName)}`
     );
 
     if (response.ok) {

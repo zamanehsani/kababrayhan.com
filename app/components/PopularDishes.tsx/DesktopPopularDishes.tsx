@@ -40,8 +40,8 @@ export default function DesktopPopularDishes() {
     return encodeURI(normalizedValue);
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_ERP_API_BASE_URL || "";
-
+  const baseUrl = process.env.NEXT_PUBLIC_ERP_API_BASE_URL;
+  console.log("base url 2", baseUrl);
   // Split the path to isolate the filename so we don't accidentally encode the "/" characters
   const pathParts = normalizedValue.split("/");
   const encodedParts = pathParts.map(part => 

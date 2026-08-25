@@ -37,22 +37,17 @@ import type {
 // Add SendOtp types
 export type { SendOtpRequest, SendOtpResponse } from "./apiType";
 
-export const baseUrl = process.env.NEXT_PUBLIC_ERP_API_BASE_URL || "";
-export const ERP_API_METHOD_URL = `${baseUrl}/api/method/`;
+export const baseUrl =
+  process.env.NEXT_PUBLIC_ERP_API_BASE_URL ||
+  process.env.ERP_API_BASE_URL ||
+  "http://localhost:8000";
 
-
-// Read token from environment variable (more secure than hardcoding)
-
-// TODO: Replace with proper session-based auth (see AUTHENTICATION_IMPROVEMENT_PLAN.md)
-
-const ERP_API_AUTHORIZATION = `token ${
-  process.env.NEXT_PUBLIC_ERP_API_TOKEN || ""
-}`;
+export const ERP_PROXY_BASE_URL = "/api/erp";
+export const ERP_API_RESOURCE_URL = `${ERP_PROXY_BASE_URL}/resource/`;
+export const ERP_API_METHOD_URL = `${ERP_PROXY_BASE_URL}/method/`;
 
 export const toErpAbsoluteUrl = (value: string) => {
-  if (/^https?:\/\//i.test(value)) {
-    return value;
-  }
+  if (/^https?:\/\//i.test(value)) {return value;}
 
   return `${baseUrl}${value.startsWith("/") ? value : `/${value}`}`;
 };
@@ -61,11 +56,9 @@ export const erpApi = createApi({
   reducerPath: "erpApi",
   tagTypes: ["CustomerAddresses"],
   baseQuery: fetchBaseQuery({
-    baseUrl: `${baseUrl}/api/resource/`,
+    baseUrl: ERP_API_RESOURCE_URL,
     prepareHeaders: (headers) => {
-      headers.set("Authorization", ERP_API_AUTHORIZATION);
       headers.set("X-Frappe-Site-Name", "kababrayhan.com");
-
       return headers;
     },
   }),
@@ -76,9 +69,6 @@ export const erpApi = createApi({
           url: `${ERP_API_METHOD_URL}pizza_app.api.send_otp`,
           method: "POST",
           body,
-          headers: {
-            Authorization: ERP_API_AUTHORIZATION,
-          },
         };
       },
       transformResponse: (response: { message: SendOtpResponse }) =>
@@ -290,7 +280,7 @@ export const erpApi = createApi({
     }),
     renameCustomer: builder.mutation<{ name: string }, RenameCustomerRequest>({
       query: ({ oldName, newName }) => ({
-        url: `${baseUrl}/api/method/frappe.client.rename_doc`,
+        url: `${ERP_API_METHOD_URL}frappe.client.rename_doc`,
         method: "POST",
         body: {
           doctype: "Customer",
@@ -341,7 +331,7 @@ export const erpApi = createApi({
         fetchWithBQ
       ) => {
         const result = await fetchWithBQ({
-          url: `${baseUrl}/api/method/erpnext.selling.page.point_of_sale.point_of_sale.set_customer_info`,
+          url: `${ERP_API_METHOD_URL}erpnext.selling.page.point_of_sale.point_of_sale.set_customer_info`,
           method: "POST",
           body: {
             fieldname,
@@ -403,7 +393,7 @@ export const erpApi = createApi({
         }
 
         const result = await fetchWithBQ({
-          url: `${baseUrl}/api/method/frappe.client.attach_file`,
+          url: `${ERP_API_METHOD_URL}frappe.client.attach_file`,
           method: "POST",
           body: {
             filename: file.name,
@@ -493,7 +483,7 @@ export const erpApi = createApi({
     }),
     updateSalesOrder: builder.mutation<UpdateSalesOrderResponse, UpdateSalesOrderRequest>({
       query: ({ salesOrderName, ...body }) => ({
-        url: `${baseUrl}/api/resource/Sales Order/${encodeURIComponent(
+        url: `${ERP_API_RESOURCE_URL}Sales Order/${encodeURIComponent(
           salesOrderName
         )}`,
         method: "PUT",
@@ -515,7 +505,7 @@ export const erpApi = createApi({
         formData.append("sales_order", body.sales_order);
 
         const result = await fetchWithBQ({
-          url: `${baseUrl}/api/method/get_stripe_intent`,
+          url: `${ERP_API_METHOD_URL}get_stripe_intent`,
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: formData.toString(),
@@ -528,12 +518,9 @@ export const erpApi = createApi({
 
     createAddress: builder.mutation< CreateAddressResponse, CreateAddressRequest >({
       query: (body) => ({
-        url: `${baseUrl}/api/resource/Address`,
+        url: `${ERP_API_RESOURCE_URL}Address`,
         method: "POST",
         body,
-        headers: {
-          Authorization: ERP_API_AUTHORIZATION,
-        },
       }),
       invalidatesTags: (_result, _error, body) => {
         const linkedCustomer = body.links?.find(
@@ -548,25 +535,19 @@ export const erpApi = createApi({
     }),
     updateAddress: builder.mutation< UpdateAddressResponse, UpdateAddressRequest >({
       query: ({ addressName, ...body }) => ({
-        url: `${baseUrl}/api/resource/Address/${encodeURIComponent(
+        url: `${ERP_API_RESOURCE_URL}Address/${encodeURIComponent(
           addressName
         )}`,
         method: "PUT",
         body,
-        headers: {
-          Authorization: ERP_API_AUTHORIZATION,
-        },
       }),
       invalidatesTags: [{ type: "CustomerAddresses", id: "LIST" }],
     }),
     deleteAddress: builder.mutation<{ message?: unknown } | null, string>({
       queryFn: async (addressName, _api, _extraOptions, fetchWithBQ) => {
         const result = await fetchWithBQ({
-          url: `Address/${encodeURIComponent(addressName)}`,
+          url: `${ERP_API_RESOURCE_URL}Address/${encodeURIComponent(addressName)}`,
           method: "DELETE",
-          headers: {
-            Authorization: ERP_API_AUTHORIZATION,
-          },
         });
 
         if (result.error) {
@@ -580,11 +561,8 @@ export const erpApi = createApi({
     disableAddress: builder.mutation<{ message?: unknown } | null, string>({
       queryFn: async (addressName, _api, _extraOptions, fetchWithBQ) => {
         const result = await fetchWithBQ({
-          url: `Address/${encodeURIComponent(addressName)}`,
+          url: `${ERP_API_RESOURCE_URL}Address/${encodeURIComponent(addressName)}`,
           method: "PUT",
-          headers: {
-            Authorization: ERP_API_AUTHORIZATION,
-          },
           body: {
             disabled: 1,
           },
