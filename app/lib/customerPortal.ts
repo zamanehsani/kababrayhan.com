@@ -197,7 +197,7 @@ export const validateCustomerSession = async (): Promise<boolean> => {
   try {
     // Check if customer exists via the internal ERP proxy, so the server keeps the secret.
     const response = await fetch(
-      `/api/erp/resource/Customer/${encodeURIComponent(customerName)}`
+      `/api/resource/Customer/${encodeURIComponent(customerName)}`
     );
 
     if (response.ok) {

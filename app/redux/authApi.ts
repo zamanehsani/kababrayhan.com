@@ -1,10 +1,9 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-import { baseUrl } from "./api";
 import type { VerifyOtpRequest, VerifyOtpResponse } from "./apiType";
 import { clearSession, setAuthenticatedIdentity } from "./sessionSlice";
 
-const ERP_API_METHOD_URL = `${baseUrl}/api/method/`;
+const ERP_API_METHOD_URL = "/api/method/";
 
 const unwrapVerifyOtpResponse = (
   response: VerifyOtpResponse | { message: VerifyOtpResponse }
@@ -21,7 +20,7 @@ const unwrapVerifyOtpResponse = (
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: ERP_API_METHOD_URL,
+    baseUrl: "/",
     // ⚠️ CRUCIAL PRODUCTION FIX: Bypasses CSRFTokenError by dropping 
     // blind cross-origin tracking cookies on verification handshakes.
     credentials: "omit", 
@@ -48,7 +47,7 @@ export const authApi = createApi({
   endpoints: (builder) => ({
     verifyOtp: builder.mutation<VerifyOtpResponse, VerifyOtpRequest>({
       query: (body) => ({
-        url: "pizza_app.api.verify_otp",
+        url: `${ERP_API_METHOD_URL}pizza_app.api.verify_otp`,
         method: "POST",
         body,
       }),
@@ -74,7 +73,7 @@ export const authApi = createApi({
     }),
     logout: builder.mutation<void, { mobile: string }>({
       query: (body) => ({
-        url: "pizza_app.api.customer_logout",
+        url: `${ERP_API_METHOD_URL}pizza_app.api.customer_logout`,
         method: "POST",
         body,
       }),

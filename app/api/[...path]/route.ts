@@ -39,14 +39,20 @@ const getForwardedHeaders = (request: NextRequest) => {
 
 const buildTargetUrl = (request: NextRequest, path: string[]) => {
   const segments = path.filter(Boolean);
-  const targetPath = segments.length ? `/${segments.join("/")}` : "/";
+  const normalizedSegments = segments[0] === "api" ? segments.slice(1) : segments;
+  const targetPath = normalizedSegments.length
+    ? `/${normalizedSegments.join("/")}`
+    : "/";
   const url = new URL(`${ERP_BASE_URL}/api${targetPath}`);
   url.search = request.nextUrl.search;
   return url;
 };
 
-async function proxyErpRequest(request: NextRequest, { params }: { params: Promise<{ path?: string[] }> }) {
-  const { path = [] } = await params;
+async function proxyErpRequest(
+  request: NextRequest,
+  context: { params: Promise<{ path?: string[] }> }
+) {
+  const { path = [] } = await context.params;
   const targetUrl = buildTargetUrl(request, path);
   const method = request.method;
 
@@ -64,7 +70,11 @@ async function proxyErpRequest(request: NextRequest, { params }: { params: Promi
 
   const responseHeaders = new Headers();
   upstreamResponse.headers.forEach((value, key) => {
-    if (["content-length", "transfer-encoding", "connection"].includes(key.toLowerCase())) {
+    if (
+      ["content-length", "transfer-encoding", "connection"].includes(
+        key.toLowerCase()
+      )
+    ) {
       return;
     }
     responseHeaders.set(key, value);
@@ -86,10 +96,17 @@ async function proxyErpRequest(request: NextRequest, { params }: { params: Promi
   }
 
   if (contentType.includes("application/json")) {
-    return NextResponse.json(JSON.parse(payloadText), {
-      status: upstreamResponse.status,
-      headers: responseHeaders,
-    });
+    try {
+      return NextResponse.json(JSON.parse(payloadText), {
+        status: upstreamResponse.status,
+        headers: responseHeaders,
+      });
+    } catch {
+      return new NextResponse(payloadText, {
+        status: upstreamResponse.status,
+        headers: responseHeaders,
+      });
+    }
   }
 
   return new NextResponse(payloadText, {
@@ -98,22 +115,37 @@ async function proxyErpRequest(request: NextRequest, { params }: { params: Promi
   });
 }
 
-export async function GET(request: NextRequest, context: { params: Promise<{ path?: string[] }> }) {
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ path?: string[] }> }
+) {
   return proxyErpRequest(request, context);
 }
 
-export async function POST(request: NextRequest, context: { params: Promise<{ path?: string[] }> }) {
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ path?: string[] }> }
+) {
   return proxyErpRequest(request, context);
 }
 
-export async function PUT(request: NextRequest, context: { params: Promise<{ path?: string[] }> }) {
+export async function PUT(
+  request: NextRequest,
+  context: { params: Promise<{ path?: string[] }> }
+) {
   return proxyErpRequest(request, context);
 }
 
-export async function PATCH(request: NextRequest, context: { params: Promise<{ path?: string[] }> }) {
+export async function PATCH(
+  request: NextRequest,
+  context: { params: Promise<{ path?: string[] }> }
+) {
   return proxyErpRequest(request, context);
 }
 
-export async function DELETE(request: NextRequest, context: { params: Promise<{ path?: string[] }> }) {
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ path?: string[] }> }
+) {
   return proxyErpRequest(request, context);
 }

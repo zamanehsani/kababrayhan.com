@@ -253,7 +253,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
 
       // 2. Query your live custom Frappe Spatial engine through the ERP proxy
       const zoneResponse = await fetch(
-        `/api/erp/method/pizza_app.api.validate_coordinate_zone?lat=${lat}&lng=${lng}`
+        `/api/method/pizza_app.api.validate_coordinate_zone?lat=${lat}&lng=${lng}`
       );
 
       if (zoneResponse.ok) {
@@ -308,7 +308,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
     );
 
     const response = await fetch(
-      `/api/erp/resource/Customer?filters=${filters}&fields=${fields}&limit_page_length=20`
+      `/api/resource/Customer?filters=${filters}&fields=${fields}&limit_page_length=20`
     );
 
     if (!response.ok) {
@@ -476,7 +476,7 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
         filters: JSON.stringify([["is_active", "=", 1]]),
       });
 
-      const url = `/api/erp/resource/${encodeURIComponent(doctypeName)}?${query.toString()}`;
+      const url = `/api/resource/${encodeURIComponent(doctypeName)}?${query.toString()}`;
 
       const response = await fetch(url, {
         headers: {

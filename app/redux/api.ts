@@ -40,11 +40,11 @@ export type { SendOtpRequest, SendOtpResponse } from "./apiType";
 export const baseUrl =
   process.env.NEXT_PUBLIC_ERP_API_BASE_URL ||
   process.env.ERP_API_BASE_URL ||
-  "http://localhost:8000";
+  "https://portal.kababrayhan.com";
 
-export const ERP_PROXY_BASE_URL = "/api/erp";
-export const ERP_API_RESOURCE_URL = `${ERP_PROXY_BASE_URL}/resource/`;
-export const ERP_API_METHOD_URL = `${ERP_PROXY_BASE_URL}/method/`;
+export const API_BASE_URL = "/";
+export const API_RESOURCE_URL = "/api/resource/";
+export const API_METHOD_URL = "/api/method/";
 
 export const toErpAbsoluteUrl = (value: string) => {
   if (/^https?:\/\//i.test(value)) {return value;}
@@ -56,7 +56,7 @@ export const erpApi = createApi({
   reducerPath: "erpApi",
   tagTypes: ["CustomerAddresses"],
   baseQuery: fetchBaseQuery({
-    baseUrl: ERP_API_RESOURCE_URL,
+    baseUrl: API_BASE_URL,
     prepareHeaders: (headers) => {
       headers.set("X-Frappe-Site-Name", "kababrayhan.com");
       return headers;
@@ -66,7 +66,7 @@ export const erpApi = createApi({
     sendOtp: builder.mutation<SendOtpResponse, SendOtpRequest>({
       query: (body) => {
         return {
-          url: `${ERP_API_METHOD_URL}pizza_app.api.send_otp`,
+          url: `${API_METHOD_URL}pizza_app.api.send_otp`,
           method: "POST",
           body,
         };
@@ -76,7 +76,7 @@ export const erpApi = createApi({
     }),
     getItems: builder.query<Item[], void>({
       query: () => ({
-        url: "Item",
+        url: `${API_RESOURCE_URL}Item`,
         params: {
           limit_page_length: 1000,
           filters: JSON.stringify([["Item", "disabled", "=", 0]]),
@@ -104,7 +104,7 @@ export const erpApi = createApi({
 
     getItemByCode: builder.query<ItemDetails, string>({
       query: (itemCode) => ({
-        url: `Item/${encodeURIComponent(itemCode)}`,
+        url: `${API_RESOURCE_URL}Item/${encodeURIComponent(itemCode)}`,
       }),
       transformResponse: (response: FullItemResponse) => {
         const itemData = response.data ?? {};
@@ -153,7 +153,7 @@ export const erpApi = createApi({
     // create the customer
     createCustomer: builder.mutation<CustomerDetails, CreateCustomerRequest>({
       query: (body) => ({
-        url: "Customer",
+        url: `${API_RESOURCE_URL}Customer`,
         method: "POST",
         body: {
           ...body,
@@ -167,13 +167,13 @@ export const erpApi = createApi({
     // get customer
     getCustomer: builder.query<CustomerDetails, string>({
       query: (customerName) => ({
-        url: `Customer/${encodeURIComponent(customerName)}`,
+        url: `${API_RESOURCE_URL}Customer/${encodeURIComponent(customerName)}`,
       }),
       transformResponse: (response: { data: CustomerDetails }) => response.data,
     }),
     getCustomersByMobile: builder.query<Array<{ name: string; customer_name?: string; mobile_no?: string }>,string>({
       query: (mobileNo) => ({
-        url: "Customer",
+        url: `${API_RESOURCE_URL}Customer`,
         params: {
           filters: JSON.stringify([["mobile_no", "=", mobileNo]]),
           fields: JSON.stringify(["name", "customer_name", "mobile_no"]),
@@ -190,9 +190,9 @@ export const erpApi = createApi({
     }),
     getCustomersByMobileNumber: builder.query<CustomerDetails[], string>({
       query: (mobileNumber) => ({
-        url: "Customer",
+        url: `${API_RESOURCE_URL}Customer`,
         params: {
-          filters: JSON.stringify([["mobile_number", "=", mobileNumber]]),
+          filters: JSON.stringify([["mobile_no", "=", mobileNumber]]),
           fields: JSON.stringify(["*"]),
           limit_page_length: 20,
         },
@@ -203,7 +203,7 @@ export const erpApi = createApi({
     }),
     getCustomerAvatar: builder.query<string | null, string>({
       query: (customerName) => ({
-        url: "File",
+        url: `${API_RESOURCE_URL}File`,
         params: {
           filters: JSON.stringify([
             ["attached_to_doctype", "=", "Customer"],
@@ -225,7 +225,7 @@ export const erpApi = createApi({
     // Fetch all addresses linked to a customer from ERPNext
     getCustomerAddresses: builder.query<Address[], string>({
       query: (customerName) => ({
-        url: "Address",
+        url: `${API_RESOURCE_URL}Address`,
         params: {
           filters: JSON.stringify([
             ["Dynamic Link", "link_doctype", "=", "Customer"],
@@ -259,7 +259,7 @@ export const erpApi = createApi({
 
     getItemGroups: builder.query<{ name: string; custom_priority: number }[],void>({
       query: () => ({
-        url: "Item Group",
+        url: `${API_RESOURCE_URL}Item Group`,
         params: {
           limit_page_length: 1000,
           fields: JSON.stringify(["name", "custom_priority"]),
@@ -272,7 +272,7 @@ export const erpApi = createApi({
     }),
     updateCustomer: builder.mutation<CustomerDetails, UpdateCustomerRequest>({
       query: ({ customerName, ...body }) => ({
-        url: `Customer/${encodeURIComponent(customerName)}`,
+        url: `${API_RESOURCE_URL}Customer/${encodeURIComponent(customerName)}`,
         method: "PUT",
         body,
       }),
@@ -280,7 +280,7 @@ export const erpApi = createApi({
     }),
     renameCustomer: builder.mutation<{ name: string }, RenameCustomerRequest>({
       query: ({ oldName, newName }) => ({
-        url: `${ERP_API_METHOD_URL}frappe.client.rename_doc`,
+        url: `${API_METHOD_URL}frappe.client.rename_doc`,
         method: "POST",
         body: {
           doctype: "Customer",
@@ -300,13 +300,13 @@ export const erpApi = createApi({
     }),
     getContact: builder.query<Contact, string>({
       query: (contactName) => ({
-        url: `Contact/${encodeURIComponent(contactName)}`,
+        url: `${API_RESOURCE_URL}Contact/${encodeURIComponent(contactName)}`,
       }),
       transformResponse: (response: { data: Contact }) => response.data,
     }),
     createContact: builder.mutation<Contact, CreateContactRequest>({
       query: (body) => ({
-        url: "Contact",
+        url: `${API_RESOURCE_URL}Contact`,
         method: "POST",
         body: {
           doctype: "Contact",
@@ -317,7 +317,7 @@ export const erpApi = createApi({
     }),
     updateContact: builder.mutation<Contact, UpdateContactRequest>({
       query: ({ contactName, ...body }) => ({
-        url: `Contact/${encodeURIComponent(contactName)}`,
+        url: `${API_RESOURCE_URL}Contact/${encodeURIComponent(contactName)}`,
         method: "PUT",
         body,
       }),
@@ -331,7 +331,7 @@ export const erpApi = createApi({
         fetchWithBQ
       ) => {
         const result = await fetchWithBQ({
-          url: `${ERP_API_METHOD_URL}erpnext.selling.page.point_of_sale.point_of_sale.set_customer_info`,
+          url: `${API_METHOD_URL}erpnext.selling.page.point_of_sale.point_of_sale.set_customer_info`,
           method: "POST",
           body: {
             fieldname,
@@ -393,7 +393,7 @@ export const erpApi = createApi({
         }
 
         const result = await fetchWithBQ({
-          url: `${ERP_API_METHOD_URL}frappe.client.attach_file`,
+          url: `${API_METHOD_URL}frappe.client.attach_file`,
           method: "POST",
           body: {
             filename: file.name,
@@ -438,7 +438,7 @@ export const erpApi = createApi({
     // get sales orders for a customer
     getCustomerSalesOrders: builder.query<SalesOrderSummary[], string>({
       query: (customerName) => ({
-        url: "Sales Order",
+        url: `${API_RESOURCE_URL}Sales Order`,
         params: {
           filters: JSON.stringify([["customer", "=", customerName]]),
           fields: JSON.stringify([
@@ -460,7 +460,7 @@ export const erpApi = createApi({
     // get sales order details
     getSalesOrder: builder.query<SalesOrderDetails, string>({
       query: (orderName) => ({
-        url: `Sales Order/${encodeURIComponent(orderName)}`,
+        url: `${API_RESOURCE_URL}Sales Order/${encodeURIComponent(orderName)}`,
       }),
       transformResponse: (response: { data: SalesOrderDetails }) =>
         response.data,
@@ -468,14 +468,14 @@ export const erpApi = createApi({
     // get kitchen order ticket details
     getKitchenOrderTicket: builder.query<KitchenOrderTicket, string>({
       query: (kotName) => ({
-        url: `Kitchen Order Ticket/${encodeURIComponent(kotName)}`,
+        url: `${API_RESOURCE_URL}Kitchen Order Ticket/${encodeURIComponent(kotName)}`,
       }),
       transformResponse: (response: { data: KitchenOrderTicket }) =>
         response.data,
     }),
     createSalesOrder: builder.mutation<SalesOrder, CreateSalesOrderRequest>({
       query: (body) => ({
-        url: "Sales Order",
+        url: `${API_RESOURCE_URL}Sales Order`,
         method: "POST",
         body,
       }),
@@ -483,7 +483,7 @@ export const erpApi = createApi({
     }),
     updateSalesOrder: builder.mutation<UpdateSalesOrderResponse, UpdateSalesOrderRequest>({
       query: ({ salesOrderName, ...body }) => ({
-        url: `${ERP_API_RESOURCE_URL}Sales Order/${encodeURIComponent(
+        url: `${API_RESOURCE_URL}Sales Order/${encodeURIComponent(
           salesOrderName
         )}`,
         method: "PUT",
@@ -505,7 +505,7 @@ export const erpApi = createApi({
         formData.append("sales_order", body.sales_order);
 
         const result = await fetchWithBQ({
-          url: `${ERP_API_METHOD_URL}get_stripe_intent`,
+          url: `${API_METHOD_URL}get_stripe_intent`,
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: formData.toString(),
@@ -518,7 +518,7 @@ export const erpApi = createApi({
 
     createAddress: builder.mutation< CreateAddressResponse, CreateAddressRequest >({
       query: (body) => ({
-        url: `${ERP_API_RESOURCE_URL}Address`,
+        url: `${API_RESOURCE_URL}Address`,
         method: "POST",
         body,
       }),
@@ -535,7 +535,7 @@ export const erpApi = createApi({
     }),
     updateAddress: builder.mutation< UpdateAddressResponse, UpdateAddressRequest >({
       query: ({ addressName, ...body }) => ({
-        url: `${ERP_API_RESOURCE_URL}Address/${encodeURIComponent(
+        url: `${API_RESOURCE_URL}Address/${encodeURIComponent(
           addressName
         )}`,
         method: "PUT",
@@ -546,7 +546,7 @@ export const erpApi = createApi({
     deleteAddress: builder.mutation<{ message?: unknown } | null, string>({
       queryFn: async (addressName, _api, _extraOptions, fetchWithBQ) => {
         const result = await fetchWithBQ({
-          url: `${ERP_API_RESOURCE_URL}Address/${encodeURIComponent(addressName)}`,
+          url: `${API_RESOURCE_URL}Address/${encodeURIComponent(addressName)}`,
           method: "DELETE",
         });
 
@@ -561,7 +561,7 @@ export const erpApi = createApi({
     disableAddress: builder.mutation<{ message?: unknown } | null, string>({
       queryFn: async (addressName, _api, _extraOptions, fetchWithBQ) => {
         const result = await fetchWithBQ({
-          url: `${ERP_API_RESOURCE_URL}Address/${encodeURIComponent(addressName)}`,
+          url: `${API_RESOURCE_URL}Address/${encodeURIComponent(addressName)}`,
           method: "PUT",
           body: {
             disabled: 1,
@@ -579,7 +579,7 @@ export const erpApi = createApi({
 
     completeDoorstepOrder: builder.mutation<{ status: string; kot_name?: string; invoice_name?: string },{salesOrderName: string; paymentMethod: "cod" | "card_on_delivery"; changeRequired?: string; } >({
       query: ({ salesOrderName, paymentMethod, changeRequired }) => {
-        const targetUrl = `${ERP_API_METHOD_URL}pizza_app.api.complete_doorstep_order`;
+        const targetUrl = `${API_METHOD_URL}pizza_app.api.complete_doorstep_order`;
 
         return {
           // By using an absolute URL string, RTK Query bypasses prepending the baseQuery url
