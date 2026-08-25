@@ -90,7 +90,7 @@ export default function DesktopFooter() {
             </h4>
             <div className="space-y-3">
               <Link
-                href="/home"
+                href="/"
                 className="block text-sm text-slate-400 hover:text-red-600 transition-colors"
               >
                 Home

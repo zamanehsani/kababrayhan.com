@@ -1,50 +1,25 @@
+import { Suspense } from "react";
+import { fetchMenuItems, fetchItemGroups } from "./lib/erp";
+import CategoryBar from "./components/menu/CategoryBar";
+import ItemsGrid from "./components/menu/ItemsGrid";
 import SearchBar from "./components/home/SearchBar";
-import PromoBanner from "./components/home/PromoBanner";
-import CategoryTabs from "./components/home/CategoryTabs";
-import PopularDishes from "./components/home/PopularDishes";
 import BottomNav from "./components/home/BottomNav";
-import MobileHeader from "./components/Header/MobileHeader";
-import TabletHeader from "./components/Header/TabletHeader";
-import DesktopHeader from "./components/Header/DesktopHeader";
-import CartSidebarWidget from "./components/Cart/CartSidebarWidget";
-import Footer from "./components/Footer/Footer";
 
-export default function Home() {
+export default async function Home() {
+  const [items, groups] = await Promise.all([
+    fetchMenuItems().catch(() => []),
+    fetchItemGroups().catch(() => []),
+  ]);
 
-  
   return (
-    <main className="min-h-screen bg-white font-sans text-slate-900 dark:bg-zinc-950 dark:text-zinc-100">
-      {/* 1. Mobile Header: Visible by default, hidden from tablet (md) upwards */}
-      <div className="block md:hidden">
-        <MobileHeader />
-      </div>
-
-      {/* 2. Tablet Header: Hidden by default, visible only on tablet dimensions (md to lg) */}
-      <div className="hidden md:block lg:hidden">
-        <TabletHeader />
-      </div>
-
-      <div className="hidden lg:block">
-        <DesktopHeader />
-      </div>
-
-      {/* <Header /> */}
+    <main className="min-h-screen bg-white text-slate-900">
       <SearchBar />
-
-      {/* <PromoBanner /> */}
-      <CategoryTabs />
-      
-      <PopularDishes />
-
-      {/* Footer */}
-      <Footer />
-
-      {/* Floating Navigation */}
+      <CategoryBar groups={groups} />
+      {/* Suspense boundary required because ItemsGrid reads useSearchParams */}
+      <Suspense>
+        <ItemsGrid items={items} groups={groups} />
+      </Suspense>
       <BottomNav />
-
-      {/* Isolated Interactive Cart Layer */}
-      <CartSidebarWidget />
-      {/* Persistent Developer Tool */}
       <ScreenIndicator />
     </main>
   );

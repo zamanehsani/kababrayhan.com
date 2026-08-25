@@ -57,7 +57,7 @@ export default function TabletHeader() {
   const navItems = [
     {
       id: "home",
-      href: "/home",
+      href: "/",
       label: "Home",
       icon: <Home size={16} />,
     },
@@ -100,8 +100,7 @@ export default function TabletHeader() {
     }
   }, []);
 
-  const isHomeRoute =
-    pathname === "/" || pathname.startsWith("/home");
+  const isHomeRoute = pathname === "/";
   const searchValue = searchParams.get("search") ?? "";
   const [draftSearchValue, setDraftSearchValue] = useState(searchValue);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -268,7 +267,7 @@ export default function TabletHeader() {
     }
 
     // Always redirect to home after logout
-    router.push("/home");
+    router.push("/");
   };
 
   return (

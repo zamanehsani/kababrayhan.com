@@ -251,7 +251,7 @@ export default function AccountProfilePage() {
       console.error("Logout failed", error);
     }
 
-    router.push("/home");
+    router.push("/");
   };
 
   const profilePhone =

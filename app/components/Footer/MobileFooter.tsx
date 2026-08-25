@@ -82,7 +82,7 @@ export default function MobileFooter() {
           </h4>
           <div className="grid grid-cols-2 gap-2">
             <Link
-              href="/home"
+              href="/"
               className="text-sm text-slate-400 hover:text-red-600 transition-colors"
             >
               Home

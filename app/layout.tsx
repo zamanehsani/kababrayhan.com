@@ -3,6 +3,11 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import ScrollRestoration from "./components/scrollrestoration";
+import MobileHeader from "./components/Header/MobileHeader";
+import TabletHeader from "./components/Header/TabletHeader";
+import DesktopHeader from "./components/Header/DesktopHeader";
+import Footer from "./components/Footer/Footer";
+import CartSidebarWidget from "./components/Cart/CartSidebarWidget";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +33,14 @@ export default function RootLayout({
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <ScrollRestoration />
-        <Providers>{children}</Providers>
+        <Providers>
+          <div className="block md:hidden"><MobileHeader /></div>
+          <div className="hidden md:block lg:hidden"><TabletHeader /></div>
+          <div className="hidden lg:block"><DesktopHeader /></div>
+          {children}
+          <Footer />
+          <CartSidebarWidget />
+        </Providers>
       </body>
     </html>
   );

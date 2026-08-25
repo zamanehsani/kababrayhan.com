@@ -243,7 +243,7 @@ const CheckoutPage = () => {
     const parsedCart = cartRaw ? JSON.parse(cartRaw) : [];
 
     if (parsedCart.length === 0) {
-      router.push("/home");
+      router.push("/");
       return;
     }
 
@@ -400,7 +400,7 @@ const CheckoutPage = () => {
     setOrderError(null);
 
     if (!cart || cart.length === 0) {
-      router.push("/home");
+      router.push("/");
       return;
     }
 

@@ -42,7 +42,7 @@ export default function TermsConditionsPage() {
             </div>
 
             <Link
-              href="/home"
+              href="/"
               className="inline-flex w-fit items-center gap-1 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-slate-700 transition-colors hover:bg-slate-50"
             >
               <ChevronLeft size={14} />

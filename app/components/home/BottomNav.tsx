@@ -67,7 +67,7 @@ export default function BottomNav() {
     };
   }, [refreshPortalState, refreshCartCount]);
 
-  const isHomeRoute = pathname === "/" || pathname.startsWith("/home");
+  const isHomeRoute = pathname === "/";
 
   const navItems = [
     { id: "home", icon: <Home size={18} />, active: isHomeRoute },
@@ -148,7 +148,7 @@ export default function BottomNav() {
 
   const handleAction = (id: string) => {
     if (id === "home") {
-      router.push("/home");
+      router.push("/");
       return;
     }
 

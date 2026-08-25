@@ -86,7 +86,7 @@ export default function TabletFooter() {
               </h4>
               <div className="grid grid-cols-2 gap-3">
                 <Link
-                  href="/home"
+                  href="/"
                   className="text-base text-slate-400 hover:text-red-600 transition-colors"
                 >
                   Home

@@ -55,7 +55,7 @@ export default function DesktopHeader() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const desktopNavItems = [
-    { id: "home", href: "/home", label: "Home", icon: <Home size={16} /> },
+    { id: "home", href: "/", label: "Home", icon: <Home size={16} /> },
     { id: "orders", href: "/my-orders", label: "My Orders", icon: <StickyNote size={16} /> },
   ];
 
@@ -85,7 +85,7 @@ export default function DesktopHeader() {
   }, []);
 
   const shouldShowNav = portalState.isVerified;
-  const isHomeRoute = pathname === "/" || pathname.startsWith("/home");
+  const isHomeRoute = pathname === "/";
   const searchValue = searchParams.get("search") ?? "";
   const [draftSearchValue, setDraftSearchValue] = useState(searchValue);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -241,7 +241,7 @@ export default function DesktopHeader() {
     }
 
     // Always redirect to home after logout
-    router.push("/home");
+    router.push("/");
   };
 
   let middleSectionContent: React.ReactNode = <div className="h-9 w-full" />;
@@ -273,8 +273,8 @@ export default function DesktopHeader() {
               router.push(item.href);
             }}
             className={`flex items-center gap-1.5 px-4 h-10 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-200 ${
-              (item.href === "/home" && isHomeRoute) ||
-              (item.href !== "/home" && pathname.startsWith(item.href))
+              (item.href === "/" && isHomeRoute) ||
+              (item.href !== "/" && pathname.startsWith(item.href))
                 ? "bg-red-600 text-white shadow-sm scale-100"
                 : "text-slate-500 hover:bg-white hover:text-slate-800 hover:shadow-sm"
             }`}
@@ -291,7 +291,7 @@ export default function DesktopHeader() {
     <header className="flex h-20 items-center justify-between border-b border-slate-100 bg-white px-12 select-none transition-all duration-300">
       {/* Left Section: Image Branding */}
       <div className="flex items-center shrink-0">
-        <Link href="/home" className="cursor-pointer">
+        <Link href="/" className="cursor-pointer">
           <Image
             src="/logo.png"
             alt="Kabab Rayhan"
