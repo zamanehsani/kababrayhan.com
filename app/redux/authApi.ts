@@ -1,8 +1,8 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 
 import type { VerifyOtpRequest, VerifyOtpResponse } from "./apiType";
 import { clearSession, setAuthenticatedIdentity } from "./sessionSlice";
-import { baseUrl, erpApiToken } from "./api";
+import { erpServerActionBaseQuery } from "./erpBaseQuery";
 
 const ERP_API_METHOD_URL = "/api/method/";
 
@@ -20,18 +20,7 @@ const unwrapVerifyOtpResponse = (
 
 export const authApi = createApi({
   reducerPath: "authApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl,
-    // Direct browser-to-ERP calls (see AUTHENTICATION_IMPROVEMENT_PLAN.md).
-    credentials: "omit",
-    prepareHeaders: (headers) => {
-      headers.set("X-Frappe-Site-Name", "kababrayhan.com");
-      if (erpApiToken) {
-        headers.set("Authorization", `token ${erpApiToken}`);
-      }
-      return headers;
-    },
-  }),
+  baseQuery: erpServerActionBaseQuery,
   endpoints: (builder) => ({
     verifyOtp: builder.mutation<VerifyOtpResponse, VerifyOtpRequest>({
       query: (body) => ({

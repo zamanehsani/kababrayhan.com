@@ -1,5 +1,5 @@
 import { getCart } from "@/app/lib/cart";
-import { baseUrl, erpApiToken } from "@/app/redux/api";
+import { callErpApi } from "@/app/lib/erpServerAction";
 import {
   clearSession,
   hydrateSession,
@@ -196,28 +196,23 @@ export const validateCustomerSession = async (): Promise<boolean> => {
   if (!customerName) return false;
 
   try {
-    // Check if customer exists by calling the ERP backend directly.
-    const response = await fetch(
-      `${baseUrl}/api/resource/Customer/${encodeURIComponent(customerName)}`,
-      {
-        headers: {
-          "X-Frappe-Site-Name": "kababrayhan.com",
-          ...(erpApiToken ? { Authorization: `token ${erpApiToken}` } : {}),
-        },
-      }
-    );
+    // Check if customer exists via the server action, so the token stays server-side.
+    const result = await callErpApi<{ data: unknown }>({
+      url: `/api/resource/Customer/${encodeURIComponent(customerName)}`,
+    });
 
-    if (response.ok) {
+    if (result.data) {
       // Customer exists, session is valid
       return true;
-    } else if (response.status === 404) {
+    } else if (result.error?.status === 404) {
       // Customer was deleted, clear session
       console.warn("Customer not found in backend, clearing session");
       clearCustomerPortalSession();
       return false;
     } else {
       // Other error, don't clear session (might be temporary network issue)
-      console.warn("Unable to validate session, status:", response.status);
+      console.warn("Unable to validate session, status:", result.error?.status);
+
       return false;
     }
   } catch (error) {

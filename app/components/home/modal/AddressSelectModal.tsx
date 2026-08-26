@@ -11,9 +11,8 @@ import {
   useCreateAddressMutation,
   useUpdateAddressMutation,
   useSetCustomerInfoMutation,
-  baseUrl,
-  erpApiToken,
 } from "../../../redux/api";
+import { callErpApi } from "@/app/lib/erpServerAction";
 import ConfirmDialog from "../../shared/ConfirmDialog";
 import {
   getCustomerName,
@@ -253,24 +252,26 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
         landmark: normalizeAddressPart(current.landmark, addressInfo.landmark, addressInfo.attraction) || "",
       }));
 
-      // 2. Query your live custom Frappe Spatial engine directly on the ERP backend
-      const zoneResponse = await fetch(
-        `${baseUrl}/api/method/pizza_app.api.validate_coordinate_zone?lat=${lat}&lng=${lng}`,
-        {
-          headers: {
-            "X-Frappe-Site-Name": "kababrayhan.com",
-            ...(erpApiToken ? { Authorization: `token ${erpApiToken}` } : {}),
-          },
-        }
-      );
+      // 2. Query your live custom Frappe Spatial engine via the server action
+      const zoneResult = await callErpApi<{
+        message?: {
+          status?: string;
+          zone_found?: boolean;
+          zone_name?: string;
+          delivery_charge?: number;
+        };
+      }>({
+        url: "/api/method/pizza_app.api.validate_coordinate_zone",
+        params: { lat, lng },
+      });
 
-      if (zoneResponse.ok) {
-        const zoneData = await zoneResponse.json();
+      if (zoneResult.data) {
+        const zoneData = zoneResult.data;
         if (zoneData.message?.status === "success") {
           const res = zoneData.message;
           if (res.zone_found) {
-            setDeliveryZone(res.zone_name);
-            setDeliveryCharge(res.delivery_charge);
+            setDeliveryZone(res.zone_name ?? "");
+            setDeliveryCharge(res.delivery_charge ?? 0);
           } else {
             setIsOutOfRange(true);
             setDeliveryZone("");
@@ -308,36 +309,26 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
   // };
 
   const lookupCustomersByMobile = async (mobileNo: string) => {
-    const filters = encodeURIComponent(
-      JSON.stringify([["mobile_no", "=", mobileNo]])
-    );
-    const fields = encodeURIComponent(
-      JSON.stringify(["name", "customer_name", "mobile_no"])
-    );
-
-    const response = await fetch(
-      `${baseUrl}/api/resource/Customer?filters=${filters}&fields=${fields}&limit_page_length=20`,
-      {
-        headers: {
-          "X-Frappe-Site-Name": "kababrayhan.com",
-          ...(erpApiToken ? { Authorization: `token ${erpApiToken}` } : {}),
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to lookup customer: ${response.status}`);
-    }
-
-    const payload = (await response.json()) as {
+    const result = await callErpApi<{
       data?: Array<{
         name: string;
         customer_name?: string;
         mobile_no?: string;
       }>;
-    };
+    }>({
+      url: "/api/resource/Customer",
+      params: {
+        filters: JSON.stringify([["mobile_no", "=", mobileNo]]),
+        fields: JSON.stringify(["name", "customer_name", "mobile_no"]),
+        limit_page_length: 20,
+      },
+    });
 
-    return payload.data ?? [];
+    if (result.error) {
+      throw new Error(`Failed to lookup customer: ${result.error.status}`);
+    }
+
+    return result.data?.data ?? [];
   };
 
 

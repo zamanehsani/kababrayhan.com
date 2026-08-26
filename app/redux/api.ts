@@ -1,6 +1,7 @@
 export type { Customer, Item, OrderCartItem, SalesOrder } from "./apiType";
 // src/redux/api.ts
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { erpServerActionBaseQuery } from "./erpBaseQuery";
 import type {
   Address,
   AttachFileRequest,
@@ -42,10 +43,6 @@ export const baseUrl =
   process.env.ERP_API_BASE_URL ||
   "https://portal.kababrayhan.com";
 
-// Sent directly from the browser to the ERP backend (see AUTHENTICATION_IMPROVEMENT_PLAN.md).
-export const erpApiToken = process.env.NEXT_PUBLIC_ERP_API_TOKEN || "";
-
-export const API_BASE_URL = baseUrl;
 export const API_RESOURCE_URL = "/api/resource/";
 export const API_METHOD_URL = "/api/method/";
 
@@ -58,16 +55,7 @@ export const toErpAbsoluteUrl = (value: string) => {
 export const erpApi = createApi({
   reducerPath: "erpApi",
   tagTypes: ["CustomerAddresses"],
-  baseQuery: fetchBaseQuery({
-    baseUrl: API_BASE_URL,
-    prepareHeaders: (headers) => {
-      headers.set("X-Frappe-Site-Name", "kababrayhan.com");
-      if (erpApiToken) {
-        headers.set("Authorization", `token ${erpApiToken}`);
-      }
-      return headers;
-    },
-  }),
+  baseQuery: erpServerActionBaseQuery,
   endpoints: (builder) => ({
     sendOtp: builder.mutation<SendOtpResponse, SendOtpRequest>({
       query: (body) => {
