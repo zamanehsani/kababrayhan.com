@@ -263,7 +263,7 @@ export default function AccountProfilePage() {
 
   return (
     <>
-      <main className="flex min-h-screen flex-col bg-slate-50 font-sans text-slate-900">
+      <main className="flex flex-1 flex-col bg-slate-50 font-sans text-slate-900">
 
 
         <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-3 sm:px-6 lg:px-8 lg:py-5">

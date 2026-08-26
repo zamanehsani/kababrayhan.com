@@ -115,7 +115,7 @@ export default function CategoryBar({ groups }: { groups: ItemGroup[] }) {
             : ""
         }`}
       >
-        <div className="scrollbar-hide mx-auto flex max-w-[1440px] gap-2 overflow-x-auto px-4 py-3 lg:px-12">
+        <div className="no-scrollbar mx-auto flex max-w-[1440px] gap-2 overflow-x-auto px-4 py-3 lg:px-12">
           {categories.map((cat) => {
             const isActive = active === cat.name;
             return (
