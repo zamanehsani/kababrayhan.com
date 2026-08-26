@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { X, ShoppingBag, ArrowRight } from "lucide-react";
 import DirhamIcon from "../icon/DirhamIcon";
 import PhoneModal from "../home/modal/PhoneModal";
@@ -29,6 +29,7 @@ import {
 
 export default function CartDrawer() {
   const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [cart, setCart] = useState<CartEntry[]>([]);
@@ -114,9 +115,13 @@ export default function CartDrawer() {
   const isCartEmpty = cart.length === 0;
 
   if (!open && !isClosing) {
+    // Stop showing the transitional loader once the checkout route has
+    // actually finished navigating and rendered.
+    const showCheckoutLoader = isNavigatingToCheckout && pathname !== "/checkout";
+
     return (
       <>
-        {isNavigatingToCheckout && (
+        {showCheckoutLoader && (
           <GlobalLoader message="Preparing checkout..." />
         )}
       </>
