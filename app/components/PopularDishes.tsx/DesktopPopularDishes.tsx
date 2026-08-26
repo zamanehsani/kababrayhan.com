@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Dish } from "@/app/types/type";
-import { useGetItemGroupsQuery, useGetItemsQuery } from "../../redux/api";
+import { useGetItemGroupsQuery, useGetItemsQuery, baseUrl } from "../../redux/api";
 import { sortGroupNamesByItemGroupPriority } from "../../lib/itemGroupOrdering";
 import { DesktopItemDetailModal } from "../home/modal/ItemDetail/DesktopItemDetailModal";
 import DirhamIcon from "../icon/DirhamIcon";
@@ -40,8 +40,6 @@ export default function DesktopPopularDishes() {
     return encodeURI(normalizedValue);
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_ERP_API_BASE_URL;
-  console.log("base url 2", baseUrl);
   // Split the path to isolate the filename so we don't accidentally encode the "/" characters
   const pathParts = normalizedValue.split("/");
   const encodedParts = pathParts.map(part => 

@@ -8,6 +8,7 @@ import type { Item } from "@/app/redux/apiType";
 import type { Dish } from "@/app/types/type";
 import { sortGroupNamesByItemGroupPriority } from "@/app/lib/itemGroupOrdering";
 import { useScreenMode } from "@/app/lib/useScreenMode";
+import { baseUrl as ERP_BASE_URL } from "@/app/redux/api";
 import DirhamIcon from "@/app/components/icon/DirhamIcon";
 import { DesktopItemDetailModal } from "@/app/components/home/modal/ItemDetail/DesktopItemDetailModal";
 import { TabletItemDetailModal } from "@/app/components/home/modal/ItemDetail/TabletItemDetailModal";
@@ -19,8 +20,6 @@ type Props = {
   items: Item[];
   groups: ItemGroup[];
 };
-
-const ERP_BASE_URL = process.env.NEXT_PUBLIC_ERP_API_BASE_URL ?? "";
 
 function resolveDishImage(value?: string): string {
   if (!value?.trim()) return "/popular-dishes/burger.png";
