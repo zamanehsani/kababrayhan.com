@@ -4,11 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { LogOut, Menu, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import MobileHeader from "../components/Header/MobileHeader";
-import TabletHeader from "../components/Header/TabletHeader";
-import DesktopHeader from "../components/Header/DesktopHeader";
 import BottomNav from "../components/home/BottomNav";
-import CartSidebarWidget from "../components/Cart/CartSidebarWidget";
 import {
   CUSTOMER_PORTAL_UPDATED,
   clearCustomerPortalSession,
@@ -26,7 +22,6 @@ import {
   useGetCustomerSalesOrdersQuery,
 } from "@/app/redux/api";
 import { useLogoutMutation } from "@/app/redux/authApi";
-import Footer from "../components/Footer/Footer";
 import type { CustomerDetails } from "@/app/redux/apiType";
 import { saveStoredCustomer } from "@/app/components/customerStorage";
 import AddressesTab from "@/app/account-profile/components/AddressesTab";
@@ -269,17 +264,7 @@ export default function AccountProfilePage() {
   return (
     <>
       <main className="flex min-h-screen flex-col bg-slate-50 font-sans text-slate-900">
-        <div className="block md:hidden">
-          <MobileHeader />
-        </div>
 
-        <div className="hidden md:block lg:hidden">
-          <TabletHeader />
-        </div>
-
-        <div className="hidden lg:block">
-          <DesktopHeader />
-        </div>
 
         <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-3 sm:px-6 lg:px-8 lg:py-5">
           {feedback && (
@@ -386,9 +371,7 @@ export default function AccountProfilePage() {
 
         </section>
 
-        <Footer />
         <BottomNav />
-        <CartSidebarWidget />
       </main>
 
       {mobileMenuOpen && (

@@ -3,11 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ClipboardList, RefreshCw } from "lucide-react";
-import MobileHeader from "../components/Header/MobileHeader";
-import TabletHeader from "../components/Header/TabletHeader";
-import DesktopHeader from "../components/Header/DesktopHeader";
 import BottomNav from "../components/home/BottomNav";
-import CartSidebarWidget from "../components/Cart/CartSidebarWidget";
 import {
   useGetCustomerSalesOrdersQuery,
   useGetKitchenOrderTicketQuery,
@@ -19,7 +15,6 @@ import {
   readCustomerPortalSnapshot,
 } from "../lib/customerPortal";
 import type { SalesOrderSummary } from "../redux/apiType";
-import Footer from "../components/Footer/Footer";
 
 
 // kot?.status -> "Pending" | "Preparing" | "Ready" | "Completed"
@@ -201,17 +196,7 @@ export default function MyOrdersPage() {
   return (
     <>
       <main className="min-h-screen bg-white  font-sans text-slate-900 ">
-        <div className="block md:hidden">
-          <MobileHeader />
-        </div>
 
-        <div className="hidden md:block lg:hidden">
-          <TabletHeader />
-        </div>
-
-        <div className="hidden lg:block">
-          <DesktopHeader />
-        </div>
 
         <section className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="mb-6 flex items-center justify-between">
@@ -335,9 +320,7 @@ export default function MyOrdersPage() {
         </section>
 
         <BottomNav />
-        <CartSidebarWidget />
       </main>
-      <Footer />
     </>
   );
 }

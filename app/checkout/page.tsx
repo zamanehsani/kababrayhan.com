@@ -31,10 +31,6 @@ import OrderSummary from "../components/Checkout/OrderSummary";
 import CheckoutForm, {
   type DeliveryAddressItem,
 } from "../components/Checkout/CheckoutForm";
-import MobileHeader from "../components/Header/MobileHeader";
-import TabletHeader from "../components/Header/TabletHeader";
-import DesktopHeader from "../components/Header/DesktopHeader";
-import Footer from "../components/Footer/Footer";
 import CustomerNote from "../components/Checkout/CustomerNote";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import DirhamIcon from "../components/icon/DirhamIcon";
@@ -732,17 +728,7 @@ const CheckoutPage = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="block md:hidden">
-        <MobileHeader />
-      </div>
-
-      <div className="hidden md:block lg:hidden">
-        <TabletHeader />
-      </div>
-
-      <div className="hidden lg:block">
-        <DesktopHeader />
-      </div>
+      
 
       <main className="mx-auto max-w-7xl px-6 py-10 md:py-14 lg:py-16">
         <CheckoutStepper currentStep={step} />
@@ -882,8 +868,6 @@ const CheckoutPage = () => {
           variant="warning"
         />
       )}
-
-      <Footer />
     </div>
   );
 };
