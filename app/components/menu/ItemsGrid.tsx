@@ -7,8 +7,11 @@ import { useSearchParams } from "next/navigation";
 import type { Item } from "@/app/redux/apiType";
 import type { Dish } from "@/app/types/type";
 import { sortGroupNamesByItemGroupPriority } from "@/app/lib/itemGroupOrdering";
+import { useScreenMode } from "@/app/lib/useScreenMode";
 import DirhamIcon from "@/app/components/icon/DirhamIcon";
 import { DesktopItemDetailModal } from "@/app/components/home/modal/ItemDetail/DesktopItemDetailModal";
+import { TabletItemDetailModal } from "@/app/components/home/modal/ItemDetail/TabletItemDetailModal";
+import { ItemDetailModal } from "@/app/components/home/modal/ItemDetail/ItemDetailModal";
 
 type ItemGroup = { name: string; custom_priority: number };
 
@@ -57,13 +60,14 @@ const slugify = (v: string) =>
 
 export default function ItemsGrid({ items, groups }: Props) {
   const [selected, setSelected] = useState<Dish | null>(null);
+  const screenMode = useScreenMode();
   const searchParams = useSearchParams();
   const search = (searchParams.get("search") ?? "").trim().toLowerCase();
 
   const dishes = useMemo(
     () =>
       items
-        .filter((i) => !i.variant_of && i.disabled !== 1)
+        .filter((i) => !i.variant_of && i.disabled !== 1 && i.docstatus !== 1)
         .map(itemToDish),
     [items]
   );
@@ -181,7 +185,16 @@ export default function ItemsGrid({ items, groups }: Props) {
         </div>
       ))}
 
-      {selected && (
+      {selected && screenMode === "mobile" && (
+        <ItemDetailModal dish={selected} onClose={() => setSelected(null)} />
+      )}
+      {selected && screenMode === "tablet" && (
+        <TabletItemDetailModal
+          dish={selected}
+          onClose={() => setSelected(null)}
+        />
+      )}
+      {selected && screenMode === "desktop" && (
         <DesktopItemDetailModal
           dish={selected}
           onClose={() => setSelected(null)}

@@ -11,6 +11,8 @@ import {
   useCreateAddressMutation,
   useUpdateAddressMutation,
   useSetCustomerInfoMutation,
+  baseUrl,
+  erpApiToken,
 } from "../../../redux/api";
 import ConfirmDialog from "../../shared/ConfirmDialog";
 import {
@@ -251,9 +253,15 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
         landmark: normalizeAddressPart(current.landmark, addressInfo.landmark, addressInfo.attraction) || "",
       }));
 
-      // 2. Query your live custom Frappe Spatial engine through the ERP proxy
+      // 2. Query your live custom Frappe Spatial engine directly on the ERP backend
       const zoneResponse = await fetch(
-        `/api/method/pizza_app.api.validate_coordinate_zone?lat=${lat}&lng=${lng}`
+        `${baseUrl}/api/method/pizza_app.api.validate_coordinate_zone?lat=${lat}&lng=${lng}`,
+        {
+          headers: {
+            "X-Frappe-Site-Name": "kababrayhan.com",
+            ...(erpApiToken ? { Authorization: `token ${erpApiToken}` } : {}),
+          },
+        }
       );
 
       if (zoneResponse.ok) {
@@ -308,7 +316,13 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
     );
 
     const response = await fetch(
-      `/api/resource/Customer?filters=${filters}&fields=${fields}&limit_page_length=20`
+      `${baseUrl}/api/resource/Customer?filters=${filters}&fields=${fields}&limit_page_length=20`,
+      {
+        headers: {
+          "X-Frappe-Site-Name": "kababrayhan.com",
+          ...(erpApiToken ? { Authorization: `token ${erpApiToken}` } : {}),
+        },
+      }
     );
 
     if (!response.ok) {

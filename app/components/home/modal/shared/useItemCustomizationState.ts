@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   useGetItemByCodeQuery,
-  useGetItemsQuery,
+  useGetItemVariantsQuery,
 } from "@/app/redux/api";
 import type { Item } from "@/app/redux/apiType";
 import type { CustomGroup, CustomOption } from "../CustomizationPanel";
@@ -66,9 +66,6 @@ export function useItemCustomizationState(
       skip: !itemCode,
     }
   );
-  const { data: allItems } = useGetItemsQuery(undefined, {
-    skip: !itemCode,
-  });
 
   const { variationGroups: baseVariationGroups, addOnGroups } =
     useMemo<CustomizationSections>(
@@ -90,15 +87,19 @@ export function useItemCustomizationState(
   const isVariantSelectionRequired =
     expectVariantSelection || isTemplateWithVariants;
 
-  const variantItems = useMemo(() => {
-    if (!isVariantSelectionRequired || !Array.isArray(allItems)) return [];
-
-    return allItems.filter((item) => {
-      const parentCode =
-        typeof item.variant_of === "string" ? item.variant_of.trim() : "";
-      return Boolean(parentCode) && parentCode === itemCode;
+  const { data: fetchedVariants, isFetching: isVariantsFetching } =
+    useGetItemVariantsQuery(itemCode, {
+      skip: !itemCode || !isVariantSelectionRequired,
     });
-  }, [allItems, isVariantSelectionRequired, itemCode]);
+
+  const variantItems = useMemo(() => {
+    if (!isVariantSelectionRequired || !Array.isArray(fetchedVariants))
+      return [];
+
+    return fetchedVariants.filter(
+      (item) => item.disabled !== 1 && item.docstatus !== 1
+    );
+  }, [fetchedVariants, isVariantSelectionRequired]);
 
   const variantSelectionGroup = useMemo<CustomGroup | null>(() => {
     if (!isVariantSelectionRequired || variantItems.length === 0) return null;
@@ -236,7 +237,7 @@ export function useItemCustomizationState(
 
   const variantOptionsCount = variantSelectionGroup?.options.length ?? 0;
   const isVariantDataLoading =
-    isVariantSelectionRequired && (isItemLoading || allItems === undefined);
+    isVariantSelectionRequired && (isItemLoading || isVariantsFetching);
 
   const canAddToCart = useMemo(() => {
     if (hasMissingRequiredSelections) return false;

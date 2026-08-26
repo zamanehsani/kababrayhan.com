@@ -13,6 +13,7 @@ import { Dish } from "@/app/types/type";
 import { addDishToCart } from "@/app/lib/cart";
 import { useItemCustomizationState } from "../shared/useItemCustomizationState";
 import DirhamIcon from "../../../icon/DirhamIcon";
+import { AddOnCarousel } from "./AddOnCarousel";
 
 export function ItemDetailModal({
   dish,
@@ -25,6 +26,7 @@ export function ItemDetailModal({
   const itemCode = useMemo(() => String(dish.id ?? ""), [dish.id]);
   const {
     variationGroups,
+    addOnGroups,
     resolvedSelections,
     selectedAddOns,
     selectedAddOnPrice,
@@ -34,9 +36,12 @@ export function ItemDetailModal({
     variantOptionsCount,
     canAddToCart,
     handleSingleSelect,
+    handleMultiToggle,
   } = useItemCustomizationState(itemCode, Boolean(dish.hasVariants));
 
   const hasVariationOptions = variationGroups.length > 0;
+  const hasResolvedPrice =
+    !isVariantSelectionRequired || Boolean(selectedVariantItem);
 
   const basePrice = useMemo(() => {
     const parsed = Number(selectedVariantItem?.standard_rate ?? dish.price);
@@ -226,10 +231,16 @@ export function ItemDetailModal({
         <h1 className="text-xl font-medium text-slate-800 tracking-wide max-w-[70%]">
           {dish.name}
         </h1>
-        <span className="flex items-center text-xl font-semibold text-red-600">
-          <DirhamIcon size={16} className="mr-0.5 text-red-600" />
-          {unitPrice.toFixed(2)}
-        </span>
+        {hasResolvedPrice ? (
+          <span className="flex items-center text-xl font-semibold text-red-600">
+            <DirhamIcon size={16} className="mr-0.5 text-red-600" />
+            {unitPrice.toFixed(2)}
+          </span>
+        ) : (
+          <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+            Select option
+          </span>
+        )}
       </div>
 
       {/* 5. QUICK METRICS (Calories, Time, Rating) */}
@@ -268,6 +279,22 @@ export function ItemDetailModal({
           </p>
           <div className="mt-2 flex flex-col gap-1.5">
             {variationGroups.map(renderVariationGroup)}
+          </div>
+        </div>
+      )}
+
+      {addOnGroups.length > 0 && (
+        <div className="px-5 pb-2">
+          <p className="text-sm font-medium text-slate-800">Add-ons</p>
+          <div className="mt-2 flex flex-col gap-1.5">
+            {addOnGroups.map((group) => (
+              <AddOnCarousel
+                key={group.id}
+                group={group}
+                selections={resolvedSelections[group.id] || []}
+                onToggle={(optionId: string) => handleMultiToggle(group.id, optionId)}
+              />
+            ))}
           </div>
         </div>
       )}

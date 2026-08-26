@@ -39,6 +39,8 @@ export function DesktopItemDetailModal({
 
   const hasCustomizationOptions =
     variationGroups.length > 0 || addOnGroups.length > 0;
+  const hasResolvedPrice =
+    !isVariantSelectionRequired || Boolean(selectedVariantItem);
 
   const basePrice = useMemo(() => {
     const parsed = Number(selectedVariantItem?.standard_rate ?? dish.price);
@@ -192,10 +194,12 @@ export function DesktopItemDetailModal({
               <div className="max-w-full mx-auto flex flex-col gap-0">
                 {variationGroups.length > 0 && (
                   <section className="p-0">
-                    <p className="m-0 text-sm font-medium text-slate-600">Select one to continue.</p>
                     <div className="mt-1">
                       {variationGroups.map((group) => (
                         <div key={group.id} className="py-0">
+                          <p className="m-0 mb-1 text-sm font-medium text-slate-600">
+                            {group.title}
+                          </p>
                           <AddOnCarousel
                             group={group}
                             selections={resolvedSelections[group.id] || []}
@@ -208,7 +212,7 @@ export function DesktopItemDetailModal({
                   </section>
                 )}
 
-                {/* {addOnGroups.length > 0 && (
+                {addOnGroups.length > 0 && (
                   <section className="p-0">
                     <h4 className="mb-1 text-xs font-semibold tracking-wide text-slate-900">Add-ons</h4>
                     <div className="space-y-1">
@@ -223,7 +227,7 @@ export function DesktopItemDetailModal({
                       ))}
                     </div>
                   </section>
-                )} */}
+                )}
               </div>
             </div>
           )}
@@ -236,6 +240,7 @@ export function DesktopItemDetailModal({
             canAddToCart={canAddToCart}
             variantGateMessage={variantGateMessage}
             onAddToCart={handleAddToCart}
+            hasResolvedPrice={hasResolvedPrice}
           />
         </div>
       </dialog>

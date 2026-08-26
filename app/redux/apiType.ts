@@ -120,6 +120,7 @@ export interface Item {
   custom_calories?: number;
   custom_prep_time?: number;
   disabled?: 0 | 1;
+  docstatus?: number;
 }
 
 export interface ItemAddOnLink {

@@ -2,6 +2,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 import type { VerifyOtpRequest, VerifyOtpResponse } from "./apiType";
 import { clearSession, setAuthenticatedIdentity } from "./sessionSlice";
+import { baseUrl, erpApiToken } from "./api";
 
 const ERP_API_METHOD_URL = "/api/method/";
 
@@ -20,27 +21,14 @@ const unwrapVerifyOtpResponse = (
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: "/",
-    // ⚠️ CRUCIAL PRODUCTION FIX: Bypasses CSRFTokenError by dropping 
-    // blind cross-origin tracking cookies on verification handshakes.
-    credentials: "omit", 
-    prepareHeaders: async (headers) => {
+    baseUrl,
+    // Direct browser-to-ERP calls (see AUTHENTICATION_IMPROVEMENT_PLAN.md).
+    credentials: "omit",
+    prepareHeaders: (headers) => {
       headers.set("X-Frappe-Site-Name", "kababrayhan.com");
-
-      if (typeof window === "undefined") {
-        try {
-          const { cookies } = await import("next/headers");
-          const cookieStore = await cookies();
-          const sidCookieValue = cookieStore.get("sid")?.value;
-
-          if (sidCookieValue) {
-            headers.set("Cookie", `sid=${sidCookieValue}`);
-          }
-        } catch {
-          // Ignore cookie forwarding errors outside Next.js request context.
-        }
+      if (erpApiToken) {
+        headers.set("Authorization", `token ${erpApiToken}`);
       }
-
       return headers;
     },
   }),

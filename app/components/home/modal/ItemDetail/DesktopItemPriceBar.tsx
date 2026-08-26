@@ -9,6 +9,7 @@ interface DesktopItemPriceBarProps {
   canAddToCart: boolean;
   variantGateMessage: string;
   onAddToCart: () => void;
+  hasResolvedPrice: boolean;
 }
 
 export function DesktopItemPriceBar({
@@ -19,6 +20,7 @@ export function DesktopItemPriceBar({
   canAddToCart,
   variantGateMessage,
   onAddToCart,
+  hasResolvedPrice,
 }: Readonly<DesktopItemPriceBarProps>) {
   return (
     <div className="flex items-center justify-between gap-4 border-t border-slate-100 bg-white px-8 py-5">
@@ -26,10 +28,16 @@ export function DesktopItemPriceBar({
         <span className="text-xs font-normal tracking-wide text-slate-400">
           Total Price
         </span>
-        <span className="flex items-center text-3xl font-medium tracking-wide text-red-600">
-          <DirhamIcon size={22} className="mr-1 text-red-600" />
-          {totalPrice}
-        </span>
+        {hasResolvedPrice ? (
+          <span className="flex items-center text-3xl font-medium tracking-wide text-red-600">
+            <DirhamIcon size={22} className="mr-1 text-red-600" />
+            {totalPrice}
+          </span>
+        ) : (
+          <span className="text-sm font-medium uppercase tracking-wide text-slate-400">
+            Select an option
+          </span>
+        )}
       </div>
 
       <div className="flex items-center gap-4">

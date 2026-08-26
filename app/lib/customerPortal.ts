@@ -1,4 +1,5 @@
 import { getCart } from "@/app/lib/cart";
+import { baseUrl, erpApiToken } from "@/app/redux/api";
 import {
   clearSession,
   hydrateSession,
@@ -195,9 +196,15 @@ export const validateCustomerSession = async (): Promise<boolean> => {
   if (!customerName) return false;
 
   try {
-    // Check if customer exists via the internal ERP proxy, so the server keeps the secret.
+    // Check if customer exists by calling the ERP backend directly.
     const response = await fetch(
-      `/api/resource/Customer/${encodeURIComponent(customerName)}`
+      `${baseUrl}/api/resource/Customer/${encodeURIComponent(customerName)}`,
+      {
+        headers: {
+          "X-Frappe-Site-Name": "kababrayhan.com",
+          ...(erpApiToken ? { Authorization: `token ${erpApiToken}` } : {}),
+        },
+      }
     );
 
     if (response.ok) {

@@ -37,7 +37,10 @@ async function erpFetch<T>(
 export async function fetchMenuItems(): Promise<Item[]> {
   const data = await erpFetch<{ data: Item[] }>("/resource/Item", {
     limit_page_length: 1000,
-    filters: JSON.stringify([["Item", "disabled", "=", 0]]),
+    filters: JSON.stringify([
+      ["Item", "disabled", "=", 0],
+      ["Item", "variant_of", "is", "not set"],
+    ]),
     fields: JSON.stringify([
       "name",
       "item_name",

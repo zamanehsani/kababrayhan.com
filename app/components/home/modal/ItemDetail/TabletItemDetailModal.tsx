@@ -5,6 +5,7 @@ import { Dish } from "@/app/types/type";
 import { addDishToCart } from "@/app/lib/cart";
 import { useItemCustomizationState } from "../shared/useItemCustomizationState";
 import DirhamIcon from "../../../icon/DirhamIcon";
+import { AddOnCarousel } from "./AddOnCarousel";
 
 export function TabletItemDetailModal({
   dish,
@@ -18,6 +19,7 @@ export function TabletItemDetailModal({
 
   const {
     variationGroups,
+    addOnGroups,
     resolvedSelections,
     selectedAddOns,
     selectedAddOnPrice,
@@ -27,9 +29,12 @@ export function TabletItemDetailModal({
     variantOptionsCount,
     canAddToCart,
     handleSingleSelect,
+    handleMultiToggle,
   } = useItemCustomizationState(itemCode, Boolean(dish.hasVariants));
 
   const hasVariationOptions = variationGroups.length > 0;
+  const hasResolvedPrice =
+    !isVariantSelectionRequired || Boolean(selectedVariantItem);
 
   const basePrice = useMemo(() => {
     const parsed = Number(selectedVariantItem?.standard_rate ?? dish.price);
@@ -223,10 +228,16 @@ export function TabletItemDetailModal({
                   {dish.name}
                 </h1>
               </div>
-              <span className="flex shrink-0 items-center text-2xl font-medium tracking-wide text-red-600">
-                <DirhamIcon size={18} className="mr-0.5 text-red-600" />
-                {unitPrice.toFixed(2)}
-              </span>
+              {hasResolvedPrice ? (
+                <span className="flex shrink-0 items-center text-2xl font-medium tracking-wide text-red-600">
+                  <DirhamIcon size={18} className="mr-0.5 text-red-600" />
+                  {unitPrice.toFixed(2)}
+                </span>
+              ) : (
+                <span className="shrink-0 text-xs font-medium uppercase tracking-wide text-slate-400">
+                  Select option
+                </span>
+              )}
             </div>
 
             <div className="mx-auto flex items-center gap-4 rounded-2xl border border-slate-100/80 bg-slate-50 px-4 py-2.5 text-xs font-medium tracking-wide text-slate-500">
@@ -260,6 +271,22 @@ export function TabletItemDetailModal({
                 </p>
                 <div className="space-y-2">
                   {variationGroups.map(renderVariationGroup)}
+                </div>
+              </div>
+            )}
+
+            {addOnGroups.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-slate-800">Add-ons</p>
+                <div className="space-y-2">
+                  {addOnGroups.map((group) => (
+                    <AddOnCarousel
+                      key={group.id}
+                      group={group}
+                      selections={resolvedSelections[group.id] || []}
+                      onToggle={(optionId: string) => handleMultiToggle(group.id, optionId)}
+                    />
+                  ))}
                 </div>
               </div>
             )}

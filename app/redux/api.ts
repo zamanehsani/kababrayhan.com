@@ -42,7 +42,10 @@ export const baseUrl =
   process.env.ERP_API_BASE_URL ||
   "https://portal.kababrayhan.com";
 
-export const API_BASE_URL = "/";
+// Sent directly from the browser to the ERP backend (see AUTHENTICATION_IMPROVEMENT_PLAN.md).
+export const erpApiToken = process.env.NEXT_PUBLIC_ERP_API_TOKEN || "";
+
+export const API_BASE_URL = baseUrl;
 export const API_RESOURCE_URL = "/api/resource/";
 export const API_METHOD_URL = "/api/method/";
 
@@ -59,6 +62,9 @@ export const erpApi = createApi({
     baseUrl: API_BASE_URL,
     prepareHeaders: (headers) => {
       headers.set("X-Frappe-Site-Name", "kababrayhan.com");
+      if (erpApiToken) {
+        headers.set("Authorization", `token ${erpApiToken}`);
+      }
       return headers;
     },
   }),
@@ -79,7 +85,41 @@ export const erpApi = createApi({
         url: `${API_RESOURCE_URL}Item`,
         params: {
           limit_page_length: 1000,
-          filters: JSON.stringify([["Item", "disabled", "=", 0]]),
+          filters: JSON.stringify([
+            ["Item", "disabled", "=", 0],
+            ["Item", "variant_of", "is", "not set"],
+          ]),
+          fields: JSON.stringify([
+            "name",
+            "item_name",
+            "item_code",
+            "has_variants",
+            "variant_of",
+            "attributes",
+            "item_group",
+            "custom_priority",
+            "standard_rate",
+            "image",
+            "description",
+            "max_discount",
+            "custom_calories",
+            "custom_prep_time",
+            "disabled",
+          ]),
+        },
+      }),
+      transformResponse: (response: { data: Item[] }) => response.data,
+    }),
+
+    getItemVariants: builder.query<Item[], string>({
+      query: (parentItemCode) => ({
+        url: `${API_RESOURCE_URL}Item`,
+        params: {
+          limit_page_length: 100,
+          filters: JSON.stringify([
+            ["Item", "disabled", "=", 0],
+            ["Item", "variant_of", "=", parentItemCode],
+          ]),
           fields: JSON.stringify([
             "name",
             "item_name",
@@ -621,6 +661,7 @@ export const {
   useUpdateSalesOrderMutation,
   useCreatePaymentIntentMutation,
   useGetItemsQuery,
+  useGetItemVariantsQuery,
   useGetItemGroupsQuery,
   useSendOtpMutation,
   useGetItemByCodeQuery,

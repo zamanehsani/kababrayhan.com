@@ -48,7 +48,7 @@ export default function PopularDishes() {
   const dishes: Dish[] = useMemo(
     () =>
       (items ?? [])
-        .filter((item) => !item.variant_of && item.disabled !== 1)
+        .filter((item) => !item.variant_of && item.disabled !== 1 && item.docstatus !== 1)
         .map((item) => ({
         id: item.item_code || item.name,
         name: item.item_name ?? item.name ?? "Menu Item",
