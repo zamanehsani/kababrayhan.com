@@ -43,6 +43,18 @@ export default function CartDrawer() {
   const [allowExistingPhoneInput, setAllowExistingPhoneInput] = useState(false);
   const [showSavedAddressesModal, setShowSavedAddressesModal] = useState(false);
   const [isNavigatingToCheckout, setIsNavigatingToCheckout] = useState(false);
+  // Tracks the pathname as of the last render so we can detect a completed
+  // route change during render (see the state-adjustment check below).
+  const [lastSeenPathname, setLastSeenPathname] = useState(pathname);
+
+  // Once the route actually changes (checkout page mounted, or any page
+  // after it), the "Preparing checkout..." loader should clear for good.
+  if (pathname !== lastSeenPathname) {
+    setLastSeenPathname(pathname);
+    if (isNavigatingToCheckout) {
+      setIsNavigatingToCheckout(false);
+    }
+  }
 
   const [snapshot, setSnapshot] = useState(() => readCustomerPortalSnapshot());
   const [selectedDeliveryAddressId, setSelectedDeliveryAddressId] = useState<
@@ -115,13 +127,9 @@ export default function CartDrawer() {
   const isCartEmpty = cart.length === 0;
 
   if (!open && !isClosing) {
-    // Stop showing the transitional loader once the checkout route has
-    // actually finished navigating and rendered.
-    const showCheckoutLoader = isNavigatingToCheckout && pathname !== "/checkout";
-
     return (
       <>
-        {showCheckoutLoader && (
+        {isNavigatingToCheckout && (
           <GlobalLoader message="Preparing checkout..." />
         )}
       </>

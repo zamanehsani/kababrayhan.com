@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Phone, Mail, Clock } from "lucide-react";
+import { MapPin, Phone, Mail } from "lucide-react";
 import Link from "next/link";
 import {
   FacebookIcon,
@@ -9,8 +9,21 @@ import {
   WhatsappIcon,
 } from "../icon/SocialIcons";
 import Image from "next/image";
+import type { CompanyInfo } from "@/app/lib/company";
 
-export default function DesktopFooter() {
+const DEFAULT_COMPANY_INFO: CompanyInfo = {
+  name: "Kabab Al Rayhan",
+  description:
+    "Authentic Persian & Iranian grill experience in the heart of Ajman. From our signature Qabuli polou to the legendary Tikka Masti, we bring tradition to your table.",
+  phone: "+971503021317",
+  email: "kababrayhan@gmail.com",
+  address: "Al Rawda 2 - Ajman - United Arab Emirates",
+  logoDataUrl: null,
+};
+
+export default function DesktopFooter({
+  company = DEFAULT_COMPANY_INFO,
+}: Readonly<{ company?: CompanyInfo }>) {
   const currentYear = new Date().getFullYear();
 
   return (
@@ -24,17 +37,15 @@ export default function DesktopFooter() {
             {/* Image wrapper with a fixed height, keeping the layout sharp */}
             <div className="relative h-22 w-58 mb-4">
               <Image
-                src="/log-white.png" // Change this path to match your logo asset
-                alt="Kabab Al Raihan Logo"
+                src={company.logoDataUrl || "/log-white.png"}
+                alt={`${company.name} Logo`}
                 fill
                 priority // Ensures the logo loads instantly without layout shifts
                 className="object-contain object-left " // Keeps aspect ratio perfect and left-aligned
               />
             </div>
             <p className="text-sm text-slate-400 tracking-wide leading-relaxed">
-              Authentic Persian & Iranian grill experience in the heart of
-              Ajman. From our signature Qabuli polou to the legendary Tikka
-              Masti, we bring tradition to your table.
+              {company.description}
             </p>
           </div>
 
@@ -48,7 +59,7 @@ export default function DesktopFooter() {
                 <MapPin size={20} className="text-red-600 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-slate-300 leading-relaxed">
-                    Al Rawda 2 - Ajman - United Arab Emirates
+                    {company.address}
                   </p>
                 </div>
               </div>
@@ -56,29 +67,21 @@ export default function DesktopFooter() {
               <div className="flex items-center gap-3 text-sm">
                 <Phone size={20} className="text-red-600 shrink-0" />
                 <a
-                  href="tel:+971503021317"
+                  href={`tel:${company.phone.replaceAll(/\s+/g, "")}`}
                   className="text-slate-300 hover:text-red-600 transition-colors"
                 >
-                  +971 50 302 1317
+                  {company.phone}
                 </a>
               </div>
 
               <div className="flex items-center gap-3 text-sm">
                 <Mail size={20} className="text-red-600 shrink-0" />
                 <a
-                  href="mailto:kababrayhan@gmail.com"
+                  href={`mailto:${company.email}`}
                   className="text-slate-300 hover:text-red-600 transition-colors break-all"
                 >
-                  kababrayhan@gmail.com
+                  {company.email}
                 </a>
-              </div>
-
-              <div className="flex items-start gap-3 text-sm">
-                <Clock size={20} className="text-red-600 mt-0.5 shrink-0" />
-                <div className="text-slate-300">
-                  <p className="font-semibold mb-1">Opening Hours</p>
-                  <p>Daily: 11:00 AM - 11:59 PM</p>
-                </div>
               </div>
             </div>
           </div>

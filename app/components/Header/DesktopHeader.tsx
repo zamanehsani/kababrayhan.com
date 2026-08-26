@@ -24,9 +24,16 @@ import {
 } from "@/app/lib/customerPortal";
 import PhoneModal from "../home/modal/PhoneModal";
 import PhoneVerifyModal from "../home/modal/PhoneVerifyModal";
- 
 
-export default function DesktopHeader() {
+type DesktopHeaderProps = {
+  companyName?: string;
+  logoSrc?: string | null;
+};
+
+export default function DesktopHeader({
+  companyName = "Kabab Al Rayhan",
+  logoSrc,
+}: Readonly<DesktopHeaderProps>) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -293,15 +300,15 @@ export default function DesktopHeader() {
       <div className="flex items-center shrink-0">
         <Link href="/" className="cursor-pointer">
           <Image
-            src="/logo.png"
-            alt="Kabab Rayhan"
+            src={logoSrc || "/logo.png"}
+            alt={companyName}
             width={150}
             height={44}
             className="h-18 w-auto object-contain"
             priority
           />
         </Link>
-        <h1 className="text-lg font-bold text-slate-900 ml-3 leading-tight">Kabab Al Rayhan <br /> 
+        <h1 className="text-lg font-bold text-slate-900 ml-3 leading-tight">{companyName} <br /> 
           <span className="text-sm text-slate-500 font-normal">Restaurant & Bakery</span>
         </h1>
       </div>

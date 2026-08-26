@@ -3,14 +3,22 @@
 import Image from "next/image";
 import Link from "next/link";
 
-export default function MobileHeader() {
+type MobileHeaderProps = {
+  companyName?: string;
+  logoSrc?: string | null;
+};
+
+export default function MobileHeader({
+  companyName = "Kabab Al Rayhan",
+  logoSrc,
+}: Readonly<MobileHeaderProps>) {
   return (
     <header className="flex h-20 items-center justify-center bg-white px-4 py-3">
       <Link href="/" className="flex items-center justify-center gap-3">
         <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full">
           <Image
-            src="/logo.png"
-            alt="Kabab Al Rayhan"
+            src={logoSrc || "/logo.png"}
+            alt={companyName}
             width={50}
             height={50}
             className="h-full w-full object-contain p-1"
@@ -20,7 +28,7 @@ export default function MobileHeader() {
 
         <div className="min-w-0 text-center">
           <h1 className="truncate text-lg font-bold text-slate-900">
-            Kabab Al Rayhan
+            {companyName}
           </h1>
           <p className="truncate text-sm font-medium uppercase text-slate-500">
             Restaurant & Bakery

@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Phone, Mail, Clock } from "lucide-react";
+import { MapPin, Phone, Mail } from "lucide-react";
 import Link from "next/link";
 import {
   FacebookIcon,
@@ -9,8 +9,21 @@ import {
   TiktokIcon,
 } from "../icon/SocialIcons";
 import Image from "next/image";
+import type { CompanyInfo } from "@/app/lib/company";
 
-export default function TabletFooter() {
+const DEFAULT_COMPANY_INFO: CompanyInfo = {
+  name: "Kabab Al Rayhan",
+  description:
+    "Authentic Persian & Iranian grill experience in the heart of Ajman. From our signature Qabuli polou to the legendary Tikka Masti, we bring tradition to your table.",
+  phone: "+971503021317",
+  email: "kababrayhan@gmail.com",
+  address: "Al Rawda 2 - Ajman - United Arab Emirates",
+  logoDataUrl: null,
+};
+
+export default function TabletFooter({
+  company = DEFAULT_COMPANY_INFO,
+}: Readonly<{ company?: CompanyInfo }>) {
   const currentYear = new Date().getFullYear();
 
   return (
@@ -24,8 +37,8 @@ export default function TabletFooter() {
             {/* Left-aligned Image Base Logo for Tablet */}
             <div className="relative h-24 w-24 mb-4">
               <Image
-                src="/log-white.png"
-                alt="Kabab Al Raihan Logo"
+                src={company.logoDataUrl || "/log-white.png"}
+                alt={`${company.name} Logo`}
                 fill
                 priority
                 className="object-contain object-left"
@@ -33,9 +46,7 @@ export default function TabletFooter() {
             </div>
 
             <p className="text-base text-slate-400 tracking-wide mb-6">
-              Authentic Persian & Iranian grill experience in the heart of
-              Ajman. From our signature Qabuli polou to the legendary Tikka
-              Masti, we bring tradition to your table.
+              {company.description}
             </p>
 
             <div className="space-y-3">
@@ -43,7 +54,7 @@ export default function TabletFooter() {
                 <MapPin size={20} className="text-red-600 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-slate-300 leading-relaxed">
-                    Al Rawda 2 - Ajman - United Arab Emirates
+                    {company.address}
                   </p>
                 </div>
               </div>
@@ -51,28 +62,21 @@ export default function TabletFooter() {
               <div className="flex items-center gap-3 text-sm">
                 <Phone size={20} className="text-red-600 shrink-0" />
                 <a
-                  href="tel:+971503021317"
+                  href={`tel:${company.phone.replaceAll(/\s+/g, "")}`}
                   className="text-slate-300 hover:text-red-600 transition-colors"
                 >
-                  +971 50 302 1317
+                  {company.phone}
                 </a>
               </div>
 
               <div className="flex items-center gap-3 text-sm">
                 <Mail size={20} className="text-red-600 shrink-0" />
                 <a
-                  href="mailto:kababrayhan@gmail.com"
+                  href={`mailto:${company.email}`}
                   className="text-slate-300 hover:text-red-600 transition-colors"
                 >
-                  kababrayhan@gmail.com
+                  {company.email}
                 </a>
-              </div>
-
-              <div className="flex items-start gap-3 text-sm">
-                <Clock size={20} className="text-red-600 mt-0.5 shrink-0" />
-                <div className="text-slate-300">
-                  <p>Daily: 11:00 AM - 11:59 PM</p>
-                </div>
               </div>
             </div>
           </div>

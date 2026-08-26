@@ -8,6 +8,7 @@ import TabletHeader from "./components/Header/TabletHeader";
 import DesktopHeader from "./components/Header/DesktopHeader";
 import Footer from "./components/Footer/Footer";
 import CartSidebarWidget from "./components/Cart/CartSidebarWidget";
+import { fetchCompanyInfo } from "./lib/company";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,21 +25,23 @@ export const metadata: Metadata = {
   description: "A restaurant and bakery located in Ajman, United Arab Emirates, offering a variety of delicious dishes and baked goods.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const company = await fetchCompanyInfo();
+
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <ScrollRestoration />
         <Providers>
-          <div className="block md:hidden"><MobileHeader /></div>
+          <div className="block md:hidden"><MobileHeader companyName={company.name} logoSrc={company.logoDataUrl} /></div>
           <div className="hidden md:block lg:hidden"><TabletHeader /></div>
-          <div className="hidden lg:block"><DesktopHeader /></div>
+          <div className="hidden lg:block"><DesktopHeader companyName={company.name} logoSrc={company.logoDataUrl} /></div>
           {children}
-          <Footer />
+          <Footer company={company} />
           <CartSidebarWidget />
         </Providers>
       </body>

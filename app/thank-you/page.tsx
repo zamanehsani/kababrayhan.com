@@ -6,11 +6,7 @@ import {
   ChevronRight,
   ArrowLeft,
 } from "lucide-react";
-import MobileHeader from "../components/Header/MobileHeader";
-import TabletHeader from "../components/Header/TabletHeader";
-import DesktopHeader from "../components/Header/DesktopHeader";
 import BottomNav from "../components/home/BottomNav";
-import Footer from "../components/Footer/Footer";
 import { useEffect } from "react";
 
 export default function ThankYouPage() {
@@ -24,18 +20,7 @@ export default function ThankYouPage() {
 
   return (
     <main className="min-h-screen bg-slate-50/50 font-sans antialiased text-slate-800 flex flex-col">
-      {/* ── Headers Track ───────────────────────────────── */}
-      <div className="flex-shrink-0">
-        <div className="block md:hidden">
-          <MobileHeader />
-        </div>
-        <div className="hidden md:block lg:hidden">
-          <TabletHeader />
-        </div>
-        <div className="hidden lg:block">
-          <DesktopHeader />
-        </div>
-      </div>
+
 
       {/* ── Main Single-View Workspace Container ────────── */}
       <section className="flex-grow w-full max-w-5xl mx-auto px-6 flex flex-col justify-center items-center py-10 pb-24 md:pb-12">
@@ -146,10 +131,6 @@ export default function ThankYouPage() {
         <BottomNav />
       </div>
 
-      {/* ── Site Footer (Tablet + Desktop only) ─────────── */}
-      <div className="hidden md:block">
-        <Footer />
-      </div>
     </main>
   );
 }

@@ -2,28 +2,16 @@
 
 import Link from "next/link";
 import { ChevronLeft, Scale, ShieldAlert, FileText, HelpCircle } from "lucide-react";
-import MobileHeader from "../components/Header/MobileHeader";
-import TabletHeader from "../components/Header/TabletHeader";
-import DesktopHeader from "../components/Header/DesktopHeader";
+
 import BottomNav from "../components/home/BottomNav";
 import CartSidebarWidget from "../components/Cart/CartSidebarWidget";
-import Footer from "../components/Footer/Footer";
 
 export default function TermsConditionsPage() {
   const lastUpdated = "June 2026";
 
   return (
     <main className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      {/* Structural Headers matching your platform layout */}
-      <div className="block md:hidden">
-        <MobileHeader />
-      </div>
-      <div className="hidden md:block lg:hidden">
-        <TabletHeader />
-      </div>
-      <div className="hidden lg:block">
-        <DesktopHeader />
-      </div>
+
 
       <section className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
         {/* Navigation & Header Panel */}
@@ -114,7 +102,6 @@ export default function TermsConditionsPage() {
 
       <BottomNav />
       <CartSidebarWidget />
-      <Footer />
     </main>
   );
 }
