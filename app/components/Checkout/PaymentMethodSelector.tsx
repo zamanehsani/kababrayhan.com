@@ -33,7 +33,6 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
           // If switching to card_online, initial state is "Unpaid" until Stripe resolves it
           custom_payment_status: "Unpaid",
         }).unwrap();
-        console.log(`Successfully synced payment method (${method}) to order: ${salesOrderName}`);
       } catch (error) {
         console.error("Failed to update sales order payment method metadata:", error);
       }

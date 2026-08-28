@@ -313,7 +313,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
             }
 
             const resolvedAddress = localAddressItem.address || "";
-            // const displayTitle = localAddressItem.title || "Address";
 
             return (
               <div key={localAddressItem.addressId || index} className="group">

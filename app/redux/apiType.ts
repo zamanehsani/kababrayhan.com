@@ -279,52 +279,6 @@ export interface Customer {
   territory: string;
 }
 
-export interface ContactEmail {
-  email_id: string;
-  is_primary?: 0 | 1;
-}
-
-export interface ContactPhone {
-  phone: string;
-  is_primary_phone?: 0 | 1;
-  is_primary_mobile_no?: 0 | 1;
-}
-
-export interface ContactLink {
-  link_doctype: string;
-  link_name: string;
-  link_title?: string;
-}
-
-export interface Contact {
-  name: string;
-  first_name: string;
-  middle_name?: string;
-  last_name?: string;
-  email_ids?: ContactEmail[];
-  phone_nos?: ContactPhone[];
-  links?: ContactLink[];
-  is_primary_contact?: 0 | 1;
-}
-
-export interface CreateContactRequest {
-  first_name: string;
-  last_name?: string;
-  is_primary_contact?: 0 | 1;
-  links: ContactLink[];
-  email_ids?: ContactEmail[];
-  phone_nos?: ContactPhone[];
-}
-
-export interface UpdateContactRequest {
-  contactName: string;
-  first_name?: string;
-  last_name?: string;
-  email_ids?: ContactEmail[];
-  phone_nos?: ContactPhone[];
-  is_primary_contact?: 0 | 1;
-}
-
 export interface CustomerDetails extends Customer {
   owner: string;
   creation: string;

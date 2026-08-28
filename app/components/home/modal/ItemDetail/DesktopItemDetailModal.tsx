@@ -20,7 +20,6 @@ export function DesktopItemDetailModal({
 }>) {
   const [quantity, setQuantity] = useState(1);
   const itemCode = useMemo(() => String(dish.id ?? ""), [dish.id]);
-  console.log("add ons", itemCode);
   const {
     variationGroups,
     addOnGroups,

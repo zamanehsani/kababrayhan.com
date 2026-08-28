@@ -5,8 +5,6 @@ import { erpServerActionBaseQuery } from "./erpBaseQuery";
 import type {
   Address,
   AttachFileRequest,
-  Contact,
-  CreateContactRequest,
   CreateCustomerRequest,
   CreateAddressRequest,
   CreateAddressResponse,
@@ -28,7 +26,6 @@ import type {
   SendOtpRequest,
   SendOtpResponse,
   SetCustomerInfoRequest,
-  UpdateContactRequest,
   UpdateCustomerRequest,
   RenameCustomerRequest,
   UploadCustomerAvatarRequest,
@@ -199,23 +196,6 @@ export const erpApi = createApi({
       }),
       transformResponse: (response: { data: CustomerDetails }) => response.data,
     }),
-    getCustomersByMobile: builder.query<Array<{ name: string; customer_name?: string; mobile_no?: string }>,string>({
-      query: (mobileNo) => ({
-        url: `${API_RESOURCE_URL}Customer`,
-        params: {
-          filters: JSON.stringify([["mobile_no", "=", mobileNo]]),
-          fields: JSON.stringify(["name", "customer_name", "mobile_no"]),
-          limit_page_length: 20,
-        },
-      }),
-      transformResponse: (response: {
-        data: Array<{
-          name: string;
-          customer_name?: string;
-          mobile_no?: string;
-        }>;
-      }) => response.data,
-    }),
     getCustomersByMobileNumber: builder.query<CustomerDetails[], string>({
       query: (mobileNumber) => ({
         url: `${API_RESOURCE_URL}Customer`,
@@ -325,31 +305,6 @@ export const erpApi = createApi({
             ? response.message
             : response.message?.name || "",
       }),
-    }),
-    getContact: builder.query<Contact, string>({
-      query: (contactName) => ({
-        url: `${API_RESOURCE_URL}Contact/${encodeURIComponent(contactName)}`,
-      }),
-      transformResponse: (response: { data: Contact }) => response.data,
-    }),
-    createContact: builder.mutation<Contact, CreateContactRequest>({
-      query: (body) => ({
-        url: `${API_RESOURCE_URL}Contact`,
-        method: "POST",
-        body: {
-          doctype: "Contact",
-          ...body,
-        },
-      }),
-      transformResponse: (response: { data: Contact }) => response.data,
-    }),
-    updateContact: builder.mutation<Contact, UpdateContactRequest>({
-      query: ({ contactName, ...body }) => ({
-        url: `${API_RESOURCE_URL}Contact/${encodeURIComponent(contactName)}`,
-        method: "PUT",
-        body,
-      }),
-      transformResponse: (response: { data: Contact }) => response.data,
     }),
     setCustomerInfo: builder.mutation<{ message?: unknown },SetCustomerInfoRequest>({
       queryFn: async (
@@ -631,15 +586,11 @@ export const {
   useDeleteAddressMutation,
   useDisableAddressMutation,
   useGetCustomerQuery,
-  useGetCustomersByMobileQuery,
   useGetCustomersByMobileNumberQuery,
   useGetCustomerAvatarQuery,
   useGetCustomerAddressesQuery,
-  useGetContactQuery,
   useUpdateCustomerMutation,
   useRenameCustomerMutation,
-  useCreateContactMutation,
-  useUpdateContactMutation,
   useSetCustomerInfoMutation,
   useUploadCustomerAvatarMutation,
   useGetCustomerSalesOrdersQuery,

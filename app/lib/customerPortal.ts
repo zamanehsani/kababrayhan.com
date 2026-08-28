@@ -289,12 +289,6 @@ export const clearCustomerPortalSession = () => {
   dispatchCustomerPortalUpdated();
 };
 
-export const getStoredAddressId = () => {
-  const sessionAddressId = store.getState().session.addressId;
-  if (sessionAddressId) return sessionAddressId;
-  return readStorageState().addressId;
-};
-
 export const readCustomerPortalSnapshot = (): CustomerPortalSnapshot => {
   const session = store.getState().session;
   const storageState = readStorageState();

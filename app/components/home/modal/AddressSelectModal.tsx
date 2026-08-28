@@ -289,25 +289,6 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
   };
 
 
-  // const fetchAddress = async (lat: number, lng: number) => {
-  //   setIsLoading(true);
-  //   try {
-  //     const response = await fetch(
-  //       `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
-  //     );
-  //     const data = await response.json();
-  //     // Use short name or full address
-  //     const name =
-  //       data.display_name || `Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
-  //     setAddressText(name);
-  //   } catch (error) {
-  //     console.error("Address reverse-geocode failed", error);
-  //     setAddressText(`Dropped Pin at ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
   const lookupCustomersByMobile = async (mobileNo: string) => {
     const result = await callErpApi<{
       data?: Array<{
@@ -981,7 +962,6 @@ const AddressSelectModal: React.FC<AddressSelectModalProps> = ({
                           territory: "United Arab Emirates",
                           email_id: "example@example.com",
                         }).unwrap();
-                        console.log("the create customer payload: ", createdCustomer);
 
                         customerName = createdCustomer.name;
                         saveCustomerName(customerName);
