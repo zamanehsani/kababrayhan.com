@@ -8,7 +8,10 @@ const ERP_BASE_URL =
   "http://localhost:8000";
 
 const ERP_API_TOKEN = process.env.ERP_API_TOKEN || "";
-const COMPANY_NAME = process.env.ERP_COMPANY_NAME || "Kabab Al Rayhan";
+const COMPANY_NAME =
+  process.env.ERP_COMPANY_NAME ||
+  process.env.NEXT_PUBLIC_ERP_COMPANY_NAME ||
+  "Kabab Al Rayhan";
 
 const erpHeaders: HeadersInit = {
   Authorization: `token ${ERP_API_TOKEN}`,

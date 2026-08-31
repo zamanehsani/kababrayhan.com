@@ -501,7 +501,7 @@ const CheckoutPage = () => {
         customer: customerName,
         transaction_date: deliveryDate,
         delivery_date: deliveryDate,
-        company: "Kabab Al Rayhan",
+        company: process.env.NEXT_PUBLIC_ERP_COMPANY_NAME || "Kabab Al Rayhan",
         selling_price_list: "Standard Selling",
         currency: "AED",
         // order_type: orderType,

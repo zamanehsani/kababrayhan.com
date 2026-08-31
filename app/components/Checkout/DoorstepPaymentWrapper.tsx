@@ -24,7 +24,7 @@ export const DoorstepPaymentWrapper: React.FC<DoorstepPaymentWrapperProps> = ({
     salesOrder,
     onCodSubmit,
 }) => {
-    const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("card_online");
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("cod");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     return (
