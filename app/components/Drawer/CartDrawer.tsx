@@ -277,12 +277,12 @@ export default function CartDrawer() {
 
       {/* Drawer Canvas */}
       <div
-        className={`relative z-10 w-full max-w-md h-full bg-white shadow-2xl flex flex-col border-l border-slate-100 ${
+        className={`relative z-10 h-dvh w-full max-w-md overflow-hidden bg-white shadow-2xl flex flex-col border-l border-slate-100 ${
           isClosing ? "animate-cart-slide-out" : "animate-cart-slide-in"
         }`}
       >
         {/* Header Segment */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-100">
+        <div className="shrink-0 flex items-center justify-between p-5 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
             <ShoppingBag size={20} className="text-red-500" />
             <h2 className="text-lg font-semibold tracking-wide text-slate-900">
@@ -298,7 +298,7 @@ export default function CartDrawer() {
         </div>
 
         {/* Scrollable Items Container */}
-        <div className="flex-1 overflow-y-auto bg-slate-50/50 no-scrollbar p-4 flex flex-col gap-3">
+        <div className="min-h-0 basis-0 flex-1 overflow-y-auto bg-slate-50/50 no-scrollbar p-4 flex flex-col gap-3">
           {isCartEmpty ? (
             <div className="flex flex-col items-center justify-center h-64 text-center p-6">
               <ShoppingBag
@@ -313,7 +313,7 @@ export default function CartDrawer() {
             cart.map((entry, idx) => (
               <div
                 key={`${entry.item.title}-${entry.addon.title}`}
-                className="relative overflow-hidden rounded-2xl border border-red-100 bg-white shadow-sm transition-all duration-200 hover:border-slate-200/60"
+                className="relative shrink-0 overflow-hidden rounded-2xl border border-red-100 bg-white shadow-sm transition-all duration-200 hover:border-slate-200/60"
               >
                 <div className="flex items-stretch gap-0">
                   <div className="relative h-auto w-[30%] min-w-[92px] overflow-hidden">
@@ -387,7 +387,7 @@ export default function CartDrawer() {
         </div>
 
         {/* Footer Checkout Interface Panel */}
-        <div className="p-5 border-t border-slate-100 bg-white shadow-[0_-8px_24px_rgba(0,0,0,0.02)]">
+        <div className="shrink-0 p-5 border-t border-slate-100 bg-white shadow-[0_-8px_24px_rgba(0,0,0,0.02)]">
           <div className="flex items-center justify-between mb-4 text-sm font-semibold text-slate-800 tracking-wide">
             <span>Subtotal Value</span>
             <span className="flex items-center gap-0.5 text-base text-slate-900 font-bold">
