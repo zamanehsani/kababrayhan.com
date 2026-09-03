@@ -27,6 +27,7 @@ export type CartItem = {
   image: string;
   discountedPrice: number;
   realPrice: number;
+  prep_time?: number;
 };
 
 export type CartSelectedAddOn = {
@@ -176,6 +177,9 @@ export const addDishToCart = (
         image: dish.img,
         discountedPrice: unitPrice,
         realPrice: unitPrice,
+        prep_time: Number.isFinite(Number(dish.custom_prep_time))
+          ? Number(dish.custom_prep_time)
+          : undefined,
       },
       addon: {
         title: addOnTitle,

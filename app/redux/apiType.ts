@@ -168,6 +168,7 @@ export interface CreateSalesOrderItem {
   delivery_date?: string;
   uom?: string;
   custom_selected_addons?: string;
+  prep_time?: number;
   is_free_item?: 0 | 1;
 }
 
@@ -175,6 +176,7 @@ export interface CreateSalesOrderRequest {
   doctype?: string;
   customer: string;
   transaction_date?: string;
+  timezone?: string;
   order_type?: string;
   delivery_date: string;
   company?: string;

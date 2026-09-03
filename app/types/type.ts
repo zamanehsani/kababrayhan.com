@@ -9,6 +9,7 @@ export type Dish = {
   tags: string;
   description: string;
   img: string;
+  custom_prep_time?: number;
   liked: boolean;
   hasVariants?: boolean;
 };

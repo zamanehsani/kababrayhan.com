@@ -560,8 +560,8 @@ export const erpApi = createApi({
       invalidatesTags: [{ type: "CustomerAddresses", id: "LIST" }],
     }),
 
-    completeDoorstepOrder: builder.mutation<{ status: string; kot_name?: string; invoice_name?: string },{salesOrderName: string; paymentMethod: "cod" | "card_on_delivery"; changeRequired?: string; } >({
-      query: ({ salesOrderName, paymentMethod, changeRequired }) => {
+    completeDoorstepOrder: builder.mutation<{ status: string; kot_name?: string; invoice_name?: string },{salesOrderName: string; paymentMethod: "cod" | "card_on_delivery"; changeRequired?: string; timezone?: string; } >({
+      query: ({ salesOrderName, paymentMethod, changeRequired, timezone }) => {
         const targetUrl = `${API_METHOD_URL}pizza_app.api.complete_doorstep_order`;
 
         return {
@@ -572,6 +572,7 @@ export const erpApi = createApi({
             sales_order_name: salesOrderName,
             payment_method: paymentMethod,
             change_required: changeRequired,
+            timezone,
           },
         };
       },

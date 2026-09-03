@@ -103,6 +103,7 @@ interface CartItem {
     discountedPrice?: number;
     price?: number;
     image?: string;
+    prep_time?: number;
   };
   qty?: number;
   name?: string;
@@ -475,6 +476,9 @@ const CheckoutPage = () => {
             delivery_date: deliveryDate,
             uom: "Nos",
             custom_selected_addons,
+            prep_time: Number.isFinite(Number(cartEntry.item?.prep_time))
+              ? Number(cartEntry.item.prep_time)
+              : undefined,
             is_free_item: 0 as const,
           };
         })
@@ -500,6 +504,7 @@ const CheckoutPage = () => {
         doctype: "Sales Order",
         customer: customerName,
         transaction_date: deliveryDate,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         delivery_date: deliveryDate,
         company: process.env.NEXT_PUBLIC_ERP_COMPANY_NAME || "Kabab Al Rayhan",
         selling_price_list: "Standard Selling",
@@ -679,7 +684,8 @@ const CheckoutPage = () => {
                       await completeDoorstepOrder({
                         salesOrderName: orderName,
                         paymentMethod: methodType,
-                        changeRequired: details?.changeRequired || "Exact Amount"
+                        changeRequired: details?.changeRequired || "Exact Amount",
+                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                       }).unwrap();
                       clearPendingCheckout();
                       clearPendingSalesOrder();

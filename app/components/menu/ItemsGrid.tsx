@@ -46,6 +46,7 @@ function itemToDish(item: Item): Dish {
     description:
       item.description ?? "A delicious selection from our menu.",
     img: resolveDishImage(item.image),
+    custom_prep_time: item.custom_prep_time,
     liked: false,
     hasVariants:
       typeof item.has_variants === "number"

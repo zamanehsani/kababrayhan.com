@@ -110,6 +110,7 @@ export function TabletItemDetailModal({
         typeof selectedVariantItem.custom_prep_time === "number"
           ? `${selectedVariantItem.custom_prep_time} min`
           : dish.time,
+      custom_prep_time: selectedVariantItem.custom_prep_time,
       description:
         typeof selectedVariantItem.description === "string" &&
         selectedVariantItem.description.trim()
