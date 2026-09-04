@@ -30,7 +30,7 @@ const readErrorMessage = (error: { status: number | string; data?: unknown }) =>
   return data?.exception || data?.message || `ERP request failed (${error.status})`;
 };
 
-const findCustomerByDocName = async (phone: string) => {
+const fetchCustomerByDocName = async (phone: string) => {
   const result = await callErpApi<{ data?: CustomerDetails }>({
     url: `${CUSTOMER_RESOURCE_URL}/${encodeURIComponent(phone)}`,
   });
@@ -42,7 +42,10 @@ const findCustomerByMobile = async (phone: string) => {
   const result = await callErpApi<{ data?: CustomerDetails[] }>({
     url: CUSTOMER_RESOURCE_URL,
     params: {
-      filters: JSON.stringify([["mobile_no", "=", phone]]),
+      filters: JSON.stringify([
+        ["mobile_no", "=", phone],
+        ["disabled", "=", 0],
+      ]),
       fields: JSON.stringify(["*"]),
       limit_page_length: 1,
     },
@@ -119,6 +122,7 @@ export const fetchCustomerAddresses = async (
         "phone",
         "is_primary_address",
         "is_shipping_address",
+        "disabled",
         "custom_latitude",
         "custom_longitude",
       ]),
@@ -126,7 +130,7 @@ export const fetchCustomerAddresses = async (
     },
   });
 
-  return result.data?.data ?? [];
+  return (result.data?.data ?? []).filter((address) => !address.disabled);
 };
 
 /** Caches the customer together with its contact and linked addresses. */
@@ -152,14 +156,20 @@ export const loadCustomerProfile = async (
 export const ensureCustomerForPhone = async (
   phone: string
 ): Promise<StoredCustomerProfile> => {
-  const existingByName = await findCustomerByDocName(phone);
-  if (existingByName) {
+  const existingByName = await fetchCustomerByDocName(phone);
+  if (existingByName && !existingByName.disabled) {
     return loadCustomerProfile(persistCustomer(existingByName));
   }
 
   const existingByMobile = await findCustomerByMobile(phone);
   if (existingByMobile) {
     return loadCustomerProfile(persistCustomer(existingByMobile));
+  }
+
+  if (existingByName) {
+    throw new Error(
+      "This account is disabled. Please contact support to continue."
+    );
   }
 
   const created = await callErpApi<{ data: CustomerDetails }>({

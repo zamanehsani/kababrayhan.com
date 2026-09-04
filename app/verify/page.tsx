@@ -134,18 +134,24 @@ export default function VerifyPage() {
         setError("Invalid code. Please try again.");
         return;
       }
+    } catch (verifyError) {
+      console.error("OTP verification failed", verifyError);
+      setError("Invalid code. Please try again.");
+      return;
+    }
 
+    try {
       saveVerifiedPhone(phone);
       setIsCreatingCustomer(true);
       await ensureCustomerForPhone(phone);
       router.replace(NEXT_ROUTE);
-    } catch (verifyError) {
-      console.error("OTP verification failed", verifyError);
+    } catch (accountError) {
+      console.error("Customer setup failed", accountError);
       setIsCreatingCustomer(false);
       setError(
-        verifyError instanceof Error && verifyError.message.includes("ERP")
-          ? "Verified, but we couldn't set up your account. Please try again."
-          : "Invalid code. Please try again."
+        accountError instanceof Error
+          ? accountError.message
+          : "Verified, but we couldn't set up your account. Please try again."
       );
     }
   };

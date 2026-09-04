@@ -14,8 +14,13 @@ export interface CreateAddressRequest {
   address_title: string;
   address_type: string;
   address_line1: string;
+  address_line2?: string;
   country: string;
   city: string;
+  emirate?: string;
+  phone?: string;
+  is_shipping_address?: number;
+  is_primary_address?: number;
   links: Array<{
     link_doctype: string;
     link_name: string;
@@ -79,6 +84,7 @@ export interface Address {
   phone?: string;
   is_primary_address?: number;
   is_shipping_address?: number;
+  disabled?: number;
   custom_latitude?: string;
   custom_longitude?: string;
 }
