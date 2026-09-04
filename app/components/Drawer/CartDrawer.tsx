@@ -4,28 +4,11 @@ import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { X, ShoppingBag, ArrowRight } from "lucide-react";
 import DirhamIcon from "../icon/DirhamIcon";
-import PhoneModal from "../home/modal/PhoneModal";
-import PhoneVerifyModal from "../home/modal/PhoneVerifyModal";
-import AddressSelectModal from "../home/modal/AddressSelectModal";
-import UpdateDecisionModal from "../home/modal/UpdateDecisionModal";
 import GlobalLoader from "../home/modal/shared/GlobalLoader";
 import { getCart, saveCart, type CartEntry } from "@/app/lib/cart";
 import Image from "next/image";
 
-import {
-  PHONE_KEY,
-  PHONE_STATUS_KEY,
-  getCustomerName,
-  readCustomerPortalSnapshot,
-  saveDeliveryAddress,
-  type DeliveryAddressItem,
-} from "@/app/lib/customerPortal";
-import type { Address } from "@/app/redux/apiType";
-import SavedAddressesModal from "../home/modal/SavedAddressesModal";
-import {
-  useGetCustomerAddressesQuery,
-  useUpdateAddressMutation,
-} from "@/app/redux/api";
+import { readCustomerPortalSnapshot } from "@/app/lib/customerPortal";
 
 export default function CartDrawer() {
   const router = useRouter();
@@ -34,14 +17,6 @@ export default function CartDrawer() {
   const [isClosing, setIsClosing] = useState(false);
   const [cart, setCart] = useState<CartEntry[]>([]);
 
-  // Modal Orchestration State
-  const [showPhoneModal, setShowPhoneModal] = useState(false);
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [phone, setPhone] = useState("");
-  const [showAddressModal, setShowAddressModal] = useState(false);
-  const [showPhoneUpdatePrompt, setShowPhoneUpdatePrompt] = useState(false);
-  const [allowExistingPhoneInput, setAllowExistingPhoneInput] = useState(false);
-  const [showSavedAddressesModal, setShowSavedAddressesModal] = useState(false);
   const [isNavigatingToCheckout, setIsNavigatingToCheckout] = useState(false);
   // Tracks the pathname as of the last render so we can detect a completed
   // route change during render (see the state-adjustment check below).
@@ -55,37 +30,6 @@ export default function CartDrawer() {
       setIsNavigatingToCheckout(false);
     }
   }
-
-  const [snapshot, setSnapshot] = useState(() => readCustomerPortalSnapshot());
-  const [selectedDeliveryAddressId, setSelectedDeliveryAddressId] = useState<
-    string | undefined
-  >(() => readCustomerPortalSnapshot().addressId);
-
-  const customerName = getCustomerName() || snapshot.phone || phone;
-  const { data: backendAddresses, refetch: refetchSavedAddresses } =
-    useGetCustomerAddressesQuery(customerName, {
-      skip: !customerName,
-    });
-
-  const resolvedSavedAddresses: DeliveryAddressItem[] =
-    snapshot.deliveryAddresses.length > 0
-      ? snapshot.deliveryAddresses
-      : (backendAddresses ?? [])
-          .map((address: Address): DeliveryAddressItem => ({
-            title:
-              address.address_title ||
-              address.address_type ||
-              "Saved Address",
-            address: [address.address_line1, address.address_line2]
-              .filter(Boolean)
-              .join(", "),
-            addressId: address.name,
-          }))
-          .filter(
-            (address) => Boolean(address.address) || Boolean(address.addressId)
-          );
-
-  const [updateAddress] = useUpdateAddressMutation();
 
   useEffect(() => {
     const handleOpen = () => {
@@ -160,107 +104,9 @@ export default function CartDrawer() {
   const handleBeginCheckout = () => {
     const currentSnapshot = readCustomerPortalSnapshot();
 
-    if (currentSnapshot.isVerified && currentSnapshot.phone) {
-      setPhone(currentSnapshot.phone);
-      setShowPhoneUpdatePrompt(true);
-      return;
-    }
-
-    if (currentSnapshot.phoneStatus === "entered" && currentSnapshot.phone) {
-      setPhone(currentSnapshot.phone);
-      setShowVerifyModal(true);
-      return;
-    }
-
-    setAllowExistingPhoneInput(false);
-    setShowPhoneModal(true);
-  };
-
-  const proceedToDeliveryFlow = async () => {
-    const currentSnapshot = readCustomerPortalSnapshot();
-    const localAddresses = currentSnapshot.deliveryAddresses;
-
-    if (localAddresses.length > 0) {
-      setShowSavedAddressesModal(true);
-      return;
-    }
-
-    const customerNameToUse = getCustomerName() || currentSnapshot.phone || phone;
-    if (customerNameToUse) {
-      try {
-        const refreshed = await refetchSavedAddresses();
-        const remoteAddresses = refreshed.data ?? backendAddresses ?? [];
-
-        if (Array.isArray(remoteAddresses) && remoteAddresses.length > 0) {
-          setShowSavedAddressesModal(true);
-          return;
-        }
-      } catch {
-        // fall through to map selection when no saved addresses are available
-      }
-    }
-
-    setShowAddressModal(true);
-  };
-
-  const handlePhoneUpdateConfirm = () => {
-    setShowPhoneUpdatePrompt(false);
-    setAllowExistingPhoneInput(true);
-    setShowPhoneModal(true);
-  };
-
-  const handlePhoneUpdateSkip = () => {
-    setShowPhoneUpdatePrompt(false);
-    void proceedToDeliveryFlow();
-  };
-
-
-  const handlePhoneModalClose = (phoneJustSaved?: string) => {
-    setShowPhoneModal(false);
-
-    // If there is no phone just saved (user clicked X / cancelled close)
-    if (!phoneJustSaved) {
-      setAllowExistingPhoneInput(false);
-      // Stop execution here so it stays on the open CartDrawer 
-      // instead of moving forward to the delivery modals.
-      return;
-    }
-
-    const savedPhone = phoneJustSaved || localStorage.getItem(PHONE_KEY) || "";
-    const status = localStorage.getItem(PHONE_STATUS_KEY);
-
-    if (!savedPhone) {
-      setAllowExistingPhoneInput(false);
-      return;
-    }
-
-    setPhone(savedPhone);
-
-    // If user was in explicit update flow and completed changing it,
-    // continue checkout with existing verified session.
-    if (allowExistingPhoneInput && status === "verified") {
-      setAllowExistingPhoneInput(false);
-      void proceedToDeliveryFlow();
-      return;
-    }
-
-    setAllowExistingPhoneInput(false);
-    setShowVerifyModal(true);
-  };
-
-  const handleVerifyModalClose = (didVerify?: boolean) => {
-    setShowVerifyModal(false);
-
-    if (didVerify) {
-      void proceedToDeliveryFlow();
-      return;
-    }
-  };
-
-  const handleChangePhoneFromVerify = () => {
-    setShowVerifyModal(false);
-    setAllowExistingPhoneInput(true);
-    setShowPhoneModal(true);
+    setOpen(false);
+    setIsNavigatingToCheckout(true);
+    router.push(currentSnapshot.isVerified ? "/delivery-address" : "/verify");
   };
 
   return (
@@ -408,95 +254,6 @@ export default function CartDrawer() {
             />
           </button>
         </div>
-
-        {/* External Modal Mount Tracks */}
-        {showPhoneModal && (
-          <PhoneModal
-            open={showPhoneModal}
-            allowExistingPhone={allowExistingPhoneInput}
-            initialPhone={phone}
-            onClose={handlePhoneModalClose}
-          />
-        )}
-        {showVerifyModal && (
-          <PhoneVerifyModal
-            open={showVerifyModal}
-            phone={phone}
-            onClose={handleVerifyModalClose}
-            onChangePhone={handleChangePhoneFromVerify}
-          />
-        )}
-        {showAddressModal && (
-          <AddressSelectModal
-            open={showAddressModal}
-            redirectTo={null}
-            onClose={() => {
-              setShowAddressModal(false);
-            }}
-            onSelect={(newAddress) => {
-              setShowAddressModal(false);
-
-              const updatedSnapshot = readCustomerPortalSnapshot();
-
-              setSnapshot(updatedSnapshot);
-
-              setSelectedDeliveryAddressId(newAddress.id);
-
-              setShowSavedAddressesModal(true);
-            }}
-          />
-        )}
-        {showPhoneUpdatePrompt && (
-          <UpdateDecisionModal
-            open={showPhoneUpdatePrompt}
-            title="Phone number"
-            description="We found a phone number on your account. Use it to continue, or change it before checkout."
-            detail={phone}
-            confirmLabel="Change Number"
-            skipLabel="Continue"
-            onConfirm={handlePhoneUpdateConfirm}
-            onSkip={handlePhoneUpdateSkip}
-          />
-        )}
-        <SavedAddressesModal
-          open={showSavedAddressesModal}
-          addresses={resolvedSavedAddresses}
-          selectedAddressId={selectedDeliveryAddressId}
-          onSelect={async (selected) => {
-            try {
-              // Update ERPNext native shipping address
-              await updateAddress({
-                addressName: selected.addressId,
-                is_shipping_address: 1,
-              }).unwrap();
-
-              // Persist local snapshot
-              saveDeliveryAddress(selected.address, selected.addressId);
-
-              // Update UI state
-              setSelectedDeliveryAddressId(selected.addressId);
-
-              // Refresh local snapshot
-              const updatedSnapshot = readCustomerPortalSnapshot();
-              setSnapshot(updatedSnapshot);
-            } catch (error) {
-              console.error("Failed to update delivery address", error);
-            }
-          }}
-          onAddNew={() => {
-            setShowSavedAddressesModal(false);
-            setShowAddressModal(true);
-          }}
-          onClose={() => {
-            setShowSavedAddressesModal(false);
-          }}
-          onContinue={() => {
-            setShowSavedAddressesModal(false);
-            setOpen(false);
-            setIsNavigatingToCheckout(true);
-            router.push("/checkout");
-          }}
-        />
       </div>
     </div>
   );

@@ -84,6 +84,15 @@ export interface Address {
 }
 
 // --- OTP Verification Types ---
+export interface CustomerContact {
+  name: string;
+  first_name?: string;
+  last_name?: string;
+  email_id?: string;
+  mobile_no?: string;
+  phone?: string;
+}
+
 export interface VerifyOtpRequest {
   mobile: string;
   otp: string;
