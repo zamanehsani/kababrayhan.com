@@ -25,7 +25,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { amount, currency = "aed", pos_invoice, sales_order } = body;
+    const { amount, currency = "aed", sales_order } = body;
 
     if (!amount || typeof amount !== "number" || amount <= 0) {
       return NextResponse.json(
@@ -44,7 +44,6 @@ export async function POST(req: NextRequest) {
     console.log("[Next.js Stripe API] Creating PaymentIntent directly with Stripe:", {
       amountInFils,
       currency,
-      pos_invoice,
       sales_order,
     });
 
@@ -53,7 +52,6 @@ export async function POST(req: NextRequest) {
       currency: currency.toLowerCase(),
       automatic_payment_methods: { enabled: true },
       metadata: {
-        ...(pos_invoice ? { pos_invoice: String(pos_invoice) } : {}),
         ...(sales_order ? { sales_order: String(sales_order) } : {}),
       },
     });
@@ -79,7 +77,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { payment_intent_id, pos_invoice, sales_order } = body;
+    const { payment_intent_id, sales_order } = body;
 
     if (!payment_intent_id) {
       return NextResponse.json(
@@ -91,7 +89,6 @@ export async function PATCH(req: NextRequest) {
     const stripe = getStripeInstance();
     const updatedIntent = await stripe.paymentIntents.update(payment_intent_id, {
       metadata: {
-        ...(pos_invoice ? { pos_invoice: String(pos_invoice) } : {}),
         ...(sales_order ? { sales_order: String(sales_order) } : {}),
       },
     });

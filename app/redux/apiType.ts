@@ -192,6 +192,7 @@ export interface CreateSalesOrderItem {
 export interface CreateSalesOrderRequest {
   doctype?: string;
   customer: string;
+  customer_name?: string;
   transaction_date?: string;
   timezone?: string;
   order_type?: string;
@@ -210,6 +211,7 @@ export interface CreateSalesOrderRequest {
   custom_delivery_charge?: number;
   custom_payment_method?: string;
   custom_payment_status?: string;
+  custom_requires_doorstep_pos_terminal?: number;
   taxes?: CreateSalesOrderTaxLine[];
   items: CreateSalesOrderItem[];
 }

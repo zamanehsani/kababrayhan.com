@@ -50,25 +50,25 @@ const OnlinePaymentSection: React.FC<OnlinePaymentSectionProps> = ({
     setIsProcessing(true);
     setPaymentError(null);
 
-    let draftInvoiceName = "";
+    let draftOrderName = "";
 
     try {
-      // 1. Create the draft POS Invoice in Frappe first to establish the official order ID
-      draftInvoiceName = await onCreateDraftOrder();
-      console.log("[Stripe Payment] Created draft invoice:", draftInvoiceName);
+      // 1. Create the draft Sales Order in Frappe first to establish the official order ID
+      draftOrderName = await onCreateDraftOrder();
+      console.log("[Stripe Payment] Created draft Sales Order:", draftOrderName);
 
-      // 2. Attach the invoice name to the Stripe PaymentIntent metadata on Stripe's servers
+      // 2. Attach the order name to the Stripe PaymentIntent metadata on Stripe's servers
       const paymentIntentId = clientSecret.includes("_secret_")
         ? clientSecret.split("_secret_")[0]
         : clientSecret;
 
-      if (paymentIntentId && draftInvoiceName) {
+      if (paymentIntentId && draftOrderName) {
         await fetch("/api/payment-intent", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             payment_intent_id: paymentIntentId,
-            pos_invoice: draftInvoiceName,
+            sales_order: draftOrderName,
           }),
         }).catch((err) =>
           console.warn("[Stripe Payment] Could not update PaymentIntent metadata:", err)
@@ -81,7 +81,7 @@ const OnlinePaymentSection: React.FC<OnlinePaymentSectionProps> = ({
         elements,
         redirect: "if_required",
         confirmParams: {
-          return_url: `${globalThis.location.origin}/thank-you?order=${encodeURIComponent(draftInvoiceName)}`,
+          return_url: `${globalThis.location.origin}/thank-you?order=${encodeURIComponent(draftOrderName)}`,
           payment_method_data: { billing_details: BILLING_DETAILS },
         },
       });
@@ -94,10 +94,10 @@ const OnlinePaymentSection: React.FC<OnlinePaymentSectionProps> = ({
 
       console.log("[Stripe Payment] PaymentIntent status:", paymentIntent?.status, paymentIntent);
 
-      // 4. On immediate success, submit the invoice (docstatus: 1) and redirect
+      // 4. On immediate success, submit the Sales Order (docstatus: 1) and redirect
       if (paymentIntent?.status === "succeeded") {
-        console.log("[Stripe Payment] Succeeded. Submitting order to Frappe as paid...");
-        await onSubmitPaidOrder(draftInvoiceName);
+        console.log("[Stripe Payment] Succeeded. Submitting Sales Order to Frappe as paid...");
+        await onSubmitPaidOrder(draftOrderName);
       }
     } catch (confirmError) {
       console.error("[Stripe Payment] Exception during confirmation:", confirmError);

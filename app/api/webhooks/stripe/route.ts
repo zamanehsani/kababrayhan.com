@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { callErpApi } from "@/app/lib/erpServerAction";
 
 const getStripeInstance = () => {
   const secretKey =
@@ -48,9 +47,7 @@ export async function POST(req: NextRequest) {
 
   if (event.type === "payment_intent.succeeded") {
     const paymentIntent = event.data.object as Stripe.PaymentIntent;
-    const posInvoiceName =
-      paymentIntent.metadata?.pos_invoice ||
-      paymentIntent.metadata?.sales_order;
+    const salesOrderName = paymentIntent.metadata?.sales_order;
 
     console.log("[Stripe Webhook] PaymentIntent payload:", {
       id: paymentIntent.id,
@@ -58,31 +55,19 @@ export async function POST(req: NextRequest) {
       currency: paymentIntent.currency,
       status: paymentIntent.status,
       metadata: paymentIntent.metadata,
-      posInvoiceName,
+      salesOrderName,
     });
 
-    if (posInvoiceName) {
+    if (salesOrderName) {
       console.log(
-        `[Stripe Webhook] Processing submission for POS Invoice: ${posInvoiceName}`
+        `[Stripe Webhook] Processing fulfillment for Sales Order: ${salesOrderName}`
       );
 
-      try {
-        const updateResult = await callErpApi({
-          url: `/api/resource/POS Invoice/${encodeURIComponent(posInvoiceName)}`,
-          method: "PUT",
-          body: {
-            docstatus: 1,
-          },
-        });
-        console.log(`[Stripe Webhook] Successfully submitted POS Invoice ${posInvoiceName}:`, updateResult);
-      } catch (submitErr) {
-        console.error(
-          `[Stripe Webhook] Failed to submit POS Invoice ${posInvoiceName}:`,
-          submitErr
-        );
-      }
+      const { fulfillPaidSalesOrder } = await import("@/app/lib/fulfillOrderAction");
+      const fulfillResult = await fulfillPaidSalesOrder(salesOrderName, paymentIntent.id);
+      console.log(`[Stripe Webhook] Fulfillment result for ${salesOrderName}:`, fulfillResult);
     } else {
-      console.log("[Stripe Webhook] No pos_invoice found in metadata.");
+      console.log("[Stripe Webhook] No sales_order found in metadata.");
     }
   }
 

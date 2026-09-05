@@ -7,14 +7,14 @@ import { Elements } from "@stripe/react-stripe-js";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 import {
-  useCreatePosInvoiceMutation,
-  useSubmitPosInvoiceMutation,
+  useCreateSalesOrderMutation,
+  useSubmitSalesOrderMutation,
   useCreatePaymentIntentMutation,
   useGetCustomerAddressesQuery,
   useGetModesOfPaymentQuery,
   type Customer,
 } from "../redux/api";
-import type { CreatePosInvoiceRequest } from "../redux/apiType";
+import type { CreateSalesOrderRequest } from "../redux/apiType";
 import { readStoredCustomer } from "@/app/components/customerStorage";
 import {
   CUSTOMER_PORTAL_UPDATED,
@@ -28,16 +28,16 @@ import {
 } from "@/app/components/orderStorage";
 import { CART_UPDATED, saveCart } from "@/app/lib/cart";
 import {
-  buildPosInvoiceItems,
-  buildPosInvoiceTaxes,
+  buildSalesOrderItems,
+  buildSalesOrderTaxes,
   calculateOrderTotals,
   cartSubtotal,
+  TAX_TEMPLATE,
   type CheckoutCartEntry,
 } from "@/app/lib/salesOrder";
 import {
   toPaymentOptions,
   type PaymentMethodType,
-  type PaymentOption,
 } from "@/app/lib/paymentMethods";
 
 import CheckoutStepper from "../components/Checkout/CheckoutStepper";
@@ -161,18 +161,6 @@ const errorMessageOf = (error: unknown, fallback: string) => {
   return data?.message || data?.exception || fallback;
 };
 
-const resolveModeName = (
-  method: PaymentMethodType,
-  options: PaymentOption[]
-) => {
-  const match = options.find((option) => option.id === method);
-  if (match?.mode) return match.mode;
-
-  if (method === "cod") return "Cash";
-  if (method === "card_on_delivery") return "Card";
-  return "Online";
-};
-
 const CheckoutPage = () => {
   const router = useRouter();
 
@@ -201,8 +189,8 @@ const CheckoutPage = () => {
   const [isAddressCollapsed, setIsAddressCollapsed] = useState(true);
   const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(true);
 
-  const [createPosInvoice] = useCreatePosInvoiceMutation();
-  const [submitPosInvoice] = useSubmitPosInvoiceMutation();
+  const [createSalesOrder] = useCreateSalesOrderMutation();
+  const [submitSalesOrder] = useSubmitSalesOrderMutation();
   const [createPaymentIntent] = useCreatePaymentIntentMutation();
 
   const { data: paymentModes, isLoading: isLoadingPaymentModes } =
@@ -219,9 +207,13 @@ const CheckoutPage = () => {
 
   const total = cartSubtotal(cart);
   const { vatAmount, grandTotal } = calculateOrderTotals(total, delivery.charge);
-  const items = useMemo(() => buildPosInvoiceItems(cart), [cart]);
+  const deliveryDate = useMemo(
+    () => new Date().toISOString().split("T")[0],
+    []
+  );
+  const items = useMemo(() => buildSalesOrderItems(cart), [cart]);
   const taxes = useMemo(
-    () => buildPosInvoiceTaxes(delivery.charge),
+    () => buildSalesOrderTaxes(delivery.charge),
     [delivery.charge]
   );
 
@@ -359,7 +351,7 @@ const CheckoutPage = () => {
     };
   }, [createPaymentIntent, grandTotal, paymentMethod]);
 
-  const handleCreateOnlineDraftInvoice = useCallback(async (): Promise<string> => {
+  const handleCreateOnlineDraftOrder = useCallback(async (): Promise<string> => {
     if (!customerName || items.length === 0) {
       throw new Error("No items in cart to order.");
     }
@@ -369,57 +361,54 @@ const CheckoutPage = () => {
       throw new Error("Please select a delivery address before proceeding.");
     }
 
-    const modeName = resolveModeName("card_online", paymentOptions);
-    const payload: CreatePosInvoiceRequest = {
+    const payload: CreateSalesOrderRequest = {
+      doctype: "Sales Order",
       customer: customerName,
       customer_name: customerName,
-      pos_profile: "website",
       company:
         process.env.NEXT_PUBLIC_ERP_COMPANY_NAME ||
         "Kabab Al Rayhan Restaurant & Bakery SPS LLC",
+      transaction_date: deliveryDate,
+      delivery_date: deliveryDate,
+      selling_price_list: "Standard Selling",
+      currency: "AED",
       customer_address: selectedAddressId || undefined,
       shipping_address_name: selectedAddressId || undefined,
-      customer_note: customerNote || undefined,
-      items,
+      custom_customer_note: customerNote || undefined,
+      custom_delivery_zone: delivery.zone || undefined,
+      custom_delivery_charge: delivery.charge || undefined,
+      custom_payment_method: "card_online",
+      custom_payment_status: "Unpaid",
+      taxes_and_charges: TAX_TEMPLATE,
       taxes,
-      payments: [
-        {
-          mode_of_payment: modeName,
-          amount: grandTotal,
-        },
-      ],
+      items,
     };
 
-    console.log("[Checkout] Creating draft POS Invoice before payment capture:", payload);
-    const createdInvoice = await createPosInvoice(payload).unwrap();
-    console.log("[Checkout] Received draft POS Invoice instance from Frappe:", createdInvoice);
-    return createdInvoice?.name || "";
+    console.log("[Checkout] Creating draft Sales Order before payment capture:", payload);
+    const createdOrder = await createSalesOrder(payload).unwrap();
+    console.log("[Checkout] Received draft Sales Order instance from Frappe:", createdOrder);
+    return createdOrder?.name || "";
   }, [
-    createPosInvoice,
+    createSalesOrder,
     customerName,
     customerNote,
-    grandTotal,
+    delivery.charge,
+    delivery.zone,
+    deliveryDate,
     items,
-    paymentOptions,
     selectedAddressId,
     taxes,
   ]);
 
-  const handleSubmitOnlinePaidInvoice = useCallback(
-    async (invoiceName: string) => {
+  const handleSubmitOnlinePaidOrder = useCallback(
+    async (orderName: string) => {
       setIsSubmitting(true);
       try {
-        if (invoiceName) {
-          console.log("[Checkout] Submitting POS Invoice docstatus 1 for paid online order:", invoiceName);
-          try {
-            const submitResult = await submitPosInvoice(invoiceName).unwrap();
-            console.log("[Checkout] POS Invoice submit result:", submitResult);
-          } catch (submitDocErr) {
-            console.warn(
-              "[Checkout] Client-side submit of POS Invoice deferred to webhook:",
-              submitDocErr
-            );
-          }
+        if (orderName) {
+          console.log("[Checkout] Fulfilling paid Sales Order (Invoice & Payment Entry):", orderName);
+          const { fulfillPaidSalesOrder } = await import("@/app/lib/fulfillOrderAction");
+          const fulfillResult = await fulfillPaidSalesOrder(orderName);
+          console.log("[Checkout] Fulfillment result:", fulfillResult);
         }
 
         isSubmittingRef.current = true;
@@ -427,8 +416,8 @@ const CheckoutPage = () => {
         clearPendingCheckout();
         clearPendingSalesOrder();
 
-        if (invoiceName) {
-          router.replace(`/thank-you?order=${encodeURIComponent(invoiceName)}`);
+        if (orderName) {
+          router.replace(`/thank-you?order=${encodeURIComponent(orderName)}`);
         } else {
           router.replace("/thank-you");
         }
@@ -441,7 +430,7 @@ const CheckoutPage = () => {
         setIsSubmitting(false);
       }
     },
-    [router, submitPosInvoice]
+    [router]
   );
 
   const handleOrderSubmission = useCallback(
@@ -461,39 +450,54 @@ const CheckoutPage = () => {
       setOrderError(null);
 
       try {
-        const modeName = resolveModeName(methodType, paymentOptions);
-        const payload: CreatePosInvoiceRequest = {
+        const payload: CreateSalesOrderRequest = {
+          doctype: "Sales Order",
           customer: customerName,
           customer_name: customerName,
-          pos_profile: "website",
           company:
             process.env.NEXT_PUBLIC_ERP_COMPANY_NAME ||
             "Kabab Al Rayhan Restaurant & Bakery SPS LLC",
+          transaction_date: deliveryDate,
+          delivery_date: deliveryDate,
+          selling_price_list: "Standard Selling",
+          currency: "AED",
           customer_address: selectedAddressId || undefined,
           shipping_address_name: selectedAddressId || undefined,
-          customer_note: customerNote || undefined,
-          items,
+          custom_customer_note: customerNote || undefined,
+          custom_delivery_zone: delivery.zone || undefined,
+          custom_delivery_charge: delivery.charge || undefined,
+          custom_payment_method: methodType,
+          custom_payment_status: "Unpaid",
+          custom_requires_doorstep_pos_terminal:
+            methodType === "card_on_delivery" ? 1 : 0,
+          taxes_and_charges: TAX_TEMPLATE,
           taxes,
-          payments: [
-            {
-              mode_of_payment: modeName,
-              amount: grandTotal,
-            },
-          ],
+          items,
         };
 
-        console.log("[Checkout] Sending POS Invoice payload to Frappe:", payload);
+        console.log("[Checkout] Sending Sales Order payload to Frappe:", payload);
         isSubmittingRef.current = true;
-        const createdInvoice = await createPosInvoice(payload).unwrap();
-        console.log("[Checkout] Received POS Invoice instance from Frappe:", createdInvoice);
-        const invoiceName = createdInvoice?.name || "";
+        const createdOrder = await createSalesOrder(payload).unwrap();
+        const orderName = createdOrder?.name || "";
+        console.log("[Checkout] Received Sales Order instance from Frappe:", createdOrder);
+
+        // Submit cash & card on delivery orders as docstatus 1 (fully submitted)
+        if (orderName) {
+          console.log(`[Checkout] Submitting Sales Order ${orderName} with docstatus 1...`);
+          try {
+            await submitSalesOrder(orderName).unwrap();
+            console.log(`[Checkout] Successfully submitted Sales Order ${orderName}`);
+          } catch (submitErr) {
+            console.warn(`[Checkout] Could not submit Sales Order ${orderName} immediately:`, submitErr);
+          }
+        }
 
         saveCart([]);
         clearPendingCheckout();
         clearPendingSalesOrder();
 
-        if (invoiceName) {
-          router.replace(`/thank-you?order=${encodeURIComponent(invoiceName)}`);
+        if (orderName) {
+          router.replace(`/thank-you?order=${encodeURIComponent(orderName)}`);
         } else {
           router.replace("/thank-you");
         }
@@ -509,12 +513,14 @@ const CheckoutPage = () => {
       }
     },
     [
-      createPosInvoice,
+      createSalesOrder,
+      submitSalesOrder,
       customerName,
       customerNote,
-      grandTotal,
+      delivery.charge,
+      delivery.zone,
+      deliveryDate,
       items,
-      paymentOptions,
       router,
       selectedAddressId,
       taxes,
@@ -557,8 +563,8 @@ const CheckoutPage = () => {
       onCodSubmit={async (methodType) => {
         await handleOrderSubmission(methodType);
       }}
-      onCreateDraftOrder={handleCreateOnlineDraftInvoice}
-      onSubmitPaidOrder={handleSubmitOnlinePaidInvoice}
+      onCreateDraftOrder={handleCreateOnlineDraftOrder}
+      onSubmitPaidOrder={handleSubmitOnlinePaidOrder}
     />
   );
 
