@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-   allowedDevOrigins: [
+  skipTrailingSlashRedirect: true,
+  allowedDevOrigins: [
     '172.20.10.5', 
     '172.20.10.5:3000', 
   ],

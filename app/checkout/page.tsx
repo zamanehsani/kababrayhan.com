@@ -51,17 +51,6 @@ import DirhamIcon from "../components/icon/DirhamIcon";
 import PaymentErrorSection from "../components/Checkout/PaymentErrorSection";
 import DoorstepPaymentWrapper from "../components/Checkout/DoorstepPaymentWrapper";
 
-const stripeKey =
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
-  process.env.STRIPE_PUBLISHABLE_KEY;
-const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
-
-if (!stripeKey) {
-  console.error(
-    "Stripe publishable key is missing. Check NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY."
-  );
-}
-
 const hasWindow = () => typeof window !== "undefined";
 
 const readCart = (): CheckoutCartEntry[] => {
@@ -201,6 +190,8 @@ const CheckoutPage = () => {
   }));
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [stripePromise, setStripePromise] =
+    useState<ReturnType<typeof loadStripe> | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("cod");
   const [customerNote, setCustomerNote] = useState("");
 
@@ -346,6 +337,9 @@ const CheckoutPage = () => {
         if (isStale) return;
 
         console.log("[Checkout] Received Stripe PaymentIntent:", intent);
+        if (intent.publishable_key) {
+          setStripePromise(loadStripe(intent.publishable_key));
+        }
         setClientSecret(intent.client_secret);
         globalThis.sessionStorage?.setItem(
           "checkout_client_secret",
@@ -364,6 +358,91 @@ const CheckoutPage = () => {
       isStale = true;
     };
   }, [createPaymentIntent, grandTotal, paymentMethod]);
+
+  const handleCreateOnlineDraftInvoice = useCallback(async (): Promise<string> => {
+    if (!customerName || items.length === 0) {
+      throw new Error("No items in cart to order.");
+    }
+
+    if (!selectedAddressId) {
+      setShowAddressWarning(true);
+      throw new Error("Please select a delivery address before proceeding.");
+    }
+
+    const modeName = resolveModeName("card_online", paymentOptions);
+    const payload: CreatePosInvoiceRequest = {
+      customer: customerName,
+      customer_name: customerName,
+      pos_profile: "website",
+      company:
+        process.env.NEXT_PUBLIC_ERP_COMPANY_NAME ||
+        "Kabab Al Rayhan Restaurant & Bakery SPS LLC",
+      customer_address: selectedAddressId || undefined,
+      shipping_address_name: selectedAddressId || undefined,
+      customer_note: customerNote || undefined,
+      items,
+      taxes,
+      payments: [
+        {
+          mode_of_payment: modeName,
+          amount: grandTotal,
+        },
+      ],
+    };
+
+    console.log("[Checkout] Creating draft POS Invoice before payment capture:", payload);
+    const createdInvoice = await createPosInvoice(payload).unwrap();
+    console.log("[Checkout] Received draft POS Invoice instance from Frappe:", createdInvoice);
+    return createdInvoice?.name || "";
+  }, [
+    createPosInvoice,
+    customerName,
+    customerNote,
+    grandTotal,
+    items,
+    paymentOptions,
+    selectedAddressId,
+    taxes,
+  ]);
+
+  const handleSubmitOnlinePaidInvoice = useCallback(
+    async (invoiceName: string) => {
+      setIsSubmitting(true);
+      try {
+        if (invoiceName) {
+          console.log("[Checkout] Submitting POS Invoice docstatus 1 for paid online order:", invoiceName);
+          try {
+            const submitResult = await submitPosInvoice(invoiceName).unwrap();
+            console.log("[Checkout] POS Invoice submit result:", submitResult);
+          } catch (submitDocErr) {
+            console.warn(
+              "[Checkout] Client-side submit of POS Invoice deferred to webhook:",
+              submitDocErr
+            );
+          }
+        }
+
+        isSubmittingRef.current = true;
+        saveCart([]);
+        clearPendingCheckout();
+        clearPendingSalesOrder();
+
+        if (invoiceName) {
+          router.replace(`/thank-you?order=${encodeURIComponent(invoiceName)}`);
+        } else {
+          router.replace("/thank-you");
+        }
+      } catch (submitError) {
+        console.error("[Checkout] Online order finalization failed:", submitError);
+        setOrderError(
+          errorMessageOf(submitError, "We couldn't finalize your order. Please retry.")
+        );
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [router, submitPosInvoice]
+  );
 
   const handleOrderSubmission = useCallback(
     async (methodType: PaymentMethodType) => {
@@ -409,19 +488,6 @@ const CheckoutPage = () => {
         console.log("[Checkout] Received POS Invoice instance from Frappe:", createdInvoice);
         const invoiceName = createdInvoice?.name || "";
 
-        if (methodType === "card_online" && invoiceName) {
-          try {
-            console.log("[Checkout] Submitting POS Invoice docstatus 1 for online payment:", invoiceName);
-            const submitResult = await submitPosInvoice(invoiceName).unwrap();
-            console.log("[Checkout] POS Invoice submit result:", submitResult);
-          } catch (submitDocErr) {
-            console.warn(
-              "[Checkout] Client-side submit of POS Invoice deferred to webhook:",
-              submitDocErr
-            );
-          }
-        }
-
         saveCart([]);
         clearPendingCheckout();
         clearPendingSalesOrder();
@@ -444,7 +510,6 @@ const CheckoutPage = () => {
     },
     [
       createPosInvoice,
-      submitPosInvoice,
       customerName,
       customerNote,
       grandTotal,
@@ -488,12 +553,12 @@ const CheckoutPage = () => {
       onMethodChange={setPaymentMethod}
       isSubmitting={isSubmitting}
       isOnlineReady={Boolean(clientSecret && stripePromise)}
+      clientSecret={clientSecret || ""}
       onCodSubmit={async (methodType) => {
         await handleOrderSubmission(methodType);
       }}
-      onOnlineSubmit={async () => {
-        await handleOrderSubmission("card_online");
-      }}
+      onCreateDraftOrder={handleCreateOnlineDraftInvoice}
+      onSubmitPaidOrder={handleSubmitOnlinePaidInvoice}
     />
   );
 

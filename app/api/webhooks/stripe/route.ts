@@ -10,6 +10,15 @@ const getStripeInstance = () => {
   return new Stripe(secretKey);
 };
 
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  return NextResponse.json({
+    status: "active",
+    message: "Stripe webhook endpoint is online",
+  });
+}
+
 export async function POST(req: NextRequest) {
   const rawBody = await req.text();
   const signature = req.headers.get("stripe-signature");

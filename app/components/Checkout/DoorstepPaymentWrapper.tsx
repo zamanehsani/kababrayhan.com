@@ -17,11 +17,13 @@ interface DoorstepPaymentWrapperProps {
   onMethodChange: (method: PaymentMethodType) => void;
   isSubmitting: boolean;
   isOnlineReady: boolean;
+  clientSecret: string;
   onCodSubmit: (
     methodType: "cod" | "card_on_delivery",
     details?: { changeRequired?: string }
   ) => Promise<void>;
-  onOnlineSubmit: () => Promise<void>;
+  onCreateDraftOrder: () => Promise<string>;
+  onSubmitPaidOrder: (invoiceName: string) => Promise<void>;
 }
 
 export const DoorstepPaymentWrapper: React.FC<DoorstepPaymentWrapperProps> = ({
@@ -32,8 +34,10 @@ export const DoorstepPaymentWrapper: React.FC<DoorstepPaymentWrapperProps> = ({
   onMethodChange,
   isSubmitting,
   isOnlineReady,
+  clientSecret,
   onCodSubmit,
-  onOnlineSubmit,
+  onCreateDraftOrder,
+  onSubmitPaidOrder,
 }) => {
   const [isLocalSubmitting, setIsLocalSubmitting] = useState(false);
   const isBusy = isSubmitting || isLocalSubmitting;
@@ -53,8 +57,10 @@ export const DoorstepPaymentWrapper: React.FC<DoorstepPaymentWrapperProps> = ({
           (isOnlineReady ? (
             <OnlinePaymentSection
               total={total}
+              clientSecret={clientSecret}
               isSubmitting={isBusy}
-              onConfirmPayment={onOnlineSubmit}
+              onCreateDraftOrder={onCreateDraftOrder}
+              onSubmitPaidOrder={onSubmitPaidOrder}
             />
           ) : (
             <div className="flex flex-col items-center py-8 text-stone-400">

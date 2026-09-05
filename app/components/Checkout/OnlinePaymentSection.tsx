@@ -23,15 +23,19 @@ const BILLING_DETAILS = {
 
 interface OnlinePaymentSectionProps {
   total: number;
+  clientSecret: string;
   isSubmitting?: boolean;
-  onConfirmPayment: () => Promise<void>;
+  onCreateDraftOrder: () => Promise<string>;
+  onSubmitPaidOrder: (invoiceName: string) => Promise<void>;
 }
 
 /** Stripe wallets (Apple Pay / Google Pay / Link) plus the card form. */
 const OnlinePaymentSection: React.FC<OnlinePaymentSectionProps> = ({
   total,
+  clientSecret,
   isSubmitting = false,
-  onConfirmPayment,
+  onCreateDraftOrder,
+  onSubmitPaidOrder,
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -42,16 +46,42 @@ const OnlinePaymentSection: React.FC<OnlinePaymentSectionProps> = ({
   const confirm = async () => {
     if (!stripe || !elements) return;
 
-    console.log("[Stripe Payment] Starting payment confirmation...");
+    console.log("[Stripe Payment] Initiating checkout payment...");
     setIsProcessing(true);
     setPaymentError(null);
 
+    let draftInvoiceName = "";
+
     try {
+      // 1. Create the draft POS Invoice in Frappe first to establish the official order ID
+      draftInvoiceName = await onCreateDraftOrder();
+      console.log("[Stripe Payment] Created draft invoice:", draftInvoiceName);
+
+      // 2. Attach the invoice name to the Stripe PaymentIntent metadata on Stripe's servers
+      const paymentIntentId = clientSecret.includes("_secret_")
+        ? clientSecret.split("_secret_")[0]
+        : clientSecret;
+
+      if (paymentIntentId && draftInvoiceName) {
+        await fetch("/api/payment-intent", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            payment_intent_id: paymentIntentId,
+            pos_invoice: draftInvoiceName,
+          }),
+        }).catch((err) =>
+          console.warn("[Stripe Payment] Could not update PaymentIntent metadata:", err)
+        );
+      }
+
+      // 3. Confirm the payment with Stripe Elements
+      console.log("[Stripe Payment] Confirming Stripe payment...");
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         redirect: "if_required",
         confirmParams: {
-          return_url: `${globalThis.location.origin}/thank-you`,
+          return_url: `${globalThis.location.origin}/thank-you?order=${encodeURIComponent(draftInvoiceName)}`,
           payment_method_data: { billing_details: BILLING_DETAILS },
         },
       });
@@ -64,9 +94,10 @@ const OnlinePaymentSection: React.FC<OnlinePaymentSectionProps> = ({
 
       console.log("[Stripe Payment] PaymentIntent status:", paymentIntent?.status, paymentIntent);
 
+      // 4. On immediate success, submit the invoice (docstatus: 1) and redirect
       if (paymentIntent?.status === "succeeded") {
-        console.log("[Stripe Payment] Succeeded. Submitting order to Frappe...");
-        await onConfirmPayment();
+        console.log("[Stripe Payment] Succeeded. Submitting order to Frappe as paid...");
+        await onSubmitPaidOrder(draftInvoiceName);
       }
     } catch (confirmError) {
       console.error("[Stripe Payment] Exception during confirmation:", confirmError);

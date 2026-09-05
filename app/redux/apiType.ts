@@ -495,6 +495,7 @@ export interface CreatePaymentIntentRequest {
 export interface PaymentIntentResponse {
   client_secret: string;
   id: string;
+  publishable_key?: string;
 }
 
 export interface FullItemResponse {
