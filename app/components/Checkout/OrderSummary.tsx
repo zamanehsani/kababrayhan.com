@@ -21,12 +21,22 @@ interface OrderSummaryProps {
   cart: CartEntry[];
   total: number;
   deliveryCharge?: number;
+  vatAmount?: number;
+  grandTotal?: number;
 }
 
-const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total, deliveryCharge = 0 }) => {
-  const grandTotal = total + deliveryCharge;
-  // Calculate the 5% VAT amount that is already included in the items subtotal
-  const vatIncludedAmount = total - total / 1.05;
+const OrderSummary: React.FC<OrderSummaryProps> = ({
+  cart,
+  total,
+  deliveryCharge = 0,
+  vatAmount,
+  grandTotal,
+}) => {
+  const calculatedVat = vatAmount !== undefined ? vatAmount : Number((total * 0.05).toFixed(2));
+  const calculatedGrandTotal =
+    grandTotal !== undefined
+      ? grandTotal
+      : Number((total + calculatedVat + deliveryCharge).toFixed(2));
 
   return (
     <section className="bg-white px-2 py-6 transition-all">
@@ -112,17 +122,17 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total, deliveryCharge
           )}
         </div>
 
-        {/* Best Practice: Explicit VAT Breakdown Row */}
+        {/* VAT Row */}
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-1.5">
             <span className="font-medium text-stone-500">VAT</span>
             <span className="rounded bg-stone-100 px-1 py-0.5 text-[10px] font-semibold text-stone-600">
-              5% Inc.
+              5%
             </span>
           </div>
-          <span className="flex items-center gap-0.5 font-medium text-stone-600">
-            <DirhamIcon size={11} className="text-stone-500" />
-            {vatIncludedAmount.toFixed(2)}
+          <span className="flex items-center gap-0.5 font-medium text-stone-900">
+            <DirhamIcon size={11} className="text-stone-900" />
+            {calculatedVat.toFixed(2)}
           </span>
         </div>
         
@@ -134,7 +144,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, total, deliveryCharge
           <div className="text-right">
             <span className="flex items-center gap-0.5 text-xl font-medium leading-none text-red-600">
               <DirhamIcon size={16} className="text-red-600 md:w-[18px] md:h-[18px]" />
-              {grandTotal.toFixed(2)}
+              {calculatedGrandTotal.toFixed(2)}
             </span>
           </div>
         </div>

@@ -8,6 +8,8 @@ import type {
   CreateCustomerRequest,
   CreateAddressRequest,
   CreateAddressResponse,
+  CreatePosInvoiceRequest,
+  PosInvoice,
   UpdateAddressRequest,
   UpdateAddressResponse,
   CreatePaymentIntentRequest,
@@ -19,7 +21,9 @@ import type {
   Item,
   ItemDetails,
   KitchenOrderTicket,
+  ModeOfPayment,
   PaymentIntentResponse,
+  PosOpeningEntry,
   SalesOrder,
   SalesOrderDetails,
   SalesOrderSummary,
@@ -479,24 +483,99 @@ export const erpApi = createApi({
       }),
     }),
     createPaymentIntent: builder.mutation< PaymentIntentResponse, CreatePaymentIntentRequest>({
-      queryFn: async (body, _api, _extraOptions, fetchWithBQ) => {
-        // ERPNext reads from frappe.form_dict, so send as form-urlencoded
-        // Send raw AED amount — the ERPNext get_stripe_intent endpoint converts to fils (× 100) itself
-        const formData = new URLSearchParams();
-        formData.append("amount", String(Math.round(body.amount)));
-        formData.append("currency", body.currency ?? "aed");
-        formData.append("sales_order", body.sales_order);
+      queryFn: async (body) => {
+        try {
+          const response = await fetch("/api/payment-intent", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
 
-        const result = await fetchWithBQ({
-          url: `${API_METHOD_URL}get_stripe_intent`,
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: formData.toString(),
-        });
-        if (result.error) return { error: result.error };
-        const data = result.data as { message: PaymentIntentResponse };
-        return { data: data.message };
+          if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            return {
+              error: {
+                status: response.status,
+                data: errData,
+              },
+            };
+          }
+
+          const data = (await response.json()) as PaymentIntentResponse;
+          return { data };
+        } catch (error) {
+          return {
+            error: {
+              status: "FETCH_ERROR",
+              error: error instanceof Error ? error.message : "Network error",
+            },
+          };
+        }
       },
+    }),
+
+    createPosInvoice: builder.mutation<PosInvoice, CreatePosInvoiceRequest>({
+      query: (body) => ({
+        url: `${API_RESOURCE_URL}POS Invoice`,
+        method: "POST",
+        body: {
+          doctype: "POS Invoice",
+          ...body,
+        },
+      }),
+      transformResponse: (response: { data: PosInvoice }) => response.data,
+    }),
+
+    submitPosInvoice: builder.mutation<{ name: string; docstatus: number }, string>({
+      query: (invoiceName) => ({
+        url: `${API_RESOURCE_URL}POS Invoice/${encodeURIComponent(invoiceName)}`,
+        method: "PUT",
+        body: { docstatus: 1 },
+      }),
+      transformResponse: (response: {
+        data: { name: string; docstatus: number };
+      }) => response.data,
+    }),
+
+    submitSalesOrder: builder.mutation<{ name: string; docstatus: number }, string>({
+      query: (salesOrderName) => ({
+        url: `${API_RESOURCE_URL}Sales Order/${encodeURIComponent(salesOrderName)}`,
+        method: "PUT",
+        body: { docstatus: 1 },
+      }),
+      transformResponse: (response: {
+        data: { name: string; docstatus: number };
+      }) => response.data,
+    }),
+
+    getModesOfPayment: builder.query<ModeOfPayment[], void>({
+      query: () => ({
+        url: `${API_RESOURCE_URL}Mode of Payment`,
+        params: {
+          filters: JSON.stringify([["enabled", "=", 1]]),
+          fields: JSON.stringify(["name", "type", "enabled"]),
+          limit_page_length: 50,
+        },
+      }),
+      transformResponse: (response: { data: ModeOfPayment[] }) => response.data,
+    }),
+
+    getPosOpeningStatus: builder.query<PosOpeningEntry[], void>({
+      query: () => ({
+        url: `${API_RESOURCE_URL}POS Opening Entry`,
+        params: {
+          filters: JSON.stringify([
+            ["pos_profile", "=", "website"],
+            ["status", "=", "Open"],
+            ["creation", ">=", "days ago:1"],
+          ]),
+          fields: JSON.stringify(["name", "period_start_date"]),
+          order_by: "creation desc",
+          limit_page_length: 1,
+        },
+      }),
+      transformResponse: (response: { data: PosOpeningEntry[] }) =>
+        response.data ?? [],
     }),
 
     createAddress: builder.mutation< CreateAddressResponse, CreateAddressRequest >({
@@ -599,11 +678,16 @@ export const {
   useGetKitchenOrderTicketQuery,
   useCreateSalesOrderMutation,
   useUpdateSalesOrderMutation,
+  useSubmitSalesOrderMutation,
+  useCreatePosInvoiceMutation,
+  useSubmitPosInvoiceMutation,
   useCreatePaymentIntentMutation,
   useGetItemsQuery,
   useGetItemVariantsQuery,
   useGetItemGroupsQuery,
   useSendOtpMutation,
   useGetItemByCodeQuery,
+  useGetModesOfPaymentQuery,
+  useGetPosOpeningStatusQuery,
   useCompleteDoorstepOrderMutation,
 } = erpApi;

@@ -57,7 +57,7 @@ const CashOnDeliverySection: React.FC<CashOnDeliverySectionProps> = ({
 
   const handleSubmit = async () => {
     if (isSubmitting) return;
-
+    console.log("Submitting COD with details:", details);
     // Safety check for custom inputs
     if (changeMode === "custom") {
       const parsed = parseFloat(customAmount);

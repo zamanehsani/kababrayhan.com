@@ -6,6 +6,8 @@ import { Check, Loader2, MapPin, Plus } from "lucide-react";
 
 import { readStoredCustomerProfile } from "@/app/components/customerStorage";
 import { toDeliveryAddressItem } from "@/app/lib/customerAccount";
+import { validateDeliveryZone } from "@/app/lib/geocoding";
+import type { DeliveryAddressItem } from "@/app/lib/customerPortal";
 import {
   getCustomerName,
   readCustomerPortalSnapshot,
@@ -44,16 +46,27 @@ export default function DeliveryAddressPage() {
 
   const items = (addresses ?? cachedAddresses).map(toDeliveryAddressItem);
 
-  const handleSelect = async (addressId: string, address: string) => {
-    setSelectedAddressId(addressId);
+  const handleSelect = async (item: DeliveryAddressItem) => {
+    setSelectedAddressId(item.addressId);
     setError("");
 
     try {
       await updateAddress({
-        addressName: addressId,
+        addressName: item.addressId,
         is_shipping_address: 1,
       }).unwrap();
-      saveDeliveryAddress(address, addressId);
+      saveDeliveryAddress(item.address, item.addressId);
+
+      const lat = Number(item.latitude);
+      const lng = Number(item.longitude);
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        const zone = await validateDeliveryZone(lat, lng);
+        globalThis.localStorage?.setItem("uae_delivery_zone", zone.zoneName);
+        globalThis.localStorage?.setItem(
+          "uae_delivery_charge",
+          String(zone.deliveryCharge)
+        );
+      }
     } catch (selectError) {
       console.error("Failed to set delivery address", selectError);
       setError("We couldn't save that address. Please try again.");
@@ -100,7 +113,7 @@ export default function DeliveryAddressPage() {
               <button
                 key={item.addressId}
                 type="button"
-                onClick={() => handleSelect(item.addressId, item.address)}
+                onClick={() => handleSelect(item)}
                 className={`flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-all ${
                   isSelected
                     ? "border-red-500 bg-red-50/50"

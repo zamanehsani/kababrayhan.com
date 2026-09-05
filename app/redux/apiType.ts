@@ -169,8 +169,10 @@ export interface CreateSalesOrderTaxLine {
   charge_type: string;
   account_head: string;
   description: string;
-  rate: number;
-  included_in_print_rate: 0 | 1;
+  rate?: number;
+  included_in_print_rate?: 0 | 1;
+  tax_amount?: number;
+  cost_center?: string;
 }
 
 export interface CreateSalesOrderItem {
@@ -206,12 +208,21 @@ export interface CreateSalesOrderRequest {
   custom_customer_note?: string;
   custom_delivery_zone?: string;
   custom_delivery_charge?: number;
+  custom_payment_method?: string;
+  custom_payment_status?: string;
   taxes?: CreateSalesOrderTaxLine[];
   items: CreateSalesOrderItem[];
 }
 
 export interface UpdateSalesOrderRequest {
   salesOrderName: string;
+  items?: CreateSalesOrderItem[];
+  taxes?: CreateSalesOrderTaxLine[];
+  taxes_and_charges?: string;
+  customer_address?: string;
+  shipping_address_name?: string;
+  custom_delivery_zone?: string;
+  custom_delivery_charge?: number;
   custom_customer_note?: string;
   payment_method?: string;
   custom_delivery_notes?: string;
@@ -225,10 +236,70 @@ export interface UpdateSalesOrderRequest {
 export interface UpdateSalesOrderResponse {
   data: ErpResourceRecord & {
     name: string;
+    grand_total?: number;
+    rounded_total?: number;
     custom_customer_note?: string;
     custom_payment_status?: string;
     custom_payment_method?: string;
   };
+}
+
+export interface ModeOfPayment {
+  name: string;
+  type?: string;
+  enabled?: number;
+}
+
+export interface PosInvoicePayment {
+  mode_of_payment: string;
+  amount: number;
+}
+
+export interface CreatePosInvoiceItem {
+  item_code: string;
+  item_name?: string;
+  qty: number;
+  rate?: number;
+  custom_selected_addons?: string;
+  prep_time?: number;
+  is_free_item?: 0 | 1;
+}
+
+export interface CreatePosInvoiceTaxLine {
+  charge_type: string;
+  account_head: string;
+  description: string;
+  rate?: number;
+  tax_amount?: number;
+}
+
+export interface CreatePosInvoiceRequest {
+  doctype?: string;
+  customer: string;
+  customer_name?: string;
+  pos_profile: string;
+  company: string;
+  customer_address?: string;
+  shipping_address_name?: string;
+  customer_note?: string;
+  items: CreatePosInvoiceItem[];
+  taxes: CreatePosInvoiceTaxLine[];
+  payments: PosInvoicePayment[];
+}
+
+export interface PosInvoice {
+  name: string;
+  customer: string;
+  customer_name: string;
+  grand_total: number;
+  status: string;
+  docstatus: number;
+}
+
+export interface PosOpeningEntry {
+  name: string;
+  period_start_date?: string;
+  status?: string;
 }
 
 export interface CreateCustomerRequest {
@@ -417,7 +488,8 @@ export interface SalesOrder {
 export interface CreatePaymentIntentRequest {
   amount: number;
   currency?: string;
-  sales_order: string;
+  sales_order?: string;
+  pos_invoice?: string;
 }
 
 export interface PaymentIntentResponse {

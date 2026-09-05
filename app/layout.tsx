@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import ScrollRestoration from "./components/scrollrestoration";
+import StoreStatusBanner from "./components/Header/StoreStatusBanner";
 import MobileHeader from "./components/Header/MobileHeader";
 import TabletHeader from "./components/Header/TabletHeader";
 import DesktopHeader from "./components/Header/DesktopHeader";
@@ -37,6 +38,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col">
         <ScrollRestoration />
         <Providers>
+          <StoreStatusBanner />
           <div className="block md:hidden"><MobileHeader companyName={company.name} logoSrc={company.logoDataUrl} /></div>
           <div className="hidden md:block lg:hidden"><TabletHeader /></div>
           <div className="hidden lg:block"><DesktopHeader companyName={company.name} logoSrc={company.logoDataUrl} /></div>

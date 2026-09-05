@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
-import AddressSelectModal from "../home/modal/AddressSelectModal";
+import { useRouter } from "next/navigation";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import {
   useDeleteAddressMutation,
   useDisableAddressMutation,
-  useUpdateAddressMutation,
   useGetCustomerAddressesQuery,
 } from "../../redux/api";
 import type { Address } from "../../redux/apiType";
@@ -45,9 +44,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
   error,
   selectedAddressId,
 }) => {
-  const [activeDeliveryIndex, setActiveDeliveryIndex] = useState<number | null>(
-    null
-  );
+  const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState<{
     index: number;
     label: string;
@@ -58,7 +55,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
   } | null>(null);
   const [deleteAddress] = useDeleteAddressMutation();
   const [disableAddress] = useDisableAddressMutation();
-  const [updateAddress] = useUpdateAddressMutation();
 
   const customerName = getCustomerName() || form.phone;
   const { data: customerAddresses, refetch: refetchAddresses } =
@@ -352,10 +348,10 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
                     <button
                       type="button"
-                      onClick={() => setActiveDeliveryIndex(index)}
+                      onClick={() => router.push("/delivery-address")}
                       className="w-full shrink-0 rounded-xl px-4 py-2 text-[13px] font-medium tracking-widest bg-stone-100 text-stone-600 hover:bg-red-600 hover:text-white sm:w-auto"
                     >
-                      Edit
+                      Change
                     </button>
                   </div>
                 </div>
@@ -367,25 +363,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
           {!selectedAddressId && (
             <button
               type="button"
-              onClick={() => {
-                const updated = [
-                  ...form.deliveryAddresses,
-                  {
-                    id: String(Date.now()),
-                    title: "",
-                    address: "",
-                    addressId: "",
-                    isDelivery: false,
-                    isBilling: false,
-                  },
-                ];
-                setForm((prev) => ({ ...prev, deliveryAddresses: updated }));
-                localStorage.setItem(
-                  "uae_delivery_addresses",
-                  JSON.stringify(updated)
-                );
-                setActiveDeliveryIndex(updated.length - 1);
-              }}
+              onClick={() => router.push("/delivery-address/new")}
               className="ml-1 flex items-center gap-2 text-[13px] font-medium tracking-wide text-stone-400 transition-colors hover:text-red-600"
             >
               <span className="text-base leading-none">+</span> Add Delivery
@@ -399,99 +377,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
             <ErrorIcon />
             {error}
           </div>
-        )}
-
-        {activeDeliveryIndex !== null && (
-          <AddressSelectModal
-            open={true}
-            onClose={() => setActiveDeliveryIndex(null)}
-            addressType="Billing"
-            skipCustomerCreation={activeDeliveryIndex > 0}
-            redirectTo={null}
-            existingAddressId={
-              form.deliveryAddresses[activeDeliveryIndex]?.addressId || null
-            }
-            customTitle={
-              form.deliveryAddresses[activeDeliveryIndex]?.title ||
-              `delivery-${activeDeliveryIndex + 1}`
-            }
-            onSelect={async (addressData) => {
-              const resolvedAddress = addressData.name || "";
-              const addressId = addressData.id;
-
-              try {
-                // Sync ERPNext native address roles
-                await updateAddress({
-                  addressName: addressId,
-
-                  // Delivery address
-                  is_shipping_address: 1,
-
-                  // First/main checkout address becomes billing too
-                  is_primary_address: activeDeliveryIndex === 0 ? 1 : 0,
-                }).unwrap();
-
-                // Local UI update
-                const updated = form.deliveryAddresses.map((da, i) => ({
-                  ...da,
-
-                  ...(i === activeDeliveryIndex
-                    ? {
-                      address: resolvedAddress,
-                      addressId,
-                    }
-                    : {}),
-
-                  // only selected becomes delivery
-                  isDelivery: i === activeDeliveryIndex,
-
-                  // only first becomes billing
-                  isBilling: activeDeliveryIndex === 0 ? i === 0 : da.isBilling,
-                }));
-
-                setForm((prev) => ({
-                  ...prev,
-                  deliveryAddresses: updated,
-                }));
-
-                localStorage.setItem(
-                  "uae_delivery_addresses",
-                  JSON.stringify(updated)
-                );
-
-                // Sync primary local values
-                if (activeDeliveryIndex === 0) {
-                  localStorage.setItem("uae_delivery_address", resolvedAddress);
-
-                  localStorage.setItem("uae_delivery_address_id", addressId);
-
-                  localStorage.setItem("uae_address", resolvedAddress);
-
-                  localStorage.setItem("uae_address_id", addressId);
-                }
-
-                setFeedback({
-                  type: "success",
-                  message: "Address updated successfully",
-                });
-
-                setTimeout(() => setFeedback(null), 2500);
-
-                refetchAddresses();
-              } catch (err) {
-                console.error("Failed to update address roles:", err);
-
-                setFeedback({
-                  type: "error",
-                  message: "Failed to update address",
-                });
-
-                setTimeout(() => setFeedback(null), 4000);
-              } finally {
-                setActiveDeliveryIndex(null);
-              }
-            }}
-          />
         )}
 
         {confirmDelete && (

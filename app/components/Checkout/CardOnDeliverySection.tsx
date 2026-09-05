@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { SmartphoneNfc, ShieldCheck } from "lucide-react";
+import { SmartphoneNfc } from "lucide-react";
 import DirhamIcon from "../icon/DirhamIcon";
 
 interface CardOnDeliverySectionProps {

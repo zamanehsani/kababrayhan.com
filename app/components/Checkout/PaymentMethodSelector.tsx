@@ -1,91 +1,80 @@
 "use client";
 
 import React from "react";
-import { CreditCard, Banknote, SmartphoneNfc } from "lucide-react";
-export type PaymentMethodType = "card_online" | "cod" | "card_on_delivery";
-import { useUpdateSalesOrderMutation } from "../../redux/api";
+import { Banknote, CreditCard, SmartphoneNfc } from "lucide-react";
+
+import type { PaymentMethodType, PaymentOption } from "@/app/lib/paymentMethods";
+
+export type { PaymentMethodType };
 
 interface PaymentMethodSelectorProps {
+  options: PaymentOption[];
   currentMethod: PaymentMethodType;
   onChange: (method: PaymentMethodType) => void;
-  salesOrderName: string | undefined;
-
+  isLoading?: boolean;
+  isSyncing?: boolean;
 }
 
+const ICONS: Record<PaymentMethodType, React.ElementType> = {
+  cod: Banknote,
+  card_on_delivery: SmartphoneNfc,
+  card_online: CreditCard,
+};
+
 const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
+  options,
   currentMethod,
   onChange,
-  salesOrderName,
+  isLoading = false,
+  isSyncing = false,
 }) => {
-
-  const [updateSalesOrder, { isLoading }] = useUpdateSalesOrderMutation();
-
-  const handleMethodChange = async (method: PaymentMethodType) => {
-    // 1. Instantly change the local UI state for an instantaneous, responsive feeling
-    onChange(method);
-
-    // 2. If we have a valid sales order identifier, sync it directly with Frappe database
-    if (salesOrderName) {
-      try {
-        await updateSalesOrder({
-          salesOrderName: salesOrderName.trim(),
-          custom_payment_method: method,
-          // If switching to card_online, initial state is "Unpaid" until Stripe resolves it
-          custom_payment_status: "Unpaid",
-        }).unwrap();
-      } catch (error) {
-        console.error("Failed to update sales order payment method metadata:", error);
-      }
-    }
-  };
-
+  if (isLoading) {
+    return (
+      <div className="mt-3 grid w-full grid-cols-3 gap-1.5 sm:gap-2">
+        {["a", "b", "c"].map((key) => (
+          <div
+            key={key}
+            className="h-16 animate-pulse rounded-xl border-2 border-stone-100 bg-stone-50"
+          />
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <div className={`mt-3 grid w-full grid-cols-3 gap-1.5 sm:gap-2 ${isLoading ? "pointer-events-none opacity-70" : ""}`}>
-      <button
-        type="button"
-        onClick={() => handleMethodChange("cod")}
-        className={`flex flex-col items-center justify-center rounded-xl border-2 p-2 text-center transition-all outline-none focus:ring-2 focus:ring-red-500/20 ${currentMethod === "cod"
-          ? "border-red-600 bg-red-50/30 text-stone-900 shadow-sm"
-          : "border-stone-100 bg-white text-stone-500 hover:border-stone-200"
-          }`}
-      >
-        <Banknote
-          className={`mb-1 h-4 w-4 transition-colors ${currentMethod === "cod" ? "text-red-600" : "text-stone-400"}`}
-        />
-        <span className="text-[10px] font-semibold leading-tight sm:text-xs">Cash on Delivery</span>
-      </button>
+    <div
+      className={`mt-3 grid w-full gap-1.5 sm:gap-2 ${
+        options.length === 2 ? "grid-cols-2" : "grid-cols-3"
+      } ${isSyncing ? "pointer-events-none opacity-70" : ""}`}
+    >
+      {options.map((option) => {
+        const Icon = ICONS[option.id];
+        const isActive = currentMethod === option.id;
 
-      <button
-        type="button"
-        onClick={() => handleMethodChange("card_on_delivery")}
-        className={`flex flex-col items-center justify-center rounded-xl border-2 p-2 text-center transition-all outline-none focus:ring-2 focus:ring-red-500/20 ${currentMethod === "card_on_delivery"
-          ? "border-red-600 bg-red-50/30 text-stone-900 shadow-sm"
-          : "border-stone-100 bg-white text-stone-500 hover:border-stone-200"
-          }`}
-      >
-        <SmartphoneNfc
-          className={`mb-1 h-4 w-4 transition-colors ${currentMethod === "card_on_delivery" ? "text-red-600" : "text-stone-400"}`}
-        />
-        <span className="text-[10px] font-semibold leading-tight sm:text-xs">Card on Delivery</span>
-      </button>
-
-      <button
-        type="button"
-        onClick={() => handleMethodChange("card_online")}
-        className={`flex flex-col items-center justify-center rounded-xl border-2 p-2 text-center transition-all outline-none focus:ring-2 focus:ring-red-500/20 ${currentMethod === "card_online"
-          ? "border-red-600 bg-red-50/30 text-stone-900 shadow-sm"
-          : "border-stone-100 bg-white text-stone-500 hover:border-stone-200"
-          }`}
-      >
-        <CreditCard
-          className={`mb-1 h-4 w-4 transition-colors ${currentMethod === "card_online" ? "text-red-600" : "text-stone-400"}`}
-        />
-        <span className="text-[10px] font-semibold leading-tight sm:text-xs">Pay Online</span>
-      </button>
+        return (
+          <button
+            key={option.id}
+            type="button"
+            onClick={() => onChange(option.id)}
+            className={`flex flex-col items-center justify-center rounded-xl border-2 p-2 text-center transition-all outline-none focus:ring-2 focus:ring-red-500/20 ${
+              isActive
+                ? "border-red-600 bg-red-50/30 text-stone-900 shadow-sm"
+                : "border-stone-100 bg-white text-stone-500 hover:border-stone-200"
+            }`}
+          >
+            <Icon
+              className={`mb-1 h-4 w-4 transition-colors ${
+                isActive ? "text-red-600" : "text-stone-400"
+              }`}
+            />
+            <span className="text-[10px] font-semibold leading-tight sm:text-xs">
+              {option.label}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 };
 
 export default PaymentMethodSelector;
-

@@ -1,22 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 import {
-  useCreateSalesOrderMutation,
+  useCreatePosInvoiceMutation,
+  useSubmitPosInvoiceMutation,
   useCreatePaymentIntentMutation,
-  useUpdateSalesOrderMutation,
   useGetCustomerAddressesQuery,
+  useGetModesOfPaymentQuery,
   type Customer,
-  type SalesOrder,
-  useCompleteDoorstepOrderMutation,
 } from "../redux/api";
-import type { CreateSalesOrderRequest } from "../redux/apiType";
+import type { CreatePosInvoiceRequest } from "../redux/apiType";
 import { readStoredCustomer } from "@/app/components/customerStorage";
 import {
+  CUSTOMER_PORTAL_UPDATED,
   getCustomerName,
   saveDeliveryAddress,
   writeDeliveryAddresses,
@@ -25,6 +26,19 @@ import {
   clearPendingCheckout,
   clearPendingSalesOrder,
 } from "@/app/components/orderStorage";
+import { CART_UPDATED, saveCart } from "@/app/lib/cart";
+import {
+  buildPosInvoiceItems,
+  buildPosInvoiceTaxes,
+  calculateOrderTotals,
+  cartSubtotal,
+  type CheckoutCartEntry,
+} from "@/app/lib/salesOrder";
+import {
+  toPaymentOptions,
+  type PaymentMethodType,
+  type PaymentOption,
+} from "@/app/lib/paymentMethods";
 
 import CheckoutStepper from "../components/Checkout/CheckoutStepper";
 import OrderSummary from "../components/Checkout/OrderSummary";
@@ -36,7 +50,74 @@ import ConfirmDialog from "../components/shared/ConfirmDialog";
 import DirhamIcon from "../components/icon/DirhamIcon";
 import PaymentErrorSection from "../components/Checkout/PaymentErrorSection";
 import DoorstepPaymentWrapper from "../components/Checkout/DoorstepPaymentWrapper";
-import { ChevronDown, ChevronUp } from "lucide-react";
+
+const stripeKey =
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
+  process.env.STRIPE_PUBLISHABLE_KEY;
+const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
+
+if (!stripeKey) {
+  console.error(
+    "Stripe publishable key is missing. Check NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY."
+  );
+}
+
+const hasWindow = () => typeof window !== "undefined";
+
+const readCart = (): CheckoutCartEntry[] => {
+  if (!hasWindow()) return [];
+  try {
+    return JSON.parse(globalThis.localStorage.getItem("cart") || "[]");
+  } catch {
+    return [];
+  }
+};
+
+const readDeliveryInfo = () => {
+  if (!hasWindow()) {
+    return { zone: "", charge: 0, addressId: "" };
+  }
+
+  return {
+    zone: globalThis.localStorage.getItem("uae_delivery_zone") || "",
+    charge:
+      Number.parseFloat(
+        globalThis.localStorage.getItem("uae_delivery_charge") || "0"
+      ) || 0,
+    addressId:
+      globalThis.localStorage.getItem("uae_delivery_address_id") ||
+      globalThis.localStorage.getItem("uae_address_id") ||
+      "",
+  };
+};
+
+const readStoredDeliveryAddresses = (): DeliveryAddressItem[] => {
+  if (!hasWindow()) return [];
+
+  const raw = globalThis.localStorage.getItem("uae_delivery_addresses");
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length) return parsed;
+    } catch {
+      // fall through to the single-address fallback below
+    }
+  }
+
+  return [
+    {
+      title: "Home",
+      address:
+        globalThis.localStorage.getItem("uae_delivery_address") ||
+        globalThis.localStorage.getItem("uae_address") ||
+        "",
+      addressId:
+        globalThis.localStorage.getItem("uae_delivery_address_id") ||
+        globalThis.localStorage.getItem("uae_address_id") ||
+        "",
+    },
+  ];
+};
 
 const toDisplayAddressTitle = (
   rawTitle: string,
@@ -46,260 +127,157 @@ const toDisplayAddressTitle = (
   const segments = rawTitle
     .split("-")
     .map((segment) => segment.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter((segment) => {
+      const normalized = segment.toLowerCase();
+      return (
+        !segment.startsWith("+") &&
+        normalized !== addressType.toLowerCase() &&
+        normalized !== "billing" &&
+        normalized !== "shipping"
+      );
+    });
 
-  const filteredSegments = segments.filter((segment) => {
-    const normalized = segment.toLowerCase();
-    return (
-      !segment.startsWith("+") &&
-      normalized !== addressType.toLowerCase() &&
-      normalized !== "billing" &&
-      normalized !== "shipping"
-    );
-  });
-
-  const candidate = filteredSegments.join(" ").trim();
-
+  const candidate = segments.join(" ").trim();
   if (candidate) {
-    return candidate.replace(/\b\w/g, (char) => char.toUpperCase());
+    return candidate.replaceAll(/\b\w/g, (char) => char.toUpperCase());
   }
 
   return index === 0 ? "Home" : `Address ${index + 1}`;
 };
 
-const stripeKey =
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
-  process.env.STRIPE_PUBLISHABLE_KEY;
-let stripePromise: ReturnType<typeof loadStripe> | null = null;
+const errorMessageOf = (error: unknown, fallback: string) => {
+  const data = (
+    error as {
+      data?: {
+        message?: string;
+        exception?: string;
+        _server_messages?: string;
+      };
+    }
+  )?.data;
 
-if (stripeKey) {
-  stripePromise = loadStripe(stripeKey);
-} else {
-  console.error(
-    "Stripe publishable key is missing. Check your .env file for NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY."
-  );
-}
+  if (data?._server_messages) {
+    try {
+      const messages = JSON.parse(data._server_messages) as string[];
+      const first = messages[0];
+      const parsed = first ? JSON.parse(first) : null;
+      const text = (parsed?.message ?? first)?.toString();
+      if (text) return text.replaceAll(/<[^>]+>/g, " ").trim();
+    } catch {
+      // fall through to the generic fields below
+    }
+  }
 
-interface CartItem {
-  item: {
-    baseItemCode?: string;
-    id?: string;
-    title?: string;
-    item_name?: string;
-    baseTitle?: string;
-    variationTitle?: string;
-    variation?: {
-      id?: string;
-      title?: string;
-      name?: string;
-      optionId?: string;
-    } | null;
-    baseItem?: {
-      itemCode?: string;
-      id?: string | number;
-      name?: string;
-      title?: string;
-    } | null;
-    discountedPrice?: number;
-    price?: number;
-    image?: string;
-    prep_time?: number;
-  };
-  qty?: number;
-  name?: string;
-  price?: number;
-  addon?: {
-    selectedAddOns?: Array<{ name?: string }>;
-    title?: string;
-  };
-}
+  return data?.message || data?.exception || fallback;
+};
+
+const resolveModeName = (
+  method: PaymentMethodType,
+  options: PaymentOption[]
+) => {
+  const match = options.find((option) => option.id === method);
+  if (match?.mode) return match.mode;
+
+  if (method === "cod") return "Cash";
+  if (method === "card_on_delivery") return "Card";
+  return "Online";
+};
 
 const CheckoutPage = () => {
   const router = useRouter();
-  const [step, setStep] = useState<2 | 3>(() => {
-    if (typeof window === "undefined") {
-      return 2;
-    }
 
-    const pendingSalesOrder = globalThis.localStorage.getItem("pending_sales_order");
-    const savedClientSecret = globalThis.sessionStorage.getItem("checkout_client_secret");
+  const [customer, setCustomer] = useState<Customer | null>(() =>
+    hasWindow() ? readStoredCustomer() : null
+  );
+  const [cart, setCart] = useState<CheckoutCartEntry[]>(readCart);
+  const [delivery, setDelivery] = useState(readDeliveryInfo);
+  const [form, setForm] = useState(() => ({
+    phone: hasWindow() ? globalThis.localStorage.getItem("uae_phone") || "" : "",
+    address: hasWindow()
+      ? globalThis.localStorage.getItem("uae_address") || ""
+      : "",
+    deliveryAddresses: readStoredDeliveryAddresses(),
+  }));
 
-    return pendingSalesOrder && savedClientSecret ? 3 : 2;
-  });
-  const [customer, setCustomer] = useState<Customer | null>(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("cod");
+  const [customerNote, setCustomerNote] = useState("");
 
-    return readStoredCustomer();
-  });
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    if (typeof window === "undefined") {
-      return [];
-    }
-
-    const cartRaw = globalThis.localStorage.getItem("cart");
-    return cartRaw ? JSON.parse(cartRaw) : [];
-  });
-  const [salesOrder, setSalesOrder] = useState<SalesOrder | null>(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
-
-    const pendingSalesOrder = globalThis.localStorage.getItem("pending_sales_order");
-    const savedClientSecret = globalThis.sessionStorage.getItem("checkout_client_secret");
-
-    if (pendingSalesOrder && savedClientSecret) {
-      return { name: pendingSalesOrder } as SalesOrder;
-    }
-
-    return null;
-  });
-  const [clientSecret, setClientSecret] = useState<string | null>(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
-
-    return globalThis.sessionStorage.getItem("checkout_client_secret");
-  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
-  const [isInitializing, setIsInitializing] = useState(false);
-  const [customerNote, setCustomerNote] = useState<string>("");
-  const [retryCount, setRetryCount] = useState(0);
   const [showAddressWarning, setShowAddressWarning] = useState(false);
-  const [deliveryZone] = useState<string>(() => {
-    if (typeof window === "undefined") {
-      return "";
-    }
-
-    return globalThis.localStorage.getItem("uae_delivery_zone") || "";
-  });
-  const [deliveryCharge] = useState<number>(() => {
-    if (typeof window === "undefined") {
-      return 0;
-    }
-
-    return parseFloat(globalThis.localStorage.getItem("uae_delivery_charge") || "0");
-  });
-
-  // UX Toggle features for smaller layouts
   const [isAddressCollapsed, setIsAddressCollapsed] = useState(true);
   const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(true);
 
-  const [form, setForm] = useState({
-    phone: "",
-    address: "",
-    deliveryAddresses: [
-      { title: "Home", address: "", addressId: "" },
-    ] as DeliveryAddressItem[],
+  const [createPosInvoice] = useCreatePosInvoiceMutation();
+  const [submitPosInvoice] = useSubmitPosInvoiceMutation();
+  const [createPaymentIntent] = useCreatePaymentIntentMutation();
+
+  const { data: paymentModes, isLoading: isLoadingPaymentModes } =
+    useGetModesOfPaymentQuery();
+  const paymentOptions = useMemo(
+    () => toPaymentOptions(paymentModes),
+    [paymentModes]
+  );
+
+  const customerName = customer?.name || getCustomerName() || form.phone;
+  const { data: backendAddresses } = useGetCustomerAddressesQuery(customerName, {
+    skip: !customerName,
   });
 
-  const [createSalesOrder] = useCreateSalesOrderMutation();
-  const [createPaymentIntent] = useCreatePaymentIntentMutation();
-  const [updateSalesOrder] = useUpdateSalesOrderMutation();
-  const [completeDoorstepOrder] = useCompleteDoorstepOrderMutation();
-
-  const hasInitializedPaymentRef = useRef(false);
-  const customerName = customer?.name || getCustomerName() || form.phone;
-  const { data: backendAddresses } = useGetCustomerAddressesQuery(
-    customerName,
-    { skip: !customerName }
+  const total = cartSubtotal(cart);
+  const { vatAmount, grandTotal } = calculateOrderTotals(total, delivery.charge);
+  const items = useMemo(() => buildPosInvoiceItems(cart), [cart]);
+  const taxes = useMemo(
+    () => buildPosInvoiceTaxes(delivery.charge),
+    [delivery.charge]
   );
 
+  const selectedAddress =
+    form.deliveryAddresses.find(
+      (address) => address.addressId === delivery.addressId
+    ) || form.deliveryAddresses.find((address) => address.addressId);
+  const selectedAddressId =
+    delivery.addressId ||
+    selectedAddress?.addressId ||
+    backendAddresses?.[0]?.name ||
+    "";
 
-  const handleCustomerNoteSave = useCallback(
-    async (noteToSave: string = customerNote) => {
-      const salesOrderName =
-        salesOrder?.name?.trim() ||
-        globalThis.localStorage.getItem("pending_sales_order") ||
-        globalThis.localStorage.getItem("sales_order") ||
-        "";
+  const intentAmountRef = useRef<number | null>(null);
+  const isSubmittingRef = useRef(false);
 
-      if (!salesOrderName) {
-        return;
-      }
+  // Keep local state aligned with cart/address changes made elsewhere in the app.
+  useEffect(() => {
+    const refresh = () => {
+      if (isSubmittingRef.current) return;
+      const latestCart = readCart();
+      setCart(latestCart);
+      setDelivery(readDeliveryInfo());
+      setCustomer(readStoredCustomer());
+    };
 
-      try {
-        await updateSalesOrder({
-          salesOrderName,
-          custom_customer_note: noteToSave,
-        }).unwrap();
-      } catch (err) {
-        console.warn("Failed to update sales order note:", err);
-      }
-    },
-    [customerNote, salesOrder?.name, updateSalesOrder]
-  );
+    globalThis.addEventListener(CART_UPDATED, refresh);
+    globalThis.addEventListener(CUSTOMER_PORTAL_UPDATED, refresh);
+    globalThis.addEventListener("storage", refresh);
+
+    return () => {
+      globalThis.removeEventListener(CART_UPDATED, refresh);
+      globalThis.removeEventListener(CUSTOMER_PORTAL_UPDATED, refresh);
+      globalThis.removeEventListener("storage", refresh);
+    };
+  }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
+    if (readCart().length === 0 && !isSubmittingRef.current) {
+      clearPendingSalesOrder();
+      clearPendingCheckout();
+      router.replace("/");
     }
-
-    const cartRaw = globalThis.localStorage.getItem("cart");
-    const parsedCart = cartRaw ? JSON.parse(cartRaw) : [];
-
-    if (parsedCart.length === 0) {
-      router.push("/");
-      return;
-    }
-
-    const savedPhone = globalThis.localStorage.getItem("uae_phone") || "";
-    const savedAddress = globalThis.localStorage.getItem("uae_address") || "";
-    const rawDelivery = globalThis.localStorage.getItem("uae_delivery_addresses");
-
-    let savedDeliveryAddresses: DeliveryAddressItem[];
-    if (rawDelivery) {
-      try {
-        savedDeliveryAddresses = JSON.parse(rawDelivery);
-      } catch {
-        savedDeliveryAddresses = [
-          {
-            title: "Home",
-            address:
-              globalThis.localStorage.getItem("uae_delivery_address") ||
-              globalThis.localStorage.getItem("uae_address") ||
-              "",
-            addressId:
-              globalThis.localStorage.getItem("uae_delivery_address_id") ||
-              globalThis.localStorage.getItem("uae_address_id") ||
-              "",
-          },
-        ];
-      }
-    } else {
-      savedDeliveryAddresses = [
-        {
-          title: "Home",
-          address:
-            globalThis.localStorage.getItem("uae_delivery_address") ||
-            globalThis.localStorage.getItem("uae_address") ||
-            "",
-          addressId:
-            globalThis.localStorage.getItem("uae_delivery_address_id") ||
-            globalThis.localStorage.getItem("uae_address_id") ||
-            "",
-        },
-      ];
-    }
-
-    const frameId = requestAnimationFrame(() => {
-      setCustomer(readStoredCustomer());
-      setCart(parsedCart);
-      setForm({
-        phone: savedPhone,
-        address: savedAddress,
-        deliveryAddresses: savedDeliveryAddresses,
-      });
-    });
-
-    return () => cancelAnimationFrame(frameId);
   }, [router]);
 
   useEffect(() => {
-    if (!backendAddresses) {
-      return;
-    }
+    if (!backendAddresses) return;
 
     const syncedAddresses: DeliveryAddressItem[] = backendAddresses.map(
       (address, index) => ({
@@ -316,396 +294,167 @@ const CheckoutPage = () => {
       })
     );
 
-    const currentSelectedId = globalThis.localStorage?.getItem("uae_delivery_address_id") || "";
-    if (currentSelectedId) {
+    const selectedId = readDeliveryInfo().addressId;
+    if (selectedId) {
       syncedAddresses.sort((a, b) => {
-        if (a.addressId === currentSelectedId) return -1;
-        if (b.addressId === currentSelectedId) return 1;
+        if (a.addressId === selectedId) return -1;
+        if (b.addressId === selectedId) return 1;
         return 0;
       });
     }
 
-    const storedDeliveryAddressesRaw = globalThis.localStorage.getItem(
-      "uae_delivery_addresses"
-    );
-    const storedDeliveryAddresses = storedDeliveryAddressesRaw
-      ? (() => {
-        try {
-          return JSON.parse(
-            storedDeliveryAddressesRaw
-          ) as DeliveryAddressItem[];
-        } catch {
-          return form.deliveryAddresses;
-        }
-      })()
-      : form.deliveryAddresses;
-
-    const currentSnapshot = JSON.stringify(
-      storedDeliveryAddresses.map((item) => ({
-        title: item.title,
-        address: item.address,
-        addressId: item.addressId,
-      }))
-    );
-    const nextSnapshot = JSON.stringify(
-      syncedAddresses.map((item) => ({
-        title: item.title,
-        address: item.address,
-        addressId: item.addressId,
-      }))
-    );
-
-    if (currentSnapshot === nextSnapshot) {
-      return;
-    }
+    const nextSnapshot = JSON.stringify(syncedAddresses);
+    const currentSnapshot = JSON.stringify(readStoredDeliveryAddresses());
+    if (nextSnapshot === currentSnapshot) return;
 
     const frameId = requestAnimationFrame(() => {
-      setForm((prev) => ({
-        ...prev,
+      setForm((previous) => ({
+        ...previous,
         deliveryAddresses: syncedAddresses,
-        address: syncedAddresses[0]?.address || prev.address,
+        address: syncedAddresses[0]?.address || previous.address,
       }));
 
       writeDeliveryAddresses(syncedAddresses);
 
-      if (syncedAddresses[0]) {
+      if (!selectedId && syncedAddresses[0]) {
         saveDeliveryAddress(
           syncedAddresses[0].address,
           syncedAddresses[0].addressId
         );
-      } else {
-        saveDeliveryAddress("", "");
       }
     });
 
     return () => cancelAnimationFrame(frameId);
-  }, [backendAddresses, form.deliveryAddresses]);
+  }, [backendAddresses]);
 
-  const total = cart.reduce(
-    (sum: number, entry: CartItem) =>
-      sum + (entry.item?.discountedPrice || 0) * (entry.qty || 1),
-    0
-  );
-  const grandTotal = total + deliveryCharge;
-
-  const handleAutoProceed = useCallback(async () => {
-    if (isInitializing || clientSecret) {
-      return;
-    }
-
-    setIsInitializing(true);
-    setOrderError(null);
-
-    if (!cart || cart.length === 0) {
-      router.push("/");
-      return;
-    }
-
-    const currentSelectedId = globalThis.localStorage?.getItem("uae_delivery_address_id") || "";
-    const selectedAddressObj = form.deliveryAddresses.find(a => a.addressId === currentSelectedId) || form.deliveryAddresses[0];
-    const primaryAddress = selectedAddressObj?.address?.trim();
-    if (!primaryAddress) {
-      setOrderError("Please select a delivery address before proceeding.");
-      setIsInitializing(false);
-      setShowAddressWarning(true);
-      return;
-    }
-
-    try {
-      const customerName = customer?.name || getCustomerName() || form.phone;
-      const deliveryDate = new Date().toISOString().split("T")[0];
-      const explicitSelectedId =
-        globalThis.localStorage?.getItem("uae_delivery_address_id") ||
-        globalThis.localStorage?.getItem("uae_address_id") ||
-        "";
-
-      const primaryDeliveryAddressId = explicitSelectedId || form.deliveryAddresses[0]?.addressId || "";
-
-      const items = cart
-        .map((cartEntry: CartItem) => {
-          const item_code = cartEntry.item?.baseItemCode || cartEntry.item?.id;
-          const item_name =
-            cartEntry.item?.variationTitle && cartEntry.item?.baseTitle
-              ? `${cartEntry.item.baseTitle} - ${cartEntry.item.variationTitle}`
-              : cartEntry.item?.title ||
-                cartEntry.item?.item_name ||
-                cartEntry.item?.baseItem?.name ||
-                cartEntry.name;
-          const qty = Number(cartEntry.qty || 1);
-          const rate = Number(
-            cartEntry.item?.discountedPrice || cartEntry.price || 0
-          );
-
-          const selectedAddOns = Array.isArray(cartEntry.addon?.selectedAddOns)
-            ? cartEntry.addon.selectedAddOns
-            : [];
-          const selectedAddOnNames = selectedAddOns
-            .map((addOn: { name?: unknown }) =>
-              typeof addOn.name === "string" ? addOn.name.trim() : ""
-            )
-            .filter((name: string) => Boolean(name));
-
-          let custom_selected_addons = "";
-
-          if (selectedAddOnNames.length > 0) {
-            custom_selected_addons = selectedAddOnNames.join(", ");
-          } else if (typeof cartEntry.addon?.title === "string") {
-            const normalizedTitle = cartEntry.addon.title.trim();
-
-            if (
-              normalizedTitle &&
-              normalizedTitle.toLowerCase() !== "standard portion"
-            ) {
-              custom_selected_addons = normalizedTitle
-                .split(",")
-                .map((name: string) => name.trim())
-                .filter((name: string) => Boolean(name))
-                .join(", ");
-            }
-          }
-
-          if (!item_code) return null;
-
-          return {
-            item_code,
-            item_name,
-            qty,
-            rate,
-            amount: rate * qty,
-            warehouse: "Finished Goods - P",
-            delivery_date: deliveryDate,
-            uom: "Nos",
-            custom_selected_addons,
-            prep_time: Number.isFinite(Number(cartEntry.item?.prep_time))
-              ? Number(cartEntry.item.prep_time)
-              : undefined,
-            is_free_item: 0 as const,
-          };
-        })
-        .filter((item): item is NonNullable<typeof item> => item !== null);
-
-      if (!items.length) {
-        setOrderError(
-          "No valid items in cart. Please add items before checkout."
-        );
-        setIsInitializing(false);
-        return;
-      }
-
-      // Read the latest zone/charge from localStorage at order time in case
-      // the user changed their address after the initial component mount.
-      const latestDeliveryZone =
-        globalThis.localStorage?.getItem("uae_delivery_zone") || deliveryZone;
-      const latestDeliveryCharge =
-        parseFloat(globalThis.localStorage?.getItem("uae_delivery_charge") ?? "0") || deliveryCharge;
-      const latestGrandTotal = total + latestDeliveryCharge;
-
-      const orderPayload = {
-        doctype: "Sales Order",
-        customer: customerName,
-        transaction_date: deliveryDate,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        delivery_date: deliveryDate,
-        company: process.env.NEXT_PUBLIC_ERP_COMPANY_NAME || "Kabab Al Rayhan",
-        selling_price_list: "Standard Selling",
-        currency: "AED",
-        // order_type: orderType,
-        price_list_currency: "AED",
-        conversion_rate: 1,
-        plc_conversion_rate: 1,
-        customer_address: primaryDeliveryAddressId || undefined,
-        shipping_address_name: primaryDeliveryAddressId || undefined,
-        custom_customer_note: customerNote,
-        custom_delivery_zone: latestDeliveryZone || undefined,
-        custom_delivery_charge: latestDeliveryCharge || undefined,
-        taxes_and_charges: "Food Tax 5%",
-        taxes: [
-          {
-            charge_type: "On Net Total",
-            account_head: "Food Tax 5% - P",
-            description: "VAT 5%",
-            rate: 5,
-            included_in_print_rate: 1 as const,
-          },
-        ],
-        items,
-      } satisfies CreateSalesOrderRequest;
-
-      const order = await createSalesOrder(orderPayload).unwrap();
-      const salesOrderName = order?.name?.trim();
-
-      if (!salesOrderName) {
-        setOrderError("Order creation failed. No order name returned.");
-        setIsInitializing(false);
-        return;
-      }
-
-      setSalesOrder(order);
-      if (salesOrderName && globalThis.localStorage) {
-        globalThis.localStorage.setItem("pending_sales_order", salesOrderName);
-        globalThis.localStorage.setItem("sales_order", salesOrderName);
-      }
-
-      const intentResult = await createPaymentIntent({
-        amount: latestGrandTotal,
-        currency: "aed",
-        sales_order: salesOrderName,
-      }).unwrap();
-
-      setClientSecret(intentResult.client_secret);
-      if (globalThis.sessionStorage) {
-        globalThis.sessionStorage.setItem(
-          "checkout_client_secret",
-          intentResult.client_secret
-        );
-      }
-      setStep(3);
-      setRetryCount(0);
-    } catch (err: unknown) {
-      console.error("Setup Error:", err);
-      const errorMessage =
-        (typeof err === "object" && err !== null && "data" in err &&
-          typeof (err as { data?: { message?: string } }).data?.message === "string"
-          ? (err as { data?: { message?: string } }).data?.message
-          : undefined) || "Failed to initialize order. Please try again.";
-      setOrderError(errorMessage);
-
-      if (retryCount < 3) {
-        setRetryCount((prev) => prev + 1);
-      }
-    } finally {
-      setIsInitializing(false);
-    }
-  }, [
-    cart,
-    clientSecret,
-    createPaymentIntent,
-    createSalesOrder,
-    customer,
-    customerNote,
-    deliveryCharge,
-    deliveryZone,
-    form.deliveryAddresses,
-    form.phone,
-    isInitializing,
-    retryCount,
-    router,
-    total,
-  ]);
-
+  // Online payments fetch Stripe payment intent for the card / wallets element.
   useEffect(() => {
-    if (hasInitializedPaymentRef.current) {
-      return;
-    }
+    if (paymentMethod !== "card_online" || grandTotal <= 0) return;
+    if (intentAmountRef.current === grandTotal) return;
 
-    if (clientSecret && salesOrder) {
-      return;
-    }
+    let isStale = false;
+    intentAmountRef.current = grandTotal;
 
-    if (!customerName || !cart.length || salesOrder || isInitializing) {
-      return;
-    }
+    (async () => {
+      try {
+        console.log("[Checkout] Requesting Stripe PaymentIntent for amount:", grandTotal);
+        const intent = await createPaymentIntent({
+          amount: grandTotal,
+          currency: "aed",
+        }).unwrap();
 
-    const primaryAddress = form.deliveryAddresses[0]?.address?.trim();
-    if (!primaryAddress) {
-      return;
-    }
+        if (isStale) return;
 
-    hasInitializedPaymentRef.current = true;
-    const frameId = requestAnimationFrame(() => {
-      void handleAutoProceed();
-    });
+        console.log("[Checkout] Received Stripe PaymentIntent:", intent);
+        setClientSecret(intent.client_secret);
+        globalThis.sessionStorage?.setItem(
+          "checkout_client_secret",
+          intent.client_secret
+        );
+      } catch (intentError) {
+        console.error("[Checkout] Failed to prepare Stripe PaymentIntent:", intentError);
+        intentAmountRef.current = null;
+        setOrderError(
+          errorMessageOf(intentError, "Payment could not be prepared. Please retry.")
+        );
+      }
+    })();
 
-    return () => cancelAnimationFrame(frameId);
-  }, [
-    customerName,
-    cart.length,
-    salesOrder,
-    clientSecret,
-    isInitializing,
-    form.deliveryAddresses,
-    handleAutoProceed,
-  ]);
+    return () => {
+      isStale = true;
+    };
+  }, [createPaymentIntent, grandTotal, paymentMethod]);
 
-  let paymentSection: ReactNode = null;
+  const handleOrderSubmission = useCallback(
+    async (methodType: PaymentMethodType) => {
+      if (!customerName || items.length === 0) {
+        setOrderError("No items in cart to order.");
+        return;
+      }
 
-  if (orderError) {
-    paymentSection = (
-      <PaymentErrorSection
-        errorMessage={orderError}
-        isInitializing={isInitializing}
-        onRetry={() => {
-          hasInitializedPaymentRef.current = false;
-          setOrderError(null);
-          handleAutoProceed();
-        }}
-      />
-    );
-  } else {
-    paymentSection = (
-      <div className="space-y-2">
-        {isInitializing || !clientSecret ? (
-          <div className="flex flex-col items-center py-6">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-stone-100 border-t-red-600 mb-3" />
-            <p className="text-stone-400 font-bold text-[9px] tracking-widest">
-              Securing Payment Line...
-            </p>
-          </div>
-        ) : (
-          <div className="animate-in fade-in duration-500">
-            {stripePromise && (
-              <Elements
-                stripe={stripePromise}
-                options={{
-                  clientSecret: clientSecret || undefined,
-                  appearance: {
-                    theme: "stripe",
-                    variables: { colorPrimary: "#dc2626", borderRadius: "16px" },
-                  },
-                  loader: "auto",
-                }}
-                key={clientSecret || "doorstep-active"}
-              >
-                <DoorstepPaymentWrapper
-                  clientSecret={clientSecret || ""}
-                  total={grandTotal}
-                  salesOrder={salesOrder}
-                  onBack={() => setStep(2)}
-                  onSuccess={() => {
-                    clearPendingCheckout();
-                    clearPendingSalesOrder();
-                    router.push("/thank-you");
-                  }}
-                  onCodSubmit={async (methodType, details) => {
-                    try {
-                      const orderName = salesOrder?.name;
-                      if (!orderName) throw new Error("Missing sales order name");
+      if (!selectedAddressId) {
+        setOrderError("Please select a delivery address before proceeding.");
+        setShowAddressWarning(true);
+        return;
+      }
 
-                      await completeDoorstepOrder({
-                        salesOrderName: orderName,
-                        paymentMethod: methodType,
-                        changeRequired: details?.changeRequired || "Exact Amount",
-                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                      }).unwrap();
-                      clearPendingCheckout();
-                      clearPendingSalesOrder();
-                      router.push("/thank-you");
-                    } catch (err) {
-                      console.error("Fulfillment selection update failed:", err);
-                    }
-                  }}
-                />
-              </Elements>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  }
+      setIsSubmitting(true);
+      setOrderError(null);
 
-  const selectedAddressId = globalThis.localStorage?.getItem("uae_delivery_address_id") ||
-    globalThis.localStorage?.getItem("uae_address_id") ||
-    "";
+      try {
+        const modeName = resolveModeName(methodType, paymentOptions);
+        const payload: CreatePosInvoiceRequest = {
+          customer: customerName,
+          customer_name: customerName,
+          pos_profile: "website",
+          company:
+            process.env.NEXT_PUBLIC_ERP_COMPANY_NAME ||
+            "Kabab Al Rayhan Restaurant & Bakery SPS LLC",
+          customer_address: selectedAddressId || undefined,
+          shipping_address_name: selectedAddressId || undefined,
+          customer_note: customerNote || undefined,
+          items,
+          taxes,
+          payments: [
+            {
+              mode_of_payment: modeName,
+              amount: grandTotal,
+            },
+          ],
+        };
+
+        console.log("[Checkout] Sending POS Invoice payload to Frappe:", payload);
+        isSubmittingRef.current = true;
+        const createdInvoice = await createPosInvoice(payload).unwrap();
+        console.log("[Checkout] Received POS Invoice instance from Frappe:", createdInvoice);
+        const invoiceName = createdInvoice?.name || "";
+
+        if (methodType === "card_online" && invoiceName) {
+          try {
+            console.log("[Checkout] Submitting POS Invoice docstatus 1 for online payment:", invoiceName);
+            const submitResult = await submitPosInvoice(invoiceName).unwrap();
+            console.log("[Checkout] POS Invoice submit result:", submitResult);
+          } catch (submitDocErr) {
+            console.warn(
+              "[Checkout] Client-side submit of POS Invoice deferred to webhook:",
+              submitDocErr
+            );
+          }
+        }
+
+        saveCart([]);
+        clearPendingCheckout();
+        clearPendingSalesOrder();
+
+        if (invoiceName) {
+          router.replace(`/thank-you?order=${encodeURIComponent(invoiceName)}`);
+        } else {
+          router.replace("/thank-you");
+        }
+      } catch (submitError) {
+        isSubmittingRef.current = false;
+        console.error("[Checkout] Order submission failed:", submitError);
+        setOrderError(
+          errorMessageOf(submitError, "We couldn't submit your order. Please retry.")
+        );
+        throw submitError;
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [
+      createPosInvoice,
+      submitPosInvoice,
+      customerName,
+      customerNote,
+      grandTotal,
+      items,
+      paymentOptions,
+      router,
+      selectedAddressId,
+      taxes,
+    ]
+  );
 
   const summaryCart = cart.map((entry) => ({
     item: {
@@ -730,21 +479,77 @@ const CheckoutPage = () => {
     addon: entry.addon ? { title: entry.addon.title || "" } : undefined,
   }));
 
-  
+  const paymentBody = (
+    <DoorstepPaymentWrapper
+      total={grandTotal}
+      options={paymentOptions}
+      isLoadingOptions={isLoadingPaymentModes}
+      paymentMethod={paymentMethod}
+      onMethodChange={setPaymentMethod}
+      isSubmitting={isSubmitting}
+      isOnlineReady={Boolean(clientSecret && stripePromise)}
+      onCodSubmit={async (methodType) => {
+        await handleOrderSubmission(methodType);
+      }}
+      onOnlineSubmit={async () => {
+        await handleOrderSubmission("card_online");
+      }}
+    />
+  );
+
+  let paymentSection = paymentBody;
+
+  if (!selectedAddressId) {
+    paymentSection = (
+      <div className="rounded-2xl bg-stone-50 p-6 text-center">
+        <p className="text-sm font-medium text-stone-700">
+          Choose a delivery address to continue.
+        </p>
+        <button
+          type="button"
+          onClick={() => router.push("/delivery-address")}
+          className="mt-4 h-11 rounded-full bg-red-600 px-6 text-sm font-semibold text-white transition-all hover:bg-red-700"
+        >
+          Select address
+        </button>
+      </div>
+    );
+  } else if (orderError) {
+    paymentSection = (
+      <PaymentErrorSection
+        errorMessage={orderError}
+        isInitializing={isSubmitting}
+        onRetry={() => {
+          setOrderError(null);
+        }}
+      />
+    );
+  } else if (paymentMethod === "card_online" && clientSecret && stripePromise) {
+    paymentSection = (
+      <Elements
+        stripe={stripePromise}
+        options={{
+          clientSecret,
+          appearance: {
+            theme: "stripe",
+            variables: { colorPrimary: "#dc2626", borderRadius: "16px" },
+          },
+          loader: "auto",
+        }}
+        key={clientSecret}
+      >
+        {paymentBody}
+      </Elements>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
-      
-
       <main className="mx-auto max-w-7xl px-6 py-10 md:py-14 lg:py-16">
-        <CheckoutStepper currentStep={step} />
+        <CheckoutStepper currentStep={3} />
 
-        <div className="grid  lg:grid-cols-2 lg:items-start flex flex-col md:flex-col lg:flex-row">
-
-          {/* Left Section (Form & Payment) - Appears SECOND on mobile/tablet, FIRST on desktop */}
+        <div className="grid lg:grid-cols-2 lg:items-start flex flex-col md:flex-col lg:flex-row">
           <div className="space-y-4 order-2 lg:order-1">
-
-            {/* COLLAPSIBLE DELIVERY ADDRESS BLOCK */}
             <div className="bg-white overflow-hidden pr-4">
               <button
                 type="button"
@@ -766,39 +571,42 @@ const CheckoutPage = () => {
                 </span>
               </button>
 
-              {/* Outer Grid Wrapper (Controls the animation) */}
               <div
-                className={`grid transition-all duration-700 ease-in-out lg:block ${isAddressCollapsed
-                  ? "grid-rows-[0fr] opacity-0 pointer-events-none lg:opacity-100 lg:pointer-events-auto"
-                  : "grid-rows-[1fr] opacity-100"
-                  }`}
+                className={`grid transition-all duration-700 ease-in-out lg:block ${
+                  isAddressCollapsed
+                    ? "grid-rows-[0fr] opacity-0 pointer-events-none lg:opacity-100 lg:pointer-events-auto"
+                    : "grid-rows-[1fr] opacity-100"
+                }`}
               >
-                {/* Inner Child Wrapper (Must use unconditional block/overflow-hidden for grid track calculation) */}
                 <div className="block overflow-hidden min-h-0 px-2 py-4 lg:p-0">
-                  <CheckoutForm form={form} setForm={setForm} error={null} selectedAddressId={selectedAddressId} />
+                  <CheckoutForm
+                    form={form}
+                    setForm={setForm}
+                    error={null}
+                    selectedAddressId={selectedAddressId}
+                  />
                 </div>
               </div>
             </div>
 
-            {/* PAYMENT COMPONENT (Always explicitly visible) */}
-            {(isInitializing || clientSecret || orderError) && (
-              <section className="overflow-hidden bg-white animate-in fade-in zoom-in-95 duration-700">
-                <div className="">
-                  <h2 className=" flex items-center gap-3 text-xl font-medium tracking-wide text-stone-900">
-                    <span className="h-6 w-1 rounded-full bg-red-600" />
-                    Payment
-                  </h2>
-                </div>
+            <section className="overflow-hidden bg-white animate-in fade-in zoom-in-95 duration-700">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="flex items-center gap-3 text-xl font-medium tracking-wide text-stone-900">
+                  <span className="h-6 w-1 rounded-full bg-red-600" />
+                  Payment
+                </h2>
+                {isSubmitting && (
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">
+                    Submitting order...
+                  </span>
+                )}
+              </div>
 
-                <div className="pr-4 py-2">{paymentSection}</div>
-              </section>
-            )}
+              <div className="pr-4 py-2">{paymentSection}</div>
+            </section>
           </div>
 
-          {/* Right Section (Order Summary & Note) - Appears FIRST on mobile/tablet, SECOND on desktop */}
           <div className="lg:sticky lg:top-6 order-1 lg:order-2">
-
-            {/* COLLAPSIBLE ORDER SUMMARY & NOTES BLOCK */}
             <div className="bg-white overflow-hidden">
               <button
                 type="button"
@@ -824,48 +632,46 @@ const CheckoutPage = () => {
                 </span>
               </button>
 
-              {/* Smooth Height Transition Wrapper */}
               <div
-                className={`grid transition-all duration-700 ease-in-out lg:block ${isSummaryCollapsed
-                  ? "grid-rows-[0fr] opacity-0 pointer-events-none lg:opacity-100 lg:pointer-events-auto"
-                  : "grid-rows-[1fr] opacity-100"
-                  }`}
+                className={`grid transition-all duration-700 ease-in-out lg:block ${
+                  isSummaryCollapsed
+                    ? "grid-rows-[0fr] opacity-0 pointer-events-none lg:opacity-100 lg:pointer-events-auto"
+                    : "grid-rows-[1fr] opacity-100"
+                }`}
               >
                 <div className="overflow-hidden min-h-0">
-                  <OrderSummary cart={summaryCart} total={total} deliveryCharge={deliveryCharge} />
+                  <OrderSummary
+                    cart={summaryCart}
+                    total={total}
+                    deliveryCharge={delivery.charge}
+                    vatAmount={vatAmount}
+                    grandTotal={grandTotal}
+                  />
 
                   <CustomerNote
                     note={customerNote}
-                    onNoteChange={(value) => {
-                      setCustomerNote(value);
-                    }}
+                    onNoteChange={setCustomerNote}
                     onBlurSave={() => {
-                      void handleCustomerNoteSave(customerNote);
+                      // Note is preserved in local state and sent upon submission
                     }}
                   />
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </main>
 
-      {/* Address Warning Dialog */}
       {showAddressWarning && (
         <ConfirmDialog
           open={true}
           onClose={() => setShowAddressWarning(false)}
           onConfirm={() => {
             setShowAddressWarning(false);
-            setIsAddressCollapsed(false); // Auto-expand when warning prompts action
-            const addressSection = document.querySelector(
-              "[data-address-section]"
-            );
-            addressSection?.scrollIntoView({
-              behavior: "smooth",
-              block: "center",
-            });
+            setIsAddressCollapsed(false);
+            document
+              .querySelector("[data-address-section]")
+              ?.scrollIntoView({ behavior: "smooth", block: "center" });
           }}
           title="Delivery Address Required"
           message="Please select a delivery address before proceeding to payment. We need to know where to deliver your delicious order!"
