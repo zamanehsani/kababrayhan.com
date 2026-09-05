@@ -143,7 +143,7 @@ export async function fulfillPaidSalesOrder(
           body: {
             ...paymentDoc,
             doctype: "Payment Entry",
-            mode_of_payment: "Stripe",
+            mode_of_payment: "Online",
             reference_no: referenceNo || salesOrderName,
             reference_date: postingDate,
             docstatus: 1,

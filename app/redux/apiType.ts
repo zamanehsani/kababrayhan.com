@@ -252,52 +252,6 @@ export interface ModeOfPayment {
   enabled?: number;
 }
 
-export interface PosInvoicePayment {
-  mode_of_payment: string;
-  amount: number;
-}
-
-export interface CreatePosInvoiceItem {
-  item_code: string;
-  item_name?: string;
-  qty: number;
-  rate?: number;
-  custom_selected_addons?: string;
-  prep_time?: number;
-  is_free_item?: 0 | 1;
-}
-
-export interface CreatePosInvoiceTaxLine {
-  charge_type: string;
-  account_head: string;
-  description: string;
-  rate?: number;
-  tax_amount?: number;
-}
-
-export interface CreatePosInvoiceRequest {
-  doctype?: string;
-  customer: string;
-  customer_name?: string;
-  pos_profile: string;
-  company: string;
-  customer_address?: string;
-  shipping_address_name?: string;
-  customer_note?: string;
-  items: CreatePosInvoiceItem[];
-  taxes: CreatePosInvoiceTaxLine[];
-  payments: PosInvoicePayment[];
-}
-
-export interface PosInvoice {
-  name: string;
-  customer: string;
-  customer_name: string;
-  grand_total: number;
-  status: string;
-  docstatus: number;
-}
-
 export interface PosOpeningEntry {
   name: string;
   period_start_date?: string;
@@ -491,7 +445,6 @@ export interface CreatePaymentIntentRequest {
   amount: number;
   currency?: string;
   sales_order?: string;
-  pos_invoice?: string;
 }
 
 export interface PaymentIntentResponse {

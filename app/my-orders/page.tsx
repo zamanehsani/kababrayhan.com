@@ -16,33 +16,6 @@ import {
 } from "../lib/customerPortal";
 import type { SalesOrderSummary } from "../redux/apiType";
 
-
-// kot?.status -> "Pending" | "Preparing" | "Ready" | "Completed"
-const getKitchenStatusDisplay = (kotStatus?: string) => {
-  switch (kotStatus?.toLowerCase()) {
-    case "pending":
-      return {
-        color: "bg-blue-50 border-blue-200 text-blue-700",
-      };
-    case "preparing":
-      return {
-        color: "bg-yellow-50 border-red-200 text-red-700",
-      };
-    case "ready":
-      return {
-        color: "bg-green-50 border-green-200 text-green-700",
-      };
-    case "completed":
-      return {
-        color: "bg-slate-50 border-slate-200 text-slate-700",
-      };
-    default:
-      return {
-        color: "bg-slate-50 border-slate-200 text-slate-700",
-      };
-  }
-};
-
 const KITCHEN_PROGRESS_STEPS = [
   { key: "pending", label: "Pending" },
   { key: "preparing", label: "Cooking" },

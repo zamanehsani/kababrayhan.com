@@ -8,8 +8,6 @@ import type {
   CreateCustomerRequest,
   CreateAddressRequest,
   CreateAddressResponse,
-  CreatePosInvoiceRequest,
-  PosInvoice,
   UpdateAddressRequest,
   UpdateAddressResponse,
   CreatePaymentIntentRequest,
@@ -514,29 +512,6 @@ export const erpApi = createApi({
       },
     }),
 
-    createPosInvoice: builder.mutation<PosInvoice, CreatePosInvoiceRequest>({
-      query: (body) => ({
-        url: `${API_RESOURCE_URL}POS Invoice`,
-        method: "POST",
-        body: {
-          doctype: "POS Invoice",
-          ...body,
-        },
-      }),
-      transformResponse: (response: { data: PosInvoice }) => response.data,
-    }),
-
-    submitPosInvoice: builder.mutation<{ name: string; docstatus: number }, string>({
-      query: (invoiceName) => ({
-        url: `${API_RESOURCE_URL}POS Invoice/${encodeURIComponent(invoiceName)}`,
-        method: "PUT",
-        body: { docstatus: 1 },
-      }),
-      transformResponse: (response: {
-        data: { name: string; docstatus: number };
-      }) => response.data,
-    }),
-
     submitSalesOrder: builder.mutation<{ name: string; docstatus: number }, string>({
       query: (salesOrderName) => ({
         url: `${API_RESOURCE_URL}Sales Order/${encodeURIComponent(salesOrderName)}`,
@@ -679,8 +654,6 @@ export const {
   useCreateSalesOrderMutation,
   useUpdateSalesOrderMutation,
   useSubmitSalesOrderMutation,
-  useCreatePosInvoiceMutation,
-  useSubmitPosInvoiceMutation,
   useCreatePaymentIntentMutation,
   useGetItemsQuery,
   useGetItemVariantsQuery,

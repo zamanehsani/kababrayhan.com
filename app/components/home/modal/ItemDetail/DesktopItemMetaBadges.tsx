@@ -1,15 +1,14 @@
-import { Clock, Flame, Star } from "lucide-react";
+import { Clock, Flame } from "lucide-react";
 
 interface DesktopItemMetaBadgesProps {
   cal: string;
   time: string;
-  rating: string;
+  rating?: string;
 }
 
 export function DesktopItemMetaBadges({
   cal,
   time,
-  rating,
 }: Readonly<DesktopItemMetaBadgesProps>) {
   return (
     <div className="mb-6 flex w-fit items-center gap-5 rounded-2xl border border-slate-100/60 bg-slate-50 px-5 py-3 text-sm font-medium tracking-wide text-slate-500">

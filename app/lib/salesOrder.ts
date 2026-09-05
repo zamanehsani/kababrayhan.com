@@ -1,6 +1,4 @@
 import type {
-  CreatePosInvoiceItem,
-  CreatePosInvoiceTaxLine,
   CreateSalesOrderItem,
   CreateSalesOrderTaxLine,
 } from "@/app/redux/apiType";
@@ -48,31 +46,6 @@ export const buildSalesOrderTaxes = (
       charge_type: "Actual",
       account_head: DELIVERY_FEE_ACCOUNT_HEAD,
       description: "Delivery Fee",
-      tax_amount: deliveryCharge,
-    });
-  }
-
-  return taxes;
-};
-
-export const buildPosInvoiceTaxes = (
-  deliveryCharge: number
-): CreatePosInvoiceTaxLine[] => {
-  const taxes: CreatePosInvoiceTaxLine[] = [
-    {
-      charge_type: "On Net Total",
-      account_head: VAT_ACCOUNT_HEAD,
-      description: "Food Tax 5%",
-      rate: 5,
-    },
-  ];
-
-  if (deliveryCharge > 0) {
-    taxes.push({
-      charge_type: "Actual",
-      account_head: DELIVERY_FEE_ACCOUNT_HEAD,
-      description: "Delivery Fee",
-      rate: deliveryCharge,
       tax_amount: deliveryCharge,
     });
   }
@@ -131,32 +104,6 @@ export const buildSalesOrderItems = (
       };
     })
     .filter((item): item is CreateSalesOrderItem => item !== null);
-
-export const buildPosInvoiceItems = (
-  cart: CheckoutCartEntry[]
-): CreatePosInvoiceItem[] =>
-  cart
-    .map((entry): CreatePosInvoiceItem | null => {
-      const item_code = entry.item?.baseItemCode || entry.item?.id;
-      if (!item_code) return null;
-
-      const item_name =
-        entry.item?.variationTitle && entry.item?.baseTitle
-          ? `${entry.item.baseTitle} - ${entry.item.variationTitle}`
-          : entry.item?.title || entry.item?.item_name || entry.name;
-
-      const prepTime = Number(entry.item?.prep_time);
-
-      return {
-        item_code: String(item_code),
-        item_name,
-        qty: Number(entry.qty || 1),
-        rate: Number(entry.item?.discountedPrice || entry.price || 0),
-        custom_selected_addons: buildSelectedAddons(entry),
-        prep_time: Number.isFinite(prepTime) ? prepTime : 0,
-      };
-    })
-    .filter((item): item is CreatePosInvoiceItem => item !== null);
 
 export const cartSubtotal = (cart: CheckoutCartEntry[]) =>
   cart.reduce(

@@ -23,7 +23,7 @@ interface DoorstepPaymentWrapperProps {
     details?: { changeRequired?: string }
   ) => Promise<void>;
   onCreateDraftOrder: () => Promise<string>;
-  onSubmitPaidOrder: (invoiceName: string) => Promise<void>;
+  onSubmitPaidOrder: (orderName: string) => Promise<void>;
 }
 
 export const DoorstepPaymentWrapper: React.FC<DoorstepPaymentWrapperProps> = ({

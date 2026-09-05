@@ -24,7 +24,6 @@ export function DesktopItemDetailModal({
     variationGroups,
     addOnGroups,
     resolvedSelections,
-    selectedCount,
     selectedAddOns,
     selectedAddOnPrice,
     selectedVariantItem,

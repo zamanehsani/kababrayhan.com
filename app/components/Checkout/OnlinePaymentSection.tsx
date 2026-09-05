@@ -26,7 +26,7 @@ interface OnlinePaymentSectionProps {
   clientSecret: string;
   isSubmitting?: boolean;
   onCreateDraftOrder: () => Promise<string>;
-  onSubmitPaidOrder: (invoiceName: string) => Promise<void>;
+  onSubmitPaidOrder: (orderName: string) => Promise<void>;
 }
 
 /** Stripe wallets (Apple Pay / Google Pay / Link) plus the card form. */
