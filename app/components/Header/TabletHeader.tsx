@@ -3,7 +3,6 @@ import {
   Search,
   X,
   Home,
-  ClipboardList,
   User,
   LogOut,
   UtensilsCrossed,
@@ -60,12 +59,6 @@ export default function TabletHeader() {
       href: "/",
       label: "Home",
       icon: <Home size={16} />,
-    },
-    {
-      id: "orders",
-      href: "/my-orders",
-      label: "Orders",
-      icon: <ClipboardList size={16} />,
     },
   ];
 
@@ -197,16 +190,6 @@ export default function TabletHeader() {
       globalThis.removeEventListener("openCartDrawer", refreshCartBadge);
     };
   }, [refreshCartBadge, refreshPortalState]);
-
-  const openVerificationFlowFor = (route: string) => {
-    if (portalState.isVerified) {
-      router.push(route);
-      return;
-    }
-
-    setPendingRoute(route);
-    setShowPhoneModal(true);
-  };
 
   const handlePhoneModalClose = (phoneJustSaved?: string) => {
     setShowPhoneModal(false);
@@ -367,16 +350,10 @@ export default function TabletHeader() {
                 key={item.id}
                 onClick={() => {
                   setIsSearchOpen(false);
-                  if (item.id === "orders") {
-                    openVerificationFlowFor(item.href);
-                    return;
-                  }
-
                   router.push(item.href);
                 }}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold tracking-wide transition-all ${
-                  (item.id === "home" && isHomeRoute) ||
-                  (item.id === "orders" && pathname.startsWith("/my-orders"))
+                  item.id === "home" && isHomeRoute
                     ? "bg-red-600 text-white shadow-sm"
                     : "text-slate-500 hover:text-slate-800"
                 }`}

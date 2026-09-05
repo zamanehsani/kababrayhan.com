@@ -1,7 +1,6 @@
 "use client";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  StickyNote,
   Search,
   ChevronDown,
   Home,
@@ -63,7 +62,6 @@ export default function DesktopHeader({
 
   const desktopNavItems = [
     { id: "home", href: "/", label: "Home", icon: <Home size={16} /> },
-    { id: "orders", href: "/my-orders", label: "My Orders", icon: <StickyNote size={16} /> },
   ];
 
   const [logout] = useLogoutMutation();

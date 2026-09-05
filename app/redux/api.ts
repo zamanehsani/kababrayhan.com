@@ -18,10 +18,8 @@ import type {
   FullItemResponse,
   Item,
   ItemDetails,
-  KitchenOrderTicket,
   ModeOfPayment,
   PaymentIntentResponse,
-  PosOpeningEntry,
   SalesOrder,
   SalesOrderDetails,
   SalesOrderSummary,
@@ -450,14 +448,6 @@ export const erpApi = createApi({
       transformResponse: (response: { data: SalesOrderDetails }) =>
         response.data,
     }),
-    // get kitchen order ticket details
-    getKitchenOrderTicket: builder.query<KitchenOrderTicket, string>({
-      query: (kotName) => ({
-        url: `${API_RESOURCE_URL}Kitchen Order Ticket/${encodeURIComponent(kotName)}`,
-      }),
-      transformResponse: (response: { data: KitchenOrderTicket }) =>
-        response.data,
-    }),
     createSalesOrder: builder.mutation<SalesOrder, CreateSalesOrderRequest>({
       query: (body) => ({
         url: `${API_RESOURCE_URL}Sales Order`,
@@ -535,24 +525,6 @@ export const erpApi = createApi({
       transformResponse: (response: { data: ModeOfPayment[] }) => response.data,
     }),
 
-    getPosOpeningStatus: builder.query<PosOpeningEntry[], void>({
-      query: () => ({
-        url: `${API_RESOURCE_URL}POS Opening Entry`,
-        params: {
-          filters: JSON.stringify([
-            ["pos_profile", "=", "website"],
-            ["status", "=", "Open"],
-            ["creation", ">=", "days ago:1"],
-          ]),
-          fields: JSON.stringify(["name", "period_start_date"]),
-          order_by: "creation desc",
-          limit_page_length: 1,
-        },
-      }),
-      transformResponse: (response: { data: PosOpeningEntry[] }) =>
-        response.data ?? [],
-    }),
-
     createAddress: builder.mutation< CreateAddressResponse, CreateAddressRequest >({
       query: (body) => ({
         url: `${API_RESOURCE_URL}Address`,
@@ -613,24 +585,6 @@ export const erpApi = createApi({
       },
       invalidatesTags: [{ type: "CustomerAddresses", id: "LIST" }],
     }),
-
-    completeDoorstepOrder: builder.mutation<{ status: string; kot_name?: string; invoice_name?: string },{salesOrderName: string; paymentMethod: "cod" | "card_on_delivery"; changeRequired?: string; timezone?: string; } >({
-      query: ({ salesOrderName, paymentMethod, changeRequired, timezone }) => {
-        const targetUrl = `${API_METHOD_URL}pizza_app.api.complete_doorstep_order`;
-
-        return {
-          // By using an absolute URL string, RTK Query bypasses prepending the baseQuery url
-          url: targetUrl,
-          method: "POST",
-          body: {
-            sales_order_name: salesOrderName,
-            payment_method: paymentMethod,
-            change_required: changeRequired,
-            timezone,
-          },
-        };
-      },
-    }),
   }),
 });
 
@@ -650,7 +604,6 @@ export const {
   useUploadCustomerAvatarMutation,
   useGetCustomerSalesOrdersQuery,
   useGetSalesOrderQuery,
-  useGetKitchenOrderTicketQuery,
   useCreateSalesOrderMutation,
   useUpdateSalesOrderMutation,
   useSubmitSalesOrderMutation,
@@ -661,6 +614,4 @@ export const {
   useSendOtpMutation,
   useGetItemByCodeQuery,
   useGetModesOfPaymentQuery,
-  useGetPosOpeningStatusQuery,
-  useCompleteDoorstepOrderMutation,
 } = erpApi;

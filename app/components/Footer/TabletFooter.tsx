@@ -96,12 +96,6 @@ export default function TabletFooter({
                   Home
                 </Link>
                 <Link
-                  href="/my-orders"
-                  className="text-base text-slate-400 hover:text-red-600 transition-colors"
-                >
-                  My Orders
-                </Link>
-                <Link
                   href="/account-profile"
                   className="text-base text-slate-400 hover:text-red-600 transition-colors"
                 >

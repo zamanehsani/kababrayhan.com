@@ -99,12 +99,6 @@ export default function DesktopFooter({
                 Home
               </Link>
               <Link
-                href="/my-orders"
-                className="block text-sm text-slate-400 hover:text-red-600 transition-colors"
-              >
-                My Orders
-              </Link>
-              <Link
                 href="/account-profile"
                 className="block text-sm text-slate-400 hover:text-red-600 transition-colors"
               >

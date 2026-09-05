@@ -252,12 +252,6 @@ export interface ModeOfPayment {
   enabled?: number;
 }
 
-export interface PosOpeningEntry {
-  name: string;
-  period_start_date?: string;
-  status?: string;
-}
-
 export interface CreateCustomerRequest {
   customer_name: string;
   email_id: string; // Required for Login
@@ -455,13 +449,4 @@ export interface PaymentIntentResponse {
 
 export interface FullItemResponse {
   data: ItemDetails;
-}
-
-export interface KitchenOrderTicket {
-  name: string;
-  status: string;
-  order_type?: string;
-  sales_order?: string;
-  creation?: string;
-  modified?: string;
 }

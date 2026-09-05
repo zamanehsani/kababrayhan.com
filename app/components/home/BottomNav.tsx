@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { Home, ShoppingCart, ClipboardList, User } from "lucide-react";
+import { Home, ShoppingCart, User } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { CART_UPDATED, getCart, type CartEntry } from "@/app/lib/cart";
 import {
@@ -86,11 +86,6 @@ export default function BottomNav() {
       active: false,
     },
     {
-      id: "orders",
-      icon: <ClipboardList size={18} />,
-      active: pathname.startsWith("/my-orders"),
-    },
-    {
       id: "profile",
       icon: <User size={18} />,
       active: pathname.startsWith("/account-profile"),
@@ -155,11 +150,6 @@ export default function BottomNav() {
     if (id === "cart") {
       // Dispatches global event to open your newly built Next.js CartDrawer.
       globalThis.dispatchEvent(new Event("openCartDrawer"));
-      return;
-    }
-
-    if (id === "orders") {
-      openVerificationFlowFor("/my-orders");
       return;
     }
 

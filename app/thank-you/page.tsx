@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   CheckCircle2,
-  ChevronRight,
   ArrowLeft,
   Receipt,
 } from "lucide-react";
@@ -55,23 +54,12 @@ function ThankYouContent() {
       </p>
 
       {/* Premium CTA Buttons Track (Desktop / Tablet) */}
-      <div className="hidden md:flex mt-8 w-full max-w-sm flex-col sm:flex-row gap-3">
-        <Link
-          href="/my-orders"
-          className="group flex flex-1 items-center justify-center gap-2 rounded-xl bg-slate-900 h-12 px-4 text-xs font-semibold text-white shadow-md shadow-slate-900/10 transition-all hover:bg-slate-800 active:scale-[0.98]"
-        >
-          <span>Track My Order</span>
-          <ChevronRight
-            size={14}
-            className="transition-transform group-hover:translate-x-0.5"
-          />
-        </Link>
-
+      <div className="hidden md:flex mt-8 w-full max-w-xs flex-col sm:flex-row gap-3">
         <Link
           href="/"
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-white h-12 px-4 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98]"
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 h-12 px-6 text-sm font-semibold text-white shadow-md shadow-red-600/10 transition-all hover:bg-red-700 active:scale-[0.98]"
         >
-          <ArrowLeft size={14} className="text-slate-400" />
+          <ArrowLeft size={16} className="text-white" />
           <span>Return to Menu</span>
         </Link>
       </div>
@@ -79,17 +67,10 @@ function ThankYouContent() {
       {/* Mobile CTA Buttons */}
       <div className="flex md:hidden mt-6 w-full flex-col gap-2 flex-shrink-0">
         <Link
-          href="/my-orders"
-          className="flex items-center justify-center gap-2 rounded-xl bg-red-600 h-11 px-6 text-xs font-semibold text-white shadow-md shadow-slate-900/10"
-        >
-          <span>Track My Order</span>
-          <ChevronRight size={14} />
-        </Link>
-
-        <Link
           href="/"
-          className="flex items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-white h-11 px-6 text-xs font-semibold text-slate-700"
+          className="flex items-center justify-center gap-2 rounded-xl bg-red-600 h-12 px-6 text-sm font-semibold text-white shadow-md shadow-red-600/10"
         >
+          <ArrowLeft size={16} className="text-white" />
           <span>Return to Menu</span>
         </Link>
       </div>
