@@ -83,25 +83,25 @@ export default function DeliveryAddressPage() {
   };
 
   return (
-    <main className="min-h-dvh bg-slate-50 px-4 py-8">
-      <div className="mx-auto w-full max-w-xl rounded-3xl border border-slate-100 bg-white p-6 shadow-xl">
-        <h1 className="text-xl font-semibold tracking-wide text-slate-900">
+    <main className="flex flex-1 items-center justify-center bg-slate-50 p-4 sm:p-6">
+      <div className="w-full max-w-xl text-center p-5 sm:p-6 ">
+        <h1 className="text-lg sm:text-xl  font-semibold tracking-wide text-slate-900">
           Delivery address
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-0.5 text-xs sm:text-sm text-slate-500">
           Choose where we should deliver your order.
         </p>
 
-        <div className="mt-6 flex flex-col gap-3">
+        <div className="mt-4 flex max-h-[52vh] flex-col gap-2.5 overflow-y-auto pr-1">
           {isLoading && (
-            <div className="flex items-center justify-center gap-2 py-10 text-sm text-slate-500">
+            <div className="flex items-center justify-center gap-2 py-8 text-xs sm:text-sm text-slate-500">
               <Loader2 size={16} className="animate-spin" />
               Loading your addresses...
             </div>
           )}
 
           {!isLoading && items.length === 0 && (
-            <p className="rounded-2xl bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+            <p className="rounded-2xl bg-slate-50 px-4 py-5 text-center text-xs sm:text-sm text-slate-500">
               No saved addresses yet. Add one to continue.
             </p>
           )}
@@ -110,56 +110,58 @@ export default function DeliveryAddressPage() {
             const isSelected = item.addressId === selectedAddressId;
 
             return (
-              <button
+             <button
                 key={item.addressId}
                 type="button"
                 onClick={() => handleSelect(item)}
-                className={`flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-all ${
-                  isSelected
+                // 1. Changed 'items-start' to 'items-center' right here:
+                className={`flex w-full items-center gap-3 rounded-full border p-3 sm:p-3.5 text-left transition-all ${
+                    isSelected
                     ? "border-red-500 bg-red-50/50"
                     : "border-slate-200 hover:border-slate-300"
                 }`}
-              >
-                <span
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                    isSelected
-                      ? "bg-red-100 text-red-500"
-                      : "bg-slate-50 text-slate-400"
-                  }`}
                 >
-                  <MapPin size={18} />
+                <span
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                    isSelected
+                        ? "bg-red-100 text-red-500"
+                        : "bg-slate-50 text-slate-400"
+                    }`}
+                >
+                    <MapPin size={17} />
                 </span>
 
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold text-slate-900">
+                    <span className="block text-sm font-semibold text-slate-900">
                     {item.title}
-                  </span>
-                  <span className="mt-1 block text-xs leading-relaxed text-slate-500">
+                    </span>
+                    <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">
                     {item.address}
-                  </span>
+                    </span>
                 </span>
 
                 {isSelected && (
-                  <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-500 text-white">
+                    // 2. Removed 'mt-0.5' here so the checkmark stays perfectly centered
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-500 text-white">
                     <Check size={12} />
-                  </span>
+                    </span>
                 )}
-              </button>
+                </button>
             );
           })}
 
           <button
             type="button"
             onClick={() => router.push("/delivery-address/new")}
-            className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-300 px-4 py-4 text-sm font-semibold text-slate-600 transition-colors hover:border-red-400 hover:text-red-600"
+            className="flex items-center justify-center gap-2 rounded-full border border-dashed border-slate-300 px-4 py-3 text-xs sm:text-sm font-semibold text-slate-600 transition-colors hover:border-red-400 hover:text-red-600"
           >
-            <Plus size={16} />
+            <Plus size={15} />
             Add new address
           </button>
         </div>
 
         {(error || isError) && (
-          <p className="mt-4 text-center text-sm text-red-600">
+          <p className="mt-3 text-center text-xs sm:text-sm text-red-600">
             {error || "We couldn't load your addresses. Please try again."}
           </p>
         )}
@@ -168,7 +170,7 @@ export default function DeliveryAddressPage() {
           type="button"
           onClick={handleContinue}
           disabled={isSavingAddress}
-          className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-red-600 text-sm font-semibold tracking-wide text-white transition-all hover:bg-red-700 active:scale-[0.98] disabled:opacity-60"
+          className="mt-4 flex h-11 sm:h-12 w-full items-center justify-center gap-2 rounded-full bg-red-600 text-sm font-semibold tracking-wide text-white transition-all hover:bg-red-700 active:scale-[0.98] disabled:opacity-60"
         >
           {isSavingAddress && <Loader2 size={16} className="animate-spin" />}
           Continue to checkout

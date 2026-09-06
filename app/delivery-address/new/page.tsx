@@ -213,7 +213,7 @@ export default function NewDeliveryAddressPage() {
               <input
                 value={form.building}
                 onChange={(event) => updateField("building", event.target.value)}
-                className="h-11 rounded-xl border border-slate-200 px-3 text-sm font-normal text-slate-900 outline-hidden focus:border-red-500"
+                className="h-11 rounded-full border border-slate-200 px-3 text-sm font-normal text-slate-900 outline-hidden focus:border-red-500"
               />
             </label>
 
@@ -222,7 +222,7 @@ export default function NewDeliveryAddressPage() {
               <input
                 value={form.street}
                 onChange={(event) => updateField("street", event.target.value)}
-                className="h-11 rounded-xl border border-slate-200 px-3 text-sm font-normal text-slate-900 outline-hidden focus:border-red-500"
+                className="h-11 rounded-full border border-slate-200 px-3 text-sm font-normal text-slate-900 outline-hidden focus:border-red-500"
               />
             </label>
 
@@ -231,7 +231,7 @@ export default function NewDeliveryAddressPage() {
               <input
                 value={form.area}
                 onChange={(event) => updateField("area", event.target.value)}
-                className="h-11 rounded-xl border border-slate-200 px-3 text-sm font-normal text-slate-900 outline-hidden focus:border-red-500"
+                className="h-11 rounded-full border border-slate-200 px-3 text-sm font-normal text-slate-900 outline-hidden focus:border-red-500"
               />
             </label>
 
@@ -240,7 +240,7 @@ export default function NewDeliveryAddressPage() {
               <input
                 value={form.city}
                 onChange={(event) => updateField("city", event.target.value)}
-                className="h-11 rounded-xl border border-slate-200 px-3 text-sm font-normal text-slate-900 outline-hidden focus:border-red-500"
+                className="h-11 rounded-full border border-slate-200 px-3 text-sm font-normal text-slate-900 outline-hidden focus:border-red-500"
               />
             </label>
 
@@ -249,7 +249,7 @@ export default function NewDeliveryAddressPage() {
               <input
                 value={form.emirate}
                 onChange={(event) => updateField("emirate", event.target.value)}
-                className="h-11 rounded-xl border border-slate-200 px-3 text-sm font-normal text-slate-900 outline-hidden focus:border-red-500"
+                className="h-11 rounded-full border border-slate-200 px-3 text-sm font-normal text-slate-900 outline-hidden focus:border-red-500"
               />
             </label>
 
@@ -258,7 +258,7 @@ export default function NewDeliveryAddressPage() {
               <input
                 value={form.country}
                 onChange={(event) => updateField("country", event.target.value)}
-                className="h-11 rounded-xl border border-slate-200 px-3 text-sm font-normal text-slate-900 outline-hidden focus:border-red-500"
+                className="h-11 rounded-full border border-slate-200 px-3 text-sm font-normal text-slate-900 outline-hidden focus:border-red-500"
               />
             </label>
 
@@ -268,7 +268,7 @@ export default function NewDeliveryAddressPage() {
                 value={form.landmark}
                 onChange={(event) => updateField("landmark", event.target.value)}
                 placeholder="Near the mosque, gate 2..."
-                className="h-11 rounded-xl border border-slate-200 px-3 text-sm font-normal text-slate-900 outline-hidden focus:border-red-500"
+                className="h-11 rounded-full border border-slate-200 px-3 text-sm font-normal text-slate-900 outline-hidden focus:border-red-500"
               />
             </label>
           </div>

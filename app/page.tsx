@@ -12,7 +12,7 @@ export default async function Home() {
   ]);
 
   return (
-    <main className="min-h-screen bg-white text-slate-900">
+    <main className="flex flex-1 flex-col bg-white text-slate-900">
       <SearchBar />
       <CategoryBar groups={groups} />
       {/* Suspense boundary required because ItemsGrid reads useSearchParams */}

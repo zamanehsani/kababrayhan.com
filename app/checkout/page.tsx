@@ -27,6 +27,7 @@ import {
   clearPendingSalesOrder,
 } from "@/app/components/orderStorage";
 import { CART_UPDATED, saveCart } from "@/app/lib/cart";
+import { validateDeliveryZone } from "@/app/lib/geocoding";
 import {
   buildSalesOrderItems,
   buildSalesOrderTaxes,
@@ -274,6 +275,8 @@ const CheckoutPage = () => {
           .filter(Boolean)
           .join(", "),
         addressId: address.name,
+        latitude: address.custom_latitude,
+        longitude: address.custom_longitude,
       })
     );
 
@@ -290,7 +293,7 @@ const CheckoutPage = () => {
     const currentSnapshot = JSON.stringify(readStoredDeliveryAddresses());
     if (nextSnapshot === currentSnapshot) return;
 
-    const frameId = requestAnimationFrame(() => {
+    const frameId = requestAnimationFrame(async () => {
       setForm((previous) => ({
         ...previous,
         deliveryAddresses: syncedAddresses,
@@ -299,11 +302,35 @@ const CheckoutPage = () => {
 
       writeDeliveryAddresses(syncedAddresses);
 
-      if (!selectedId && syncedAddresses[0]) {
-        saveDeliveryAddress(
-          syncedAddresses[0].address,
-          syncedAddresses[0].addressId
-        );
+      const targetAddress = selectedId
+        ? syncedAddresses.find((a) => a.addressId === selectedId)
+        : syncedAddresses[0];
+
+      if (targetAddress) {
+        if (!selectedId) {
+          saveDeliveryAddress(targetAddress.address, targetAddress.addressId);
+        }
+
+        // Validate and recalculate delivery zone & charge if missing or changed
+        const lat = Number(targetAddress.latitude);
+        const lng = Number(targetAddress.longitude);
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+          try {
+            const zone = await validateDeliveryZone(lat, lng);
+            globalThis.localStorage?.setItem("uae_delivery_zone", zone.zoneName);
+            globalThis.localStorage?.setItem(
+              "uae_delivery_charge",
+              String(zone.deliveryCharge)
+            );
+            setDelivery({
+              zone: zone.zoneName,
+              charge: zone.deliveryCharge,
+              addressId: targetAddress.addressId,
+            });
+          } catch (err) {
+            console.warn("Failed to recalculate delivery zone from coordinates:", err);
+          }
+        }
       }
     });
 
@@ -615,7 +642,7 @@ const CheckoutPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="flex flex-1 bg-white">
       <main className="mx-auto max-w-7xl px-6 py-10 md:py-14 lg:py-16">
         <CheckoutStepper currentStep={3} />
 

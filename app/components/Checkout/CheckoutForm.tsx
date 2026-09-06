@@ -19,6 +19,8 @@ export type DeliveryAddressItem = {
   addressId: string;
   isDelivery?: boolean;
   isBilling?: boolean;
+  latitude?: string;
+  longitude?: string;
 };
 
 interface CheckoutFormProps {
