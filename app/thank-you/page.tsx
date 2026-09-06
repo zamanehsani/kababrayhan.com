@@ -24,6 +24,7 @@ function ThankYouContent() {
 
   return (
     <div className="flex flex-col items-center text-center">
+
       {/* Minimalist Success Icon Plate */}
       <div className="relative mb-5 flex h-20 w-20 items-center justify-center">
         <span className="absolute inset-0 animate-pulse rounded-full bg-red-500/10" />
@@ -38,7 +39,7 @@ function ThankYouContent() {
 
       {/* Clean Balanced Typography Hierarchy */}
       <h1 className="text-3xl font-medium tracking-wide text-slate-900 lg:text-4xl">
-        Thank you for your order!
+        Thank you for your order.
       </h1>
 
       {orderName ? (
@@ -57,7 +58,7 @@ function ThankYouContent() {
       <div className="hidden md:flex mt-8 w-full max-w-xs flex-col sm:flex-row gap-3">
         <Link
           href="/"
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 h-12 px-6 text-sm font-semibold text-white shadow-md shadow-red-600/10 transition-all hover:bg-red-700 active:scale-[0.98]"
+          className="flex flex-1 items-center justify-center gap-2 rounded-full bg-red-600 h-12 px-6 text-sm font-semibold text-white shadow-md shadow-red-600/10 transition-all hover:bg-red-700 active:scale-[0.98]"
         >
           <ArrowLeft size={16} className="text-white" />
           <span>Return to Menu</span>
@@ -68,7 +69,7 @@ function ThankYouContent() {
       <div className="flex md:hidden mt-6 w-full flex-col gap-2 flex-shrink-0">
         <Link
           href="/"
-          className="flex items-center justify-center gap-2 rounded-xl bg-red-600 h-12 px-6 text-sm font-semibold text-white shadow-md shadow-red-600/10"
+          className="flex items-center justify-center gap-2 rounded-full bg-red-600 h-12 px-6 text-sm font-semibold text-white shadow-md shadow-red-600/10"
         >
           <ArrowLeft size={16} className="text-white" />
           <span>Return to Menu</span>
@@ -80,7 +81,7 @@ function ThankYouContent() {
 
 export default function ThankYouPage() {
   return (
-    <main className="min-h-screen bg-slate-50/50 font-sans antialiased text-slate-800 flex flex-col">
+    <main className="flex flex-1 bg-slate-50/50 font-sans antialiased text-slate-800 flex flex-col">
       <section className="flex-grow w-full max-w-5xl mx-auto px-6 flex flex-col justify-center items-center py-10 pb-24 md:pb-12">
         <div className="grid grid-cols-1 gap-8 lg:gap-12 w-full items-center">
           <Suspense fallback={<div className="text-sm text-slate-400">Loading order details...</div>}>

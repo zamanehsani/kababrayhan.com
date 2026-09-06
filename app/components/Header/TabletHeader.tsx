@@ -344,7 +344,7 @@ export default function TabletHeader() {
             />
           </div>
         ) : (
-          <nav className="flex items-center bg-slate-50 p-1 rounded-full border border-slate-100 animate-in fade-in duration-300">
+          <nav className="flex items-center bg-slate-50  rounded-full border border-slate-100 animate-in fade-in duration-300">
             {navItems.map((item) => (
               <button
                 key={item.id}
@@ -352,7 +352,7 @@ export default function TabletHeader() {
                   setIsSearchOpen(false);
                   router.push(item.href);
                 }}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold tracking-wide transition-all ${
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold transition-all ${
                   item.id === "home" && isHomeRoute
                     ? "bg-red-600 text-white shadow-sm"
                     : "text-slate-500 hover:text-slate-800"

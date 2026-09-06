@@ -3,7 +3,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Crosshair, Loader2, Search } from "lucide-react";
+import { Crosshair, Layers, Loader2, Search } from "lucide-react";
+import {
+  fetchDeliveryZonePolygons,
+  type DeliveryZonePolygon,
+} from "@/app/lib/geocoding";
 
 const LEAFLET_VERSION = "1.9.4";
 const DUBAI_CENTER: [number, number] = [25.2048, 55.2708];
@@ -14,7 +18,19 @@ type LocationPickerMapProps = {
   value: LatLng | null;
   onPick: (coordinates: LatLng) => void;
   onSearch?: (query: string) => Promise<LatLng | null>;
+  showZones?: boolean;
 };
+
+const ZONE_COLORS = [
+  { color: "#ef4444", fillColor: "#ef4444" },
+  { color: "#f97316", fillColor: "#f97316" },
+  { color: "#f59e0b", fillColor: "#f59e0b" },
+  { color: "#10b981", fillColor: "#10b981" },
+  { color: "#06b6d4", fillColor: "#06b6d4" },
+  { color: "#3b82f6", fillColor: "#3b82f6" },
+  { color: "#8b5cf6", fillColor: "#8b5cf6" },
+  { color: "#ec4899", fillColor: "#ec4899" },
+];
 
 const loadLeaflet = () =>
   new Promise<any>((resolve, reject) => {
@@ -59,13 +75,17 @@ export default function LocationPickerMap({
   value,
   onPick,
   onSearch,
+  showZones = true,
 }: Readonly<LocationPickerMapProps>) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
+  const zoneLayersRef = useRef<any[]>([]);
   const onPickRef = useRef(onPick);
   const [query, setQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [zones, setZones] = useState<DeliveryZonePolygon[]>([]);
+  const [isLoadingZones, setIsLoadingZones] = useState(() => showZones);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -92,6 +112,90 @@ export default function LocationPickerMap({
       duration: 0.6,
     });
   }, []);
+
+  const renderZonePolygons = useCallback(
+    (L: any, map: any, zoneList: DeliveryZonePolygon[]) => {
+      // Clean up previous layers
+      zoneLayersRef.current.forEach((layer) => layer.remove());
+      zoneLayersRef.current = [];
+
+      if (!zoneList.length) return;
+
+      const layers: any[] = [];
+
+      zoneList.forEach((zone, index) => {
+        const style = ZONE_COLORS[index % ZONE_COLORS.length];
+        const polygon = L.polygon(zone.points, {
+          color: style.color,
+          fillColor: style.fillColor,
+          fillOpacity: 0.16,
+          weight: 2,
+          opacity: 0.85,
+        });
+
+        polygon.bindTooltip(
+          `<div style="font-family: inherit; font-size: 11px; font-weight: 600; color: #0f172a; line-height: 1.2;">
+            <div>${zone.zoneName}</div>
+            <div style="font-size: 10px; color: #dc2626; margin-top: 2px;">
+              ${zone.deliveryCharge > 0 ? `Delivery Fee: ${zone.deliveryCharge} AED` : "Free Delivery"}
+            </div>
+          </div>`,
+          {
+            sticky: true,
+            direction: "top",
+            opacity: 0.95,
+          }
+        );
+
+        polygon.on("click", (event: any) => {
+          const { lat, lng } = event.latlng;
+          onPickRef.current({ lat, lng });
+        });
+
+        polygon.addTo(map);
+        layers.push(polygon);
+      });
+
+      zoneLayersRef.current = layers;
+
+      // If no initial pin location was set, fit view to show all delivery zones
+      if (!value && layers.length > 0) {
+        const bounds = L.featureGroup(layers).getBounds();
+        if (bounds.isValid()) {
+          map.fitBounds(bounds, { padding: [28, 28], maxZoom: 13 });
+        }
+      }
+    },
+    [value]
+  );
+
+  // Fetch Delivery Zones on mount
+  useEffect(() => {
+    if (!showZones) return;
+
+    let isMounted = true;
+
+    fetchDeliveryZonePolygons()
+      .then((data) => {
+        if (!isMounted) return;
+        setZones(data);
+        const L = (globalThis as typeof globalThis & { L?: any }).L;
+        const map = mapRef.current;
+        if (L && map) {
+          renderZonePolygons(L, map, data);
+        }
+      })
+      .catch((err) => {
+        console.warn("Could not load delivery zones for map:", err);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingZones(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [showZones, renderZonePolygons]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -125,6 +229,12 @@ export default function LocationPickerMap({
         });
 
         mapRef.current = map;
+
+        // Render zones if already loaded
+        if (zones.length > 0) {
+          renderZonePolygons(L, map, zones);
+        }
+
         setTimeout(() => map.invalidateSize(), 200);
       })
       .catch((loadError) => {
@@ -134,6 +244,8 @@ export default function LocationPickerMap({
 
     return () => {
       isCancelled = true;
+      zoneLayersRef.current.forEach((layer) => layer.remove());
+      zoneLayersRef.current = [];
       mapRef.current?.remove();
       mapRef.current = null;
       markerRef.current = null;
@@ -229,10 +341,24 @@ export default function LocationPickerMap({
         </button>
       </div>
 
+      {zones.length > 0 && (
+        <div className="pointer-events-none absolute left-3 bottom-3 z-1001 hidden sm:flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold text-slate-700 shadow-md backdrop-blur border border-slate-100">
+          <Layers size={13} className="text-red-600" />
+          <span>{zones.length} Delivery Zones Loaded</span>
+        </div>
+      )}
+
+      {isLoadingZones && (
+        <div className="pointer-events-none absolute left-3 bottom-3 z-1001 flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold text-slate-600 shadow-md backdrop-blur">
+          <Loader2 size={12} className="animate-spin text-red-600" />
+          <span>Loading delivery zones...</span>
+        </div>
+      )}
+
       {!value && (
         <div className="pointer-events-none absolute inset-x-0 bottom-4 z-1001 flex justify-center">
           <span className="rounded-full bg-slate-900/80 px-3 py-1.5 text-xs font-medium text-white">
-            Tap the map to drop your pin
+            Tap the map or within a delivery zone to drop your pin
           </span>
         </div>
       )}
