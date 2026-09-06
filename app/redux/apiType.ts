@@ -387,40 +387,62 @@ export interface SalesOrderItem {
 
 export interface SalesOrderSummary {
   name: string;
+  customer?: string;
+  customer_name?: string;
   creation?: string;
   transaction_date: string;
+  delivery_date?: string;
   grand_total: number;
+  rounded_total?: number;
   status: string;
+  docstatus?: number;
+  currency?: string;
+  custom_payment_method?: string;
+  custom_payment_status?: string;
+  customer_address?: string;
+  shipping_address_name?: string;
+  custom_delivery_zone?: string;
+  custom_delivery_charge?: number;
   custom_kitchen_order_ticket?: string;
   kitchen_order_ticket_status?: string;
 }
 
 export interface SalesOrderDetails {
   name: string;
-  owner: string;
-  creation: string;
-  modified: string;
-  modified_by: string;
+  owner?: string;
+  creation?: string;
+  modified?: string;
+  modified_by?: string;
   customer: string;
-  customer_name: string;
+  customer_name?: string;
   transaction_date: string;
-  delivery_date: string;
-  currency: string;
-  total_qty: number;
+  delivery_date?: string;
+  currency?: string;
+  total_qty?: number;
+  net_total?: number;
+  base_net_total?: number;
+  total_taxes_and_charges?: number;
+  base_total_taxes_and_charges?: number;
   grand_total: number;
-  rounded_total: number;
+  rounded_total?: number;
   status: string;
-  delivery_status: string;
-  billing_status: string;
+  docstatus?: number;
+  delivery_status?: string;
+  billing_status?: string;
   custom_kitchen_order_ticket?: string;
   items: SalesOrderItem[];
-  base_total_taxes_and_charges?: number;
-  base_net_total?: number;
+  customer_address?: string;
+  shipping_address_name?: string;
+  address_display?: string;
+  shipping_address?: string;
+  custom_customer_note?: string;
+  custom_delivery_zone?: string;
+  custom_delivery_charge?: number;
   custom_delivery_notes?: string;
   custom_change_required?: string;
-  custom_requires_pos_terminal?: number;
   custom_payment_status?: string;
   custom_payment_method?: string;
+  custom_requires_pos_terminal?: number;
   custom_requires_doorstep_pos_terminal?: number;
 }
 

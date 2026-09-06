@@ -295,7 +295,9 @@ export const readCustomerPortalSnapshot = (): CustomerPortalSnapshot => {
 
   const phone = session.phone || storageState.phone;
   const phoneStatus =
-    session.phoneStatus !== "none"
+    session.phoneStatus === "verified" || storageState.phoneStatus === "verified"
+      ? "verified"
+      : session.phoneStatus !== "none"
       ? session.phoneStatus
       : storageState.phoneStatus;
   const address = session.address || storageState.address;
@@ -303,10 +305,16 @@ export const readCustomerPortalSnapshot = (): CustomerPortalSnapshot => {
   const deliveryAddresses = readDeliveryAddresses();
   const hasOrder = getCart().length > 0;
 
+  const isVerified =
+    (phoneStatus === "verified" ||
+      Boolean(globalThis.localStorage?.getItem(CUSTOMER_NAME_KEY)) ||
+      Boolean(globalThis.localStorage?.getItem("erpnext.customer"))) &&
+    Boolean(phone);
+
   return {
     phone,
-    phoneStatus,
-    isVerified: phoneStatus === "verified" && Boolean(phone),
+    phoneStatus: isVerified ? "verified" : phoneStatus,
+    isVerified,
     address,
     addressId,
     deliveryAddresses,
@@ -317,6 +325,53 @@ export const readCustomerPortalSnapshot = (): CustomerPortalSnapshot => {
 export const dispatchCustomerPortalUpdated = () => {
   if (!hasWindow()) return;
   globalThis.dispatchEvent(new Event(CUSTOMER_PORTAL_UPDATED));
+};
+
+export const subscribeCustomerPortal = (callback: () => void) => {
+  if (!hasWindow()) return () => {};
+  const unsubscribeRedux = store.subscribe(callback);
+  globalThis.addEventListener(CUSTOMER_PORTAL_UPDATED, callback);
+  globalThis.addEventListener("storage", callback);
+  return () => {
+    unsubscribeRedux();
+    globalThis.removeEventListener(CUSTOMER_PORTAL_UPDATED, callback);
+    globalThis.removeEventListener("storage", callback);
+  };
+};
+
+export const SERVER_CUSTOMER_PORTAL_SNAPSHOT: CustomerPortalSnapshot = {
+  phone: "",
+  phoneStatus: "none",
+  isVerified: false,
+  address: "",
+  addressId: "",
+  deliveryAddresses: [],
+  hasOrder: false,
+};
+
+let cachedSnapshot: CustomerPortalSnapshot = SERVER_CUSTOMER_PORTAL_SNAPSHOT;
+let cachedAddressesJson = "";
+
+export const getCustomerPortalSnapshot = (): CustomerPortalSnapshot => {
+  if (!hasWindow()) return SERVER_CUSTOMER_PORTAL_SNAPSHOT;
+  const next = readCustomerPortalSnapshot();
+  const nextAddressesJson = JSON.stringify(next.deliveryAddresses);
+
+  if (
+    cachedSnapshot.phone === next.phone &&
+    cachedSnapshot.phoneStatus === next.phoneStatus &&
+    cachedSnapshot.isVerified === next.isVerified &&
+    cachedSnapshot.address === next.address &&
+    cachedSnapshot.addressId === next.addressId &&
+    cachedSnapshot.hasOrder === next.hasOrder &&
+    cachedAddressesJson === nextAddressesJson
+  ) {
+    return cachedSnapshot;
+  }
+
+  cachedSnapshot = next;
+  cachedAddressesJson = nextAddressesJson;
+  return cachedSnapshot;
 };
 
 const readDeliveryAddresses = (): DeliveryAddressItem[] => {

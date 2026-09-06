@@ -106,7 +106,11 @@ export default function CartDrawer() {
 
     setOpen(false);
     setIsNavigatingToCheckout(true);
-    router.push(currentSnapshot.isVerified ? "/delivery-address" : "/verify");
+    router.push(
+      currentSnapshot.isVerified
+        ? "/delivery-address"
+        : "/verify?redirect=/delivery-address"
+    );
   };
 
   return (

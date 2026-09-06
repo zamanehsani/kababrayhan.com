@@ -212,3 +212,28 @@ export const updateCartQty = (index: number, qty: number) => {
 };
 
 export const CART_UPDATED = CART_UPDATED_EVENT;
+
+export const subscribeCart = (callback: () => void) => {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener(CART_UPDATED_EVENT, callback);
+  window.addEventListener("storage", callback);
+  window.addEventListener("openCartDrawer", callback);
+  return () => {
+    window.removeEventListener(CART_UPDATED_EVENT, callback);
+    window.removeEventListener("storage", callback);
+    window.removeEventListener("openCartDrawer", callback);
+  };
+};
+
+export const getCartItemCount = (): number => {
+  if (typeof window === "undefined") return 0;
+  try {
+    const items = getCart() || [];
+    return items.reduce(
+      (sum: number, entry: CartEntry) => sum + (entry.qty || 1),
+      0
+    );
+  } catch {
+    return 0;
+  }
+};

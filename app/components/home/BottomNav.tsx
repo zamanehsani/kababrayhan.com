@@ -1,71 +1,44 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Home, ShoppingCart, User } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { CART_UPDATED, getCart, type CartEntry } from "@/app/lib/cart";
+import { useAppSelector } from "@/app/redux/hooks";
+import { getCartItemCount, subscribeCart } from "@/app/lib/cart";
 import {
-  CUSTOMER_PORTAL_UPDATED,
+  CUSTOMER_NAME_KEY,
+  getCustomerPortalSnapshot,
   PHONE_KEY,
-  PHONE_STATUS_KEY,
-  readCustomerPortalSnapshot,
+  SERVER_CUSTOMER_PORTAL_SNAPSHOT,
+  subscribeCustomerPortal,
 } from "@/app/lib/customerPortal";
-import PhoneModal from "./modal/PhoneModal";
-import PhoneVerifyModal from "./modal/PhoneVerifyModal";
 
 export default function BottomNav() {
   const router = useRouter();
   const pathname = usePathname();
-  const [showPhoneModal, setShowPhoneModal] = useState(false);
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [phoneForVerify, setPhoneForVerify] = useState("");
-  const [pendingRoute, setPendingRoute] = useState<string | null>(null);
-  const [portalState, setPortalState] = useState(() =>
-    readCustomerPortalSnapshot()
+  const session = useAppSelector((state) => state.session);
+
+  const portalState = useSyncExternalStore(
+    subscribeCustomerPortal,
+    getCustomerPortalSnapshot,
+    () => SERVER_CUSTOMER_PORTAL_SNAPSHOT
   );
-  const [cartCount, setCartCount] = useState(() => {
-    if (globalThis.window === undefined) return 0;
-    try {
-      const items = getCart() || [];
-      return items.reduce((sum: number, e: CartEntry) => sum + (e.qty || 1), 0);
-    } catch {
-      return 0;
-    }
-  });
 
-  const refreshPortalState = useCallback(() => {
-    setPortalState(readCustomerPortalSnapshot());
-  }, []);
+  const cartCount = useSyncExternalStore(
+    subscribeCart,
+    getCartItemCount,
+    () => 0
+  );
 
-  const refreshCartCount = useCallback(() => {
-    if (globalThis.window === undefined) return;
-    try {
-      const items = getCart() || [];
-      setCartCount(
-        items.reduce((sum: number, e: CartEntry) => sum + (e.qty || 1), 0)
-      );
-    } catch {
-      setCartCount(0);
-    }
-  }, []);
-
-  useEffect(() => {
-    globalThis.addEventListener(CUSTOMER_PORTAL_UPDATED, refreshPortalState);
-    globalThis.addEventListener(CART_UPDATED, refreshPortalState);
-    globalThis.addEventListener("storage", refreshPortalState);
-    globalThis.addEventListener(CART_UPDATED, refreshCartCount);
-    globalThis.addEventListener("storage", refreshCartCount);
-
-    return () => {
-      globalThis.removeEventListener(
-        CUSTOMER_PORTAL_UPDATED,
-        refreshPortalState
-      );
-      globalThis.removeEventListener(CART_UPDATED, refreshPortalState);
-      globalThis.removeEventListener("storage", refreshPortalState);
-      globalThis.removeEventListener(CART_UPDATED, refreshCartCount);
-      globalThis.removeEventListener("storage", refreshCartCount);
-    };
-  }, [refreshPortalState, refreshCartCount]);
+  const isVerified =
+    portalState.isVerified ||
+    (session.phoneStatus === "verified" && Boolean(session.phone)) ||
+    (typeof window !== "undefined" &&
+      Boolean(
+        globalThis.localStorage.getItem(PHONE_KEY) &&
+          (globalThis.localStorage.getItem("uae_phone_status") === "verified" ||
+            globalThis.localStorage.getItem(CUSTOMER_NAME_KEY) ||
+            globalThis.localStorage.getItem("erpnext.customer"))
+      ));
 
   const isHomeRoute = pathname === "/";
 
@@ -92,55 +65,6 @@ export default function BottomNav() {
     },
   ];
 
-  const openVerificationFlowFor = (route: string) => {
-    if (portalState.isVerified) {
-      router.push(route);
-      return;
-    }
-
-    setPendingRoute(route);
-    setShowPhoneModal(true);
-  };
-
-  const handlePhoneModalClose = (phoneJustSaved?: string) => {
-    setShowPhoneModal(false);
-    const savedPhone =
-      phoneJustSaved || globalThis.localStorage.getItem(PHONE_KEY) || "";
-
-    if (!savedPhone) {
-      setPendingRoute(null);
-      refreshPortalState();
-      return;
-    }
-
-    setPhoneForVerify(savedPhone);
-    setShowVerifyModal(true);
-  };
-
-  const handleVerifyModalClose = () => {
-    setShowVerifyModal(false);
-    setPhoneForVerify("");
-    refreshPortalState();
-
-    if (!pendingRoute) {
-      return;
-    }
-
-    if (readCustomerPortalSnapshot().isVerified) {
-      router.push(pendingRoute);
-    }
-
-    setPendingRoute(null);
-  };
-
-  const handleChangePhoneFromVerify = () => {
-    setShowVerifyModal(false);
-    setPhoneForVerify("");
-    localStorage.removeItem(PHONE_KEY);
-    localStorage.removeItem(PHONE_STATUS_KEY);
-    setShowPhoneModal(true);
-  };
-
   const handleAction = (id: string) => {
     if (id === "home") {
       router.push("/");
@@ -154,47 +78,33 @@ export default function BottomNav() {
     }
 
     if (id === "profile") {
-      openVerificationFlowFor("/account-profile");
+      if (isVerified) {
+        router.push("/account-profile");
+      } else {
+        router.push("/verify");
+      }
     }
   };
 
   return (
-    <>
-      <nav className="fixed bottom-2 left-1/2 z-100 -translate-x-1/2 md:hidden">
-        <div className="flex items-center gap-1.5 rounded-full border border-white/20 bg-slate-400/20 p-1.5 backdrop-blur-xl">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => handleAction(item.id)}
-              aria-label={item.id}
-              className={`flex h-11 w-11 items-center justify-center rounded-full transition-all duration-300 ${
-                item.active
-                  ? "scale-105 bg-red-600 text-white shadow-sm"
-                  : "bg-white text-slate-500 shadow-sm hover:bg-slate-50 active:scale-95"
-              }`}
-            >
-              {item.icon}
-            </button>
-          ))}
-        </div>
-      </nav>
-
-      {showPhoneModal && (
-        <PhoneModal
-          open={showPhoneModal}
-          allowExistingPhone={true}
-          onClose={handlePhoneModalClose}
-        />
-      )}
-      {showVerifyModal && (
-        <PhoneVerifyModal
-          open={showVerifyModal}
-          phone={phoneForVerify}
-          onClose={handleVerifyModalClose}
-          onChangePhone={handleChangePhoneFromVerify}
-        />
-      )}
-    </>
+    <nav className="fixed bottom-2 left-1/2 z-100 -translate-x-1/2 md:hidden">
+      <div className="flex items-center gap-1.5 rounded-full border border-white/20 bg-slate-400/20 p-1.5 backdrop-blur-xl">
+        {navItems.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => handleAction(item.id)}
+            aria-label={item.id}
+            className={`flex h-11 w-11 items-center justify-center rounded-full transition-all duration-300 ${
+              item.active
+                ? "scale-105 bg-red-600 text-white shadow-sm"
+                : "bg-white text-slate-500 shadow-sm hover:bg-slate-50 active:scale-95"
+            }`}
+          >
+            {item.icon}
+          </button>
+        ))}
+      </div>
+    </nav>
   );
 }

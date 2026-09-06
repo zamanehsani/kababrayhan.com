@@ -8,9 +8,7 @@ import {
   writeDeliveryAddresses,
 } from "@/app/lib/customerPortal";
 import { useUpdateAddressMutation } from "@/app/redux/api";
-import AddressSelectModal, {
-  type SelectedAddress,
-} from "../../components/home/modal/AddressSelectModal";
+import AddressModal from "./AddressModal";
 
 type AddressesTabProps = {
   addresses: DeliveryAddressItem[];
@@ -190,48 +188,7 @@ export default function AddressesTab({
   const [activeDeliveryIndex, setActiveDeliveryIndex] = useState<number | null>(null);
   const [updateAddress] = useUpdateAddressMutation();
 
-  const handleAddressSelect = (addressData: SelectedAddress) => {
-    if (activeDeliveryIndex === null) return;
-
-    const normalizedTitle = addressData.title || "Home";
-    const normalizedType = addressData.addressType || "Home";
-
-    if (activeDeliveryIndex < 0) {
-      const newAddress: DeliveryAddressItem = {
-        id: addressData.id,
-        title: normalizedTitle,
-        address: addressData.name || "",
-        addressId: addressData.id,
-        addressType: normalizedType,
-        latitude: String(addressData.lat),
-        longitude: String(addressData.lng),
-      };
-
-      const updatedAddresses = [...addresses, newAddress];
-      writeDeliveryAddresses(updatedAddresses);
-      saveDeliveryAddress(newAddress.address, newAddress.addressId);
-      onRefresh();
-      setActiveDeliveryIndex(null);
-      return;
-    }
-
-    const updatedAddresses = addresses.map((address, index) =>
-      index === activeDeliveryIndex
-        ? {
-            ...address,
-            title: normalizedTitle,
-            addressType: normalizedType,
-            address: addressData.name || "",
-            addressId: addressData.id,
-            latitude: String(addressData.lat),
-            longitude: String(addressData.lng),
-          }
-        : address
-    );
-    writeDeliveryAddresses(updatedAddresses);
-    if (activeDeliveryIndex === 0) {
-      saveDeliveryAddress(addressData.name || "", addressData.id);
-    }
+  const handleAddressSaved = () => {
     onRefresh();
     setActiveDeliveryIndex(null);
   };
@@ -265,8 +222,7 @@ export default function AddressesTab({
     setActiveDeliveryIndex(null);
   };
   const handleAddNewAddress = () => {
-    // Do not create a temporary empty address entry in local state or storage.
-    // The modal should only persist a new address after the user confirms it.
+    // Open modal in create mode
     setActiveDeliveryIndex(-1);
   };
 
@@ -321,28 +277,12 @@ export default function AddressesTab({
       </div>
 
       {activeDeliveryIndex !== null && (
-        <AddressSelectModal
+        <AddressModal
           open={true}
           onClose={() => setActiveDeliveryIndex(null)}
-          onSelect={handleAddressSelect}
-          onRemove={handleRemoveAddress}
-          redirectTo={null}
-          existingAddressId={
-            activeDeliveryIndex >= 0 ? addresses[activeDeliveryIndex]?.addressId || null : null
-          }
-          customTitle={
-            activeDeliveryIndex >= 0 ? addresses[activeDeliveryIndex]?.title || undefined : undefined
-          }
-          defaultAddressType={
-            activeDeliveryIndex >= 0 ? addresses[activeDeliveryIndex]?.addressType || "Home" : "Home"
-          }
-          initialCoordinates={
-            activeDeliveryIndex >= 0 && addresses[activeDeliveryIndex]?.latitude && addresses[activeDeliveryIndex]?.longitude
-              ? {
-                  lat: Number(addresses[activeDeliveryIndex].latitude),
-                  lng: Number(addresses[activeDeliveryIndex].longitude),
-                }
-              : undefined
+          onSaved={handleAddressSaved}
+          existingAddress={
+            activeDeliveryIndex >= 0 ? addresses[activeDeliveryIndex] || null : null
           }
         />
       )}

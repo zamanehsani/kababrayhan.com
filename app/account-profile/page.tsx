@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { LogOut, Menu, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -120,12 +120,46 @@ export default function AccountProfilePage() {
     skip: !customerName || !portalState.isVerified,
   });
 
-  const { data: customerOrdersData } = useGetCustomerSalesOrdersQuery(
-    customerName || "",
-    {
-      skip: !customerName || !portalState.isVerified,
+  // Collect all plausible customer identifiers across sessions/formats
+  const candidateCustomerNames = useMemo(() => {
+    const list: string[] = [];
+    if (storedCustomerName) list.push(storedCustomerName);
+    if (customersByMobileNumber?.[0]?.name) list.push(customersByMobileNumber[0].name);
+    if (customerProfile?.name) list.push(customerProfile.name);
+    if (phoneNumber) {
+      list.push(phoneNumber);
+      const digits = phoneNumber.replaceAll(/\D/g, "");
+      if (phoneNumber.startsWith("+971")) {
+        list.push(phoneNumber.slice(1));
+        list.push("0" + phoneNumber.slice(4));
+      } else if (phoneNumber.startsWith("05")) {
+        list.push("+971" + phoneNumber.slice(1));
+        list.push("971" + phoneNumber.slice(1));
+      } else if (phoneNumber.startsWith("971")) {
+        list.push("+" + phoneNumber);
+        list.push("0" + phoneNumber.slice(3));
+      }
+      if (digits) list.push(digits);
     }
-  );
+    if (portalState.phone) {
+      list.push(portalState.phone);
+    }
+    return Array.from(new Set(list)).filter(Boolean);
+  }, [
+    storedCustomerName,
+    customersByMobileNumber,
+    customerProfile,
+    phoneNumber,
+    portalState.phone,
+  ]);
+
+  const {
+    data: customerOrdersData,
+    isLoading: isLoadingOrders,
+    refetch: refetchOrders,
+  } = useGetCustomerSalesOrdersQuery(candidateCustomerNames, {
+    skip: candidateCustomerNames.length === 0,
+  });
   const customerOrders = customerOrdersData ?? [];
 
   useEffect(() => {
@@ -363,6 +397,8 @@ export default function AccountProfilePage() {
               {activeTab === "orders" && (
                 <OrdersTab
                   orders={customerOrders}
+                  isLoading={isLoadingOrders}
+                  onRefresh={refetchOrders}
                   formatCurrency={formatCurrency}
                 />
               )}

@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   Search,
   ChevronDown,
@@ -13,16 +13,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLogoutMutation } from "@/app/redux/authApi";
-import { CART_UPDATED, getCart, type CartEntry } from "@/app/lib/cart";
+import { useAppSelector } from "@/app/redux/hooks";
+import { getCartItemCount, subscribeCart } from "@/app/lib/cart";
 import {
   clearCustomerPortalSession,
-  CUSTOMER_PORTAL_UPDATED,
+  CUSTOMER_NAME_KEY,
+  getCustomerPortalSnapshot,
   PHONE_KEY,
-  PHONE_STATUS_KEY,
-  readCustomerPortalSnapshot,
+  SERVER_CUSTOMER_PORTAL_SNAPSHOT,
+  subscribeCustomerPortal,
 } from "@/app/lib/customerPortal";
-import PhoneModal from "../home/modal/PhoneModal";
-import PhoneVerifyModal from "../home/modal/PhoneVerifyModal";
 
 type DesktopHeaderProps = {
   companyName?: string;
@@ -36,28 +36,22 @@ export default function DesktopHeader({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const session = useAppSelector((state) => state.session);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [showPhoneModal, setShowPhoneModal] = useState(false);
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [phoneForVerify, setPhoneForVerify] = useState("");
-  const [cartItemCount, setCartItemCount] = useState(() => {
-    if (typeof window === "undefined") return 0;
 
-    try {
-      const items = getCart() || [];
-      return items.reduce(
-        (sum: number, entry: CartEntry) => sum + (entry.qty || 1),
-        0
-      );
-    } catch (error) {
-      console.error("Failed to parse cart values safely:", error);
-      return 0;
-    }
-  });
-  const [portalState, setPortalState] = useState(() =>
-    readCustomerPortalSnapshot()
+  const portalState = useSyncExternalStore(
+    subscribeCustomerPortal,
+    getCustomerPortalSnapshot,
+    () => SERVER_CUSTOMER_PORTAL_SNAPSHOT
   );
+
+  const cartItemCount = useSyncExternalStore(
+    subscribeCart,
+    getCartItemCount,
+    () => 0
+  );
+
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const desktopNavItems = [
@@ -66,30 +60,25 @@ export default function DesktopHeader({
 
   const [logout] = useLogoutMutation();
 
-  const refreshPortalState = useCallback(() => {
-    setPortalState(readCustomerPortalSnapshot());
-  }, []);
+  const isVerified =
+    portalState.isVerified ||
+    (session.phoneStatus === "verified" && Boolean(session.phone)) ||
+    (typeof window !== "undefined" &&
+      Boolean(
+        globalThis.localStorage.getItem(PHONE_KEY) &&
+          (globalThis.localStorage.getItem("uae_phone_status") === "verified" ||
+            globalThis.localStorage.getItem(CUSTOMER_NAME_KEY) ||
+            globalThis.localStorage.getItem("erpnext.customer"))
+      ));
 
-  const refreshCartBadge = useCallback(() => {
-    if (typeof window === "undefined") {
-      setCartItemCount(0);
-      return;
-    }
+  const displayPhone =
+    portalState.phone ||
+    session.phone ||
+    (typeof window !== "undefined"
+      ? globalThis.localStorage.getItem(PHONE_KEY) || ""
+      : "");
 
-    try {
-      const items = getCart() || [];
-      const nextCount = items.reduce(
-        (sum: number, entry: CartEntry) => sum + (entry.qty || 1),
-        0
-      );
-      setCartItemCount(nextCount);
-    } catch (error) {
-      console.error("Failed to parse cart values safely:", error);
-      setCartItemCount(0);
-    }
-  }, []);
-
-  const shouldShowNav = portalState.isVerified;
+  const shouldShowNav = isVerified;
   const isHomeRoute = pathname === "/";
   const searchValue = searchParams.get("search") ?? "";
   const [draftSearchValue, setDraftSearchValue] = useState(searchValue);
@@ -166,58 +155,12 @@ export default function DesktopHeader({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    globalThis.addEventListener(CUSTOMER_PORTAL_UPDATED, refreshPortalState);
-    globalThis.addEventListener(CART_UPDATED, refreshCartBadge);
-    globalThis.addEventListener("storage", refreshPortalState);
-    globalThis.addEventListener("storage", refreshCartBadge);
-    globalThis.addEventListener("openCartDrawer", refreshCartBadge);
-
-    return () => {
-      globalThis.removeEventListener(
-        CUSTOMER_PORTAL_UPDATED,
-        refreshPortalState
-      );
-      globalThis.removeEventListener(CART_UPDATED, refreshCartBadge);
-      globalThis.removeEventListener("storage", refreshPortalState);
-      globalThis.removeEventListener("storage", refreshCartBadge);
-      globalThis.removeEventListener("openCartDrawer", refreshCartBadge);
-    };
-  }, [refreshCartBadge, refreshPortalState]);
-
   const handlePortalClick = () => {
-    setShowVerifyModal(false);
-    setPhoneForVerify("");
-    localStorage.removeItem(PHONE_KEY);
-    localStorage.removeItem(PHONE_STATUS_KEY);
-    setShowPhoneModal(true);
-  };
-
-  const handlePhoneModalClose = (phoneJustSaved?: string) => {
-    setShowPhoneModal(false);
-    const savedPhone = phoneJustSaved || localStorage.getItem(PHONE_KEY) || "";
-
-    if (!savedPhone) {
-      refreshPortalState();
+    if (isVerified) {
+      router.push("/account-profile");
       return;
     }
-
-    setPhoneForVerify(savedPhone);
-    setShowVerifyModal(true);
-  };
-
-  const handleVerifyModalClose = () => {
-    setShowVerifyModal(false);
-    setPhoneForVerify("");
-    refreshPortalState();
-  };
-
-  const handleChangePhoneFromVerify = () => {
-    setShowVerifyModal(false);
-    setPhoneForVerify("");
-    localStorage.removeItem(PHONE_KEY);
-    localStorage.removeItem(PHONE_STATUS_KEY);
-    setShowPhoneModal(true);
+    router.push("/verify");
   };
 
   const handleTriggerCart = () => {
@@ -226,16 +169,15 @@ export default function DesktopHeader({
 
   const handleSignOut = async () => {
     const mobile = (
-      portalState.phone ||
-      phoneForVerify ||
-      localStorage.getItem(PHONE_KEY) ||
-      ""
+      displayPhone ||
+      (typeof window !== "undefined"
+        ? globalThis.localStorage.getItem(PHONE_KEY) || ""
+        : "")
     ).trim();
 
     // Always clear session locally, even if backend logout fails
     clearCustomerPortalSession();
     setIsProfileOpen(false);
-    refreshPortalState();
 
     try {
       if (mobile) {
@@ -332,7 +274,7 @@ export default function DesktopHeader({
         </button>
 
        
-        {portalState.isVerified ? (
+        {isVerified ? (
           <div className="relative" ref={dropdownRef}>
             <button
               type="button"
@@ -363,18 +305,17 @@ export default function DesktopHeader({
                     setIsProfileOpen(false);
                     router.push("/account-profile");
                   }}
-                  className="w-full border-b border-slate-50 px-3 py-2.5 text-left"
+                  className="w-full border-b border-slate-50 px-3 py-2.5 text-left hover:bg-slate-50 rounded-xl transition-colors"
                 >
                   <div className="min-w-0">
                     <p className="truncate font-semibold text-slate-800">
-                      {portalState.phone}
+                      {displayPhone}
                     </p>
                     <p className="mt-0.5 truncate text-[12px] text-slate-400">
-                      {portalState.address || "No saved address"}
+                      {portalState.address || "View profile & addresses"}
                     </p>
                   </div>
                 </button>
-
 
                 <div className="h-px bg-slate-100 my-1.5" />
 
@@ -414,22 +355,6 @@ export default function DesktopHeader({
           )}
         </button>
       </div>
-
-      {showPhoneModal && (
-        <PhoneModal
-          open={showPhoneModal}
-          allowExistingPhone={true}
-          onClose={handlePhoneModalClose}
-        />
-      )}
-      {showVerifyModal && (
-        <PhoneVerifyModal
-          open={showVerifyModal}
-          phone={phoneForVerify}
-          onClose={handleVerifyModalClose}
-          onChangePhone={handleChangePhoneFromVerify}
-        />
-      )}
     </header>
   );
 }

@@ -418,26 +418,33 @@ export const erpApi = createApi({
         };
       },
     }),
-    // get sales orders for a customer
-    getCustomerSalesOrders: builder.query<SalesOrderSummary[], string>({
-      query: (customerName) => ({
-        url: `${API_RESOURCE_URL}Sales Order`,
-        params: {
-          filters: JSON.stringify([["customer", "=", customerName]]),
-          fields: JSON.stringify([
-            "name",
-            "creation",
-            "transaction_date",
-            "grand_total",
-            "status",
-            "custom_kitchen_order_ticket",
-            "custom_kitchen_order_ticket.status as kitchen_order_ticket_status",
-          ]),
-          order_by: "creation desc",
-        },
-      }),
+    // get sales orders for a customer (all orders, no status or docstatus filtering)
+    getCustomerSalesOrders: builder.query<SalesOrderSummary[], string | string[]>({
+      query: (customerOrCustomers) => {
+        let filters: (string | string[])[][] = [];
+        if (Array.isArray(customerOrCustomers)) {
+          const list = customerOrCustomers.filter(Boolean);
+          if (list.length === 1) {
+            filters = [["customer", "=", list[0]]];
+          } else if (list.length > 1) {
+            filters = [["customer", "in", list]];
+          }
+        } else if (customerOrCustomers) {
+          filters = [["customer", "=", customerOrCustomers]];
+        }
+
+        return {
+          url: `${API_RESOURCE_URL}Sales Order`,
+          params: {
+            filters: JSON.stringify(filters),
+            fields: JSON.stringify(["*"]),
+            order_by: "creation desc",
+            limit_page_length: 0,
+          },
+        };
+      },
       transformResponse: (response: { data: SalesOrderSummary[] }) =>
-        response.data,
+        response.data || [],
     }),
 
     // get sales order details

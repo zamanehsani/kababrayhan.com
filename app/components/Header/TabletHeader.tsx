@@ -8,50 +8,63 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useGetCustomerAvatarQuery } from "@/app/redux/api";
 import { useLogoutMutation } from "@/app/redux/authApi";
-import { CART_UPDATED, getCart, type CartEntry } from "@/app/lib/cart";
+import { useAppSelector } from "@/app/redux/hooks";
+import { getCartItemCount, subscribeCart } from "@/app/lib/cart";
 import {
   clearCustomerPortalSession,
-  CUSTOMER_PORTAL_UPDATED,
-  PHONE_KEY,
+  CUSTOMER_NAME_KEY,
   getCustomerName,
-  readCustomerPortalSnapshot,
+  getCustomerPortalSnapshot,
+  PHONE_KEY,
+  SERVER_CUSTOMER_PORTAL_SNAPSHOT,
+  subscribeCustomerPortal,
 } from "@/app/lib/customerPortal";
-import PhoneModal from "../home/modal/PhoneModal";
-import PhoneVerifyModal from "../home/modal/PhoneVerifyModal";
 
 export default function TabletHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const session = useAppSelector((state) => state.session);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [showPhoneModal, setShowPhoneModal] = useState(false);
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [phoneForVerify, setPhoneForVerify] = useState("");
-  const [pendingRoute, setPendingRoute] = useState<string | null>(null);
-  const [cartItemCount, setCartItemCount] = useState(() => {
-    if (typeof window === "undefined") return 0;
 
-    try {
-      const items = getCart() || [];
-      return items.reduce(
-        (sum: number, entry: CartEntry) => sum + (entry.qty || 1),
-        0
-      );
-    } catch (error) {
-      console.error("Failed to parse cart values safely:", error);
-      return 0;
-    }
-  });
-  const [portalState, setPortalState] = useState(() =>
-    readCustomerPortalSnapshot()
+  const portalState = useSyncExternalStore(
+    subscribeCustomerPortal,
+    getCustomerPortalSnapshot,
+    () => SERVER_CUSTOMER_PORTAL_SNAPSHOT
   );
+
+  const cartItemCount = useSyncExternalStore(
+    subscribeCart,
+    getCartItemCount,
+    () => 0
+  );
+
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const stableCustomerName = getCustomerName() || portalState.phone;
+
+  const isVerified =
+    portalState.isVerified ||
+    (session.phoneStatus === "verified" && Boolean(session.phone)) ||
+    (typeof window !== "undefined" &&
+      Boolean(
+        globalThis.localStorage.getItem(PHONE_KEY) &&
+          (globalThis.localStorage.getItem("uae_phone_status") === "verified" ||
+            globalThis.localStorage.getItem(CUSTOMER_NAME_KEY) ||
+            globalThis.localStorage.getItem("erpnext.customer"))
+      ));
+
+  const displayPhone =
+    portalState.phone ||
+    session.phone ||
+    (typeof window !== "undefined"
+      ? globalThis.localStorage.getItem(PHONE_KEY) || ""
+      : "");
+
+  const stableCustomerName = getCustomerName() || displayPhone;
 
   const navItems = [
     {
@@ -65,33 +78,10 @@ export default function TabletHeader() {
   const { data: customerAvatar } = useGetCustomerAvatarQuery(
     stableCustomerName,
     {
-      skip: !portalState.isVerified || !stableCustomerName,
+      skip: !isVerified || !stableCustomerName,
     }
   );
   const [logout] = useLogoutMutation();
-
-  const refreshPortalState = useCallback(() => {
-    setPortalState(readCustomerPortalSnapshot());
-  }, []);
-
-  const refreshCartBadge = useCallback(() => {
-    if (typeof window === "undefined") {
-      setCartItemCount(0);
-      return;
-    }
-
-    try {
-      const items = getCart() || [];
-      const nextCount = items.reduce(
-        (sum: number, entry: CartEntry) => sum + (entry.qty || 1),
-        0
-      );
-      setCartItemCount(nextCount);
-    } catch (error) {
-      console.error("Failed to parse cart values safely:", error);
-      setCartItemCount(0);
-    }
-  }, []);
 
   const isHomeRoute = pathname === "/";
   const searchValue = searchParams.get("search") ?? "";
@@ -172,61 +162,13 @@ export default function TabletHeader() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    globalThis.addEventListener(CUSTOMER_PORTAL_UPDATED, refreshPortalState);
-    globalThis.addEventListener(CART_UPDATED, refreshCartBadge);
-    globalThis.addEventListener("storage", refreshPortalState);
-    globalThis.addEventListener("storage", refreshCartBadge);
-    globalThis.addEventListener("openCartDrawer", refreshCartBadge);
-
-    return () => {
-      globalThis.removeEventListener(
-        CUSTOMER_PORTAL_UPDATED,
-        refreshPortalState
-      );
-      globalThis.removeEventListener(CART_UPDATED, refreshCartBadge);
-      globalThis.removeEventListener("storage", refreshPortalState);
-      globalThis.removeEventListener("storage", refreshCartBadge);
-      globalThis.removeEventListener("openCartDrawer", refreshCartBadge);
-    };
-  }, [refreshCartBadge, refreshPortalState]);
-
-  const handlePhoneModalClose = (phoneJustSaved?: string) => {
-    setShowPhoneModal(false);
-    const savedPhone =
-      phoneJustSaved || globalThis.localStorage.getItem(PHONE_KEY) || "";
-
-    if (savedPhone) {
-      setPhoneForVerify(savedPhone);
-      setShowVerifyModal(true);
-      return;
-    }
-
-    setPendingRoute(null);
-    refreshPortalState();
-  };
-
-  const handleVerifyModalClose = () => {
-    setShowVerifyModal(false);
-    setPhoneForVerify("");
-    refreshPortalState();
-
-    if (pendingRoute) {
-      if (readCustomerPortalSnapshot().isVerified) {
-        router.push(pendingRoute);
-      }
-
-      setPendingRoute(null);
-    }
-  };
-
   const handleProfileTrigger = () => {
-    if (portalState.isVerified) {
+    if (isVerified) {
       setIsProfileOpen((prev) => !prev);
       return;
     }
 
-      setShowPhoneModal(true);
+    router.push("/verify");
   };
 
   const handleTriggerCart = () => {
@@ -234,12 +176,16 @@ export default function TabletHeader() {
   };
 
   const handleSignOut = async () => {
-    const mobile = (portalState.phone || localStorage.getItem(PHONE_KEY) || "").trim();
+    const mobile = (
+      displayPhone ||
+      (typeof window !== "undefined"
+        ? globalThis.localStorage.getItem(PHONE_KEY) || ""
+        : "")
+    ).trim();
 
     // Always clear session locally, even if backend logout fails
     clearCustomerPortalSession();
     setIsProfileOpen(false);
-    refreshPortalState();
 
     try {
       if (mobile) {
@@ -254,8 +200,7 @@ export default function TabletHeader() {
   };
 
   return (
-    <>
-      <header className="sticky top-0 z-40 flex h-20 items-center justify-between border-b border-slate-100 bg-white/95 backdrop-blur-md px-6 select-none transition-all duration-300">
+    <header className="sticky top-0 z-40 flex h-20 items-center justify-between border-b border-slate-100 bg-white/95 backdrop-blur-md px-6 select-none transition-all duration-300">
       {/* Left Section: User Profile */}
       <div className="flex shrink-0 items-center gap-3">
         <div className="relative" ref={dropdownRef}>
@@ -290,17 +235,19 @@ export default function TabletHeader() {
                 }}
               >
                 <p className="w-full truncate font-medium text-slate-800">
-                  {portalState.phone}
+                  {displayPhone}
                 </p>
                 <p className="w-full truncate text-slate-400">
-                  {portalState.address || "No saved address"}
+                  {portalState.address || "View profile & addresses"}
                 </p>
               </button>
 
               <div className="my-1.5 h-px bg-slate-100" />
-              <button type="button"
+              <button
+                type="button"
                 className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
-                onClick={handleSignOut} >
+                onClick={handleSignOut}
+              >
                 <LogOut size={16} />
                 Sign Out
               </button>
@@ -317,10 +264,16 @@ export default function TabletHeader() {
           }`}
         >
           <p className="text-xs font-normal uppercase tracking-wider text-slate-400 whitespace-nowrap">
-            {portalState.isVerified ? "Welcome Back" : "click to"}
+            {isVerified ? "Welcome Back" : "click to"}
           </p>
           <h1 className="font-normal tracking-wide text-slate-900 whitespace-nowrap">
-            {portalState.isVerified ? portalState.phone : <span onClick={handleProfileTrigger} className="text-red-600 cursor-pointer">Login</span>}
+            {isVerified ? (
+              displayPhone
+            ) : (
+              <span onClick={handleProfileTrigger} className="text-red-600 cursor-pointer">
+                Login
+              </span>
+            )}
           </h1>
         </div>
       </div>
@@ -395,19 +348,7 @@ export default function TabletHeader() {
         </button>
       </div>
 
-      </header>
-
-      {showPhoneModal && (
-        <PhoneModal open={showPhoneModal} onClose={handlePhoneModalClose} />
-      )}
-      {showVerifyModal && (
-        <PhoneVerifyModal
-          open={showVerifyModal}
-          phone={phoneForVerify}
-          onClose={handleVerifyModalClose}
-        />
-      )}
-    </>
+    </header>
   );
 }
 
