@@ -293,10 +293,10 @@ export default function DesktopHeader({
   }
 
   return (
-    <header className="flex h-20 items-center justify-between border-b border-slate-100 bg-white px-12 select-none transition-all duration-300">
+    <header className="sticky top-0 z-40 flex h-20 items-center justify-between border-b border-slate-100 bg-white/95 backdrop-blur-md px-12 select-none transition-all duration-300">
       {/* Left Section: Image Branding */}
       <div className="flex items-center shrink-0">
-        <Link href="/" className="cursor-pointer">
+        <Link href="/" className="cursor-pointer flex items-center">
           <Image
             src={logoSrc || "/logo.png"}
             alt={companyName}
@@ -394,6 +394,7 @@ export default function DesktopHeader({
             type="button"
             onClick={handlePortalClick}
             className="h-11 rounded-full border border-slate-200 bg-white p-3 font-semibold uppercase tracking-widest text-slate-700 transition-all hover:bg-slate-50 active:scale-95"
+            aria-label="Account Login"
           >
             <User size={20} />
           </button>

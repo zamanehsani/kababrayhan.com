@@ -38,8 +38,8 @@ export default async function RootLayout({
         <ScrollRestoration />
         <Providers>
           <div className="block md:hidden"><MobileHeader companyName={company.name} logoSrc={company.logoDataUrl} /></div>
-          <div className="hidden md:block lg:hidden"><TabletHeader /></div>
-          <div className="hidden lg:block"><DesktopHeader companyName={company.name} logoSrc={company.logoDataUrl} /></div>
+          <div className="hidden md:block lg:hidden sticky top-0 z-40"><TabletHeader /></div>
+          <div className="hidden lg:block sticky top-0 z-40"><DesktopHeader companyName={company.name} logoSrc={company.logoDataUrl} /></div>
           {children}
           <Footer company={company} />
           <CartSidebarWidget />

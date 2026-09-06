@@ -51,13 +51,16 @@ export default function CategoryBar({ groups }: { groups: ItemGroup[] }) {
     ];
   }, [groups]);
 
-  // Sticky sentinel: detect when bar should pin to top
+  // Sticky sentinel: detect when bar should pin below header
   useEffect(() => {
     const el = sentinelRef.current;
     if (!el) return;
+    const isLg = window.innerWidth >= 1024;
+    const isMd = window.innerWidth >= 768;
+    const headerH = isLg ? 80 : isMd ? 96 : 0;
     const obs = new IntersectionObserver(
       ([entry]) => setIsPinned(!entry.isIntersecting),
-      { threshold: 0 }
+      { rootMargin: headerH > 0 ? `-${headerH}px 0px 0px 0px` : "0px", threshold: 0 }
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -66,6 +69,10 @@ export default function CategoryBar({ groups }: { groups: ItemGroup[] }) {
   // Scroll-spy: update active tab as user scrolls through sections
   useEffect(() => {
     const barHeight = barRef.current?.offsetHeight ?? 60;
+    const isLg = typeof window !== "undefined" && window.innerWidth >= 1024;
+    const isMd = typeof window !== "undefined" && window.innerWidth >= 768;
+    const headerH = isLg ? 80 : isMd ? 96 : 0;
+    const topOffset = barHeight + headerH;
     const sections = document.querySelectorAll("[data-category-section]");
     if (!sections.length) return;
 
@@ -81,7 +88,7 @@ export default function CategoryBar({ groups }: { groups: ItemGroup[] }) {
           setActive(name);
         }
       },
-      { rootMargin: `-${barHeight + 1}px 0px -60% 0px`, threshold: 0 }
+      { rootMargin: `-${topOffset + 1}px 0px -60% 0px`, threshold: 0 }
     );
 
     sections.forEach((s) => obs.observe(s));
@@ -94,9 +101,19 @@ export default function CategoryBar({ groups }: { groups: ItemGroup[] }) {
 
     const id =
       name === "All" ? "category-all" : `category-${slugify(name)}`;
-    document
-      .getElementById(id)
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const element = document.getElementById(id);
+    if (element) {
+      const isLg = window.innerWidth >= 1024;
+      const isMd = window.innerWidth >= 768;
+      const headerH = isLg ? 80 : isMd ? 96 : 0;
+      const barHeight = barRef.current?.offsetHeight ?? 60;
+      const topOffset = barHeight + headerH;
+      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({
+        top: Math.max(0, elementPosition - topOffset - 12),
+        behavior: "smooth",
+      });
+    }
 
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
@@ -109,9 +126,9 @@ export default function CategoryBar({ groups }: { groups: ItemGroup[] }) {
       <div ref={sentinelRef} className="h-px" />
       <div
         ref={barRef}
-        className={`z-30 bg-white transition-shadow ${
+        className={`sticky top-0 md:top-20 lg:top-20 z-30 bg-white/95 backdrop-blur-md transition-shadow ${
           isPinned
-            ? "sticky top-0 border-b border-slate-100 shadow-sm"
+            ? "border-b border-slate-100 shadow-sm"
             : ""
         }`}
       >
@@ -122,9 +139,9 @@ export default function CategoryBar({ groups }: { groups: ItemGroup[] }) {
               <button
                 key={cat.name}
                 onClick={() => scrollToCategory(cat.name)}
-                className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-red-600 text-white"
+                    ? "bg-red-600 text-white shadow-xs"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >

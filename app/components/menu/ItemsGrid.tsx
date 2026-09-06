@@ -113,7 +113,7 @@ export default function ItemsGrid({ items, groups }: Props) {
         id="category-all"
         data-category-section
         data-category-name="All"
-        className="sr-only"
+        className="sr-only scroll-mt-16 md:scroll-mt-32"
       />
 
       {grouped.map((group, i) => (
@@ -122,7 +122,7 @@ export default function ItemsGrid({ items, groups }: Props) {
           id={`category-${slugify(group.name)}`}
           data-category-section
           data-category-name={group.name}
-          className={i === 0 ? "mt-6" : "mt-10"}
+          className={`scroll-mt-16 md:scroll-mt-32 ${i === 0 ? "mt-6" : "mt-10"}`}
         >
           <h4 className="mb-4 text-base font-semibold tracking-wide text-slate-800">
             {group.name}

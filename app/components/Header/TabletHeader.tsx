@@ -255,14 +255,14 @@ export default function TabletHeader() {
 
   return (
     <>
-      <header className="flex h-24 items-center justify-between border-b border-slate-100 bg-white px-8 transition-all duration-300">
+      <header className="sticky top-0 z-40 flex h-20 items-center justify-between border-b border-slate-100 bg-white/95 backdrop-blur-md px-6 select-none transition-all duration-300">
       {/* Left Section: User Profile */}
       <div className="flex shrink-0 items-center gap-3">
         <div className="relative" ref={dropdownRef}>
           <button
             type="button"
             onClick={handleProfileTrigger}
-            className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-1 border-red-100 bg-slate-50 shadow-sm"
+            className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-red-100 bg-slate-50 shadow-sm"
             aria-haspopup="menu"
             aria-expanded={isProfileOpen}
           >
@@ -319,7 +319,7 @@ export default function TabletHeader() {
           <p className="text-xs font-normal uppercase tracking-wider text-slate-400 whitespace-nowrap">
             {portalState.isVerified ? "Welcome Back" : "click to"}
           </p>
-          <h1 className=" font-normal tracking-wide text-slate-900 whitespace-nowrap">
+          <h1 className="font-normal tracking-wide text-slate-900 whitespace-nowrap">
             {portalState.isVerified ? portalState.phone : <span onClick={handleProfileTrigger} className="text-red-600 cursor-pointer">Login</span>}
           </h1>
         </div>
@@ -344,7 +344,7 @@ export default function TabletHeader() {
             />
           </div>
         ) : (
-          <nav className="flex items-center bg-slate-50  rounded-full border border-slate-100 animate-in fade-in duration-300">
+          <nav className="flex items-center bg-slate-50 p-1 rounded-full border border-slate-100 animate-in fade-in duration-300">
             {navItems.map((item) => (
               <button
                 key={item.id}
